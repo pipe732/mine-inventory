@@ -1,0 +1,67 @@
+<aside>
+  <ul class="nav-list">
+    <li>
+      <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'inventario' %}" class="nav-link {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
+        <i class="bi bi-box-seam"></i> Inventario
+      </a>
+    </li>
+
+    <li>
+      <a href="{% url 'prestamo_list' %}" class="nav-link {% if request.resolver_match.url_name == 'prestamo_list' %}active{% endif %}">
+        <i class="bi bi-box-arrow-right"></i> Prestamos
+      </a>
+    </li>
+    <li>
+      <a href="#" class="nav-link">
+        <i class="bi bi-file-earmark-bar-graph"></i> Reportes
+      </a>
+    </li>
+
+    <li>
+      <a class="nav-link text-cream d-flex justify-content-between align-items-center" 
+         data-bs-toggle="collapse" 
+         href="#menuMantenimiento" 
+         role="button" 
+         aria-expanded="false">
+        <span><i class="bi bi-tools"></i> Mantenimientos</span>
+        <i class="bi bi-chevron-down small"></i>
+      </a>
+
+      <div class="collapse" id="menuMantenimiento">
+        <ul class="nav flex-column ms-3 mt-1" style="font-size: 0.9rem">
+          <li class="nav-item">
+            <a class="nav-link text-cream py-1" href="{% url 'mantenimiento_list' %}" class= "nav-link {% if request.resolver_match.url_name == 'mantenimiento_list' %}active{% endif %}">
+              <i class="bi bi-card-list"></i> Ver Detalles (Historial)
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-cream py-1" href="{% url 'estado_list' %}" class= "nav-link {% if request.resolver_match.url_name == 'mantenimiento_list' %}active{% endif %}">
+              <i class="bi bi-activity"></i> Ver Estado Actual
+        </li>
+          <hr class="border-secondary my-1">
+          <li class="nav-item">
+            <a class="nav-link text-info py-1 fw-bold" href="{% url 'crear_bitacora_mantenimiento' %} " class= "nav-link {% if request.resolver_match.url_name == 'mantenimiento_list' %}active{% endif %}">
+              <i class="bi bi-plus-circle-fill"></i> Registrar Mantenimiento
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-warning py-1 fw-bold" href="{% url 'mantenimiento_crear' %}" class= "nav-link {% if request.resolver_match.url_name == 'mantenimiento_list' %}active{% endif %}">
+              <i class="bi bi-plus-square-fill"></i> Registrar Estado
+            </a>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+        <li class="nav-spacer">
+            <a href="{% url 'login' %}" class="nav-link">
+                <i class="ti ti-user"></i> Inicio de Sesión / Registro
+            </a>
+  </ul>
+</aside>
