@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'devoluciones',
+    'usuario',
 ]
 
 MIDDLEWARE = [
@@ -118,3 +119,5 @@ USE_TZ = True
 # settings.py
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # ← agrega esta línea
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
