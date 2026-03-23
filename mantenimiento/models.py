@@ -30,3 +30,67 @@ class EstadoHerramienta(models.Model): #creacion de la clase
     class Meta:
         verbose_name = "Estado de Herramienta"
         verbose_name_plural = "Estados de Herramientas"
+        
+# === NUEVO CATÁLOGO DE TIPOS DE ESTADO (separado) ===
+class TipoEstado(models.Model):
+    nombre = models.CharField(
+        max_length=120,
+        unique=True,
+        verbose_name="Nombre del estado *"
+    )
+    codigo = models.CharField(
+        max_length=20,
+        unique=True,
+        verbose_name="Código abreviado *"
+    )
+    descripcion = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Descripción breve"
+    )
+    categoria = models.CharField(
+        max_length=50,
+        choices=[
+            ('danado', 'Dañado'),
+            ('reparacion', 'En reparación'),
+            ('obsoleto', 'Obsoleto'),
+            ('calibracion', 'Calibración pendiente'),
+            ('preventivo', 'Mantenimiento preventivo'),
+            ('otro', 'Otro'),
+        ],
+        verbose_name="Categoría"
+    )
+    impacto_disponibilidad = models.CharField(
+        max_length=40,
+        choices=[
+            ('no_disponible', 'No disponible'),
+            ('parcialmente_disponible', 'Parcialmente disponible'),
+            ('disponible_restringido', 'Disponible con restricción'),
+        ],
+        default='no_disponible',
+        verbose_name="Impacto en disponibilidad *"
+    )
+    color = models.CharField(
+        max_length=7,  # #RRGGBB
+        blank=True,
+        verbose_name="Color asociado"
+    )
+    activo = models.BooleanField(default=True, verbose_name="Activo")
+
+    creado_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Creado por"
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Tipo de Estado (Catálogo)"
+        verbose_name_plural = "Tipos de Estado (Catálogo)"
+        ordering = ['nombre']
+        db_table = 'mantenimiento_tipoestado'   # ← nombre explícito en BD para evitar conflictos
+
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"

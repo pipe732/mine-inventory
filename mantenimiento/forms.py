@@ -1,25 +1,27 @@
 from django import forms
-from .models import EstadoCondicion
+from .models import TipoEstado
 
-class EstadoCondicionForm(forms.ModelForm):
+class TipoEstadoForm(forms.ModelForm):
     class Meta:
-        model = EstadoCondicion
-        #Campos del formulario para Registrar un tipo de estado
-        fields = [
-            'estado_material', 
-            'codigo_abreviado', 
-            'descripcion', 
-            'categoria_estado', 
-            'estado_disponibilidad', 
-            'color'
-        ]
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            # Si el campo es un select (como categoría), usamos form-select
-            if isinstance(field.widget, forms.Select):
-                field.widget.attrs.update({'class': 'form-select'})
-            # Para los demás campos de texto, usamos form-control
-            else:
-                field.widget.attrs.update({'class': 'form-control'})
-                
+        model = TipoEstado
+        fields = ['nombre', 'codigo', 'descripcion', 'categoria', 
+                'impacto_disponibilidad', 'color', 'activo']
+        
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Dañado severo'}),
+            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: DS'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'categoria': forms.Select(attrs={'class': 'form-select'}),
+            'impacto_disponibilidad': forms.Select(attrs={'class': 'form-select'}),
+            'color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color w-25'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'nombre': 'Nombre del estado *',
+            'codigo': 'Código abreviado *',
+            'descripcion': 'Descripción breve',
+            'categoria': 'Categoría',
+            'impacto_disponibilidad': 'Impacto en disponibilidad *',
+            'color': 'Color asociado (opcional)',
+            'activo': 'Estado activo',
+        }

@@ -4,6 +4,14 @@ from .models import EstadoHerramienta
 from django.db.models import Q
 import openpyxl # Para generar el Excel
 
+#Importaciones para el segundo modelo
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from .models import TipoEstado
+from .forms import TipoEstadoForm
+
 def consultar_tipo_estado(request):
     # 1. Obtener registros base
     estados = EstadoHerramienta.objects.all()
@@ -49,3 +57,15 @@ def consultar_tipo_estado(request):
         'estados': estados,
         'busqueda': busqueda,
     })
+
+class TipoEstadoCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
+    model = TipoEstado
+    form_class = TipoEstadoForm
+    template_name = 'mantenimiento/tipo_estado_form.html'
+    success_url = reverse_lazy('mantenimiento:consultar_estado')  # ← vuelve a tu lista actual
+    success_message = '✅ Tipo de estado "%(nombre)s" registrado correctamente.'
+    permission_required = 'mantenimiento.add_tipoestado'   # Django lo crea automáticamente
+
+    def form_valid(self, form):
+        form.instance.creado_por = self.request.user
+        return super().form_valid(form)

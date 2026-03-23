@@ -1,0 +1,48 @@
+{% extends 'mantenimiento/base.html' %}
+
+{% if perms.mantenimiento.add_tipoestado %}
+<a href="{% url 'mantenimiento:tipo_estado_nuevo' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nuevo Tipo de Estado (Catálogo)
+</a>
+
+{% endif %}
+{% block title %}Catalogo - estados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3><i class="bi bi-tags"></i>Agregar nuevo estado</h3>
+    <hr>
+
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+            {{ form.nombre.label_tag }} {{ form.nombre }}
+            {{ form.nombre.errors }}
+        </div>
+        <div class="col-md-6">
+            {{ form.codigo.label_tag }} {{ form.codigo }}
+            {{ form.codigo.errors }}
+        </div>
+
+        <div class="col-12">
+            {{ form.descripcion.label_tag }} {{ form.descripcion }}
+        </div>
+
+        <div class="col-md-4">{{ form.categoria.label_tag }} {{ form.categoria }}</div>
+        <div class="col-md-4">{{ form.impacto_disponibilidad.label_tag }} {{ form.impacto_disponibilidad }}</div>
+        <div class="col-md-4">{{ form.color.label_tag }} {{ form.color }}</div>
+
+        <div class="col-md-12 mt-3">
+            <div class="form-check">
+                {{ form.activo }} {{ form.activo.label_tag }}
+            </div>
+        </div>
+
+        <div class="col-12 mt-4">
+            <button type="submit" class="btn btn-success btn-lg">Guardar Catalogo</button>
+            <a href="{% url 'mantenimiento:consultar_estado' %}" class="btn btn-secondary btn-lg">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
