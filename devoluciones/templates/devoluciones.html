@@ -6,17 +6,30 @@
 <!-- ══ ALERTAS ══ -->
 {% if messages %}
   {% for message in messages %}
-    <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
-         style="background:rgba(113,129,109,.13); border:1px solid rgba(113,129,109,.25);
-                border-radius:var(--radius-md); color:var(--text-main); font-family:var(--font-ui);"
-         role="alert">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#71816D" stroke-width="2.2">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      {{ message }}
-      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
-              style="filter:opacity(.4);"></button>
-    </div>
+    {% if message.tags == 'warning' %}
+      <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
+           style="background:rgba(196,144,10,.12); border:1px solid rgba(196,144,10,.3);
+                  border-radius:var(--radius-md); color:#7a5500; font-family:var(--font-ui);"
+           role="alert">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4900a" stroke-width="2.2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        {{ message }}
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" style="filter:opacity(.4);"></button>
+      </div>
+    {% else %}
+      <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
+           style="background:rgba(113,129,109,.13); border:1px solid rgba(113,129,109,.25);
+                  border-radius:var(--radius-md); color:var(--text-main); font-family:var(--font-ui);"
+           role="alert">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#71816D" stroke-width="2.2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        {{ message }}
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" style="filter:opacity(.4);"></button>
+      </div>
+    {% endif %}
   {% endfor %}
 {% endif %}
 
@@ -27,13 +40,12 @@
                color:var(--text-main); letter-spacing:.03em; margin:0;">
       Devoluciones
     </h5>
-    <p style="font-family:var(--font-ui); font-size:.8rem;
-              color:var(--text-muted); margin:0;">
+    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
       Gestión de devoluciones de productos
     </p>
   </div>
   <button class="btn-primary-mine"
-          data-bs-toggle="modal" data-bs-target="#modalDevolucion">
+          data-bs-toggle="modal" data-bs-target="#modalCrear">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
          stroke="currentColor" stroke-width="2.5">
       <circle cx="12" cy="12" r="10"/>
@@ -74,22 +86,19 @@
           <th>Cant.</th>
           <th>Estado</th>
           <th>Fecha</th>
+          <th style="width:60px;"></th>
         </tr>
       </thead>
       <tbody>
 
         {% for d in devoluciones %}
-
-        <!-- Fila principal -->
         <tr>
           <td style="text-align:center;">
             <button type="button"
                     style="width:24px; height:24px; border-radius:50%;
-                           background:rgba(9,77,146,.07);
-                           border:1px solid rgba(9,77,146,.14);
-                           color:var(--navy); cursor:pointer;
-                           display:inline-flex; align-items:center;
-                           justify-content:center; padding:0;"
+                           background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.14);
+                           color:var(--navy); cursor:pointer; display:inline-flex;
+                           align-items:center; justify-content:center; padding:0;"
                     data-bs-toggle="collapse"
                     data-bs-target="#detail-{{ d.pk }}"
                     aria-expanded="false">
@@ -100,16 +109,8 @@
               </svg>
             </button>
           </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:.78rem;
-                         color:var(--text-muted);">#{{ d.pk }}</span>
-          </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-weight:700;
-                         color:var(--navy); font-size:.88rem;">
-              {{ d.numero_orden }}
-            </span>
-          </td>
+          <td><span style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">#{{ d.pk }}</span></td>
+          <td><span style="font-family:var(--font-mono); font-weight:700; color:var(--navy); font-size:.88rem;">{{ d.numero_orden }}</span></td>
           <td style="font-weight:600;">{{ d.producto }}</td>
           <td>{{ d.cantidad }}</td>
           <td>
@@ -121,82 +122,64 @@
               <span class="badge-state badge-rechazada">Rechazada</span>
             {% endif %}
           </td>
-          <td style="font-family:var(--font-mono); font-size:.82rem;
-                     color:var(--text-muted);">
+          <td style="font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted);">
             {{ d.fecha_creacion|date:"d/m/Y" }}
+          </td>
+          <!-- MINE-106: botón editar -->
+          <td style="text-align:center;">
+            <button type="button"
+                    class="btn-ghost btn-editar"
+                    style="padding:.22rem .5rem;"
+                    data-id="{{ d.pk }}"
+                    data-orden="{{ d.numero_orden }}"
+                    data-producto="{{ d.producto }}"
+                    data-cantidad="{{ d.cantidad }}"
+                    data-motivo="{{ d.motivo }}"
+                    data-estado="{{ d.estado }}"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalEditar"
+                    title="Editar">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
           </td>
         </tr>
 
         <!-- MINE-105: Detalle desplegable -->
         <tr style="background:rgba(9,77,146,.02);">
-          <td colspan="7" style="padding:0; border:none;">
+          <td colspan="8" style="padding:0; border:none;">
             <div class="collapse" id="detail-{{ d.pk }}">
-              <div style="padding:1rem 1.4rem;
-                          border-bottom:1px solid var(--border-color);">
-                <p style="font-family:var(--font-mono); font-size:.62rem;
-                           letter-spacing:.12em; text-transform:uppercase;
-                           color:var(--text-muted); margin-bottom:.75rem;">
+              <div style="padding:1rem 1.4rem; border-bottom:1px solid var(--border-color);">
+                <p style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em;
+                           text-transform:uppercase; color:var(--text-muted); margin-bottom:.75rem;">
                   Detalle completo
                 </p>
                 <div class="row g-3" style="font-family:var(--font-ui);">
                   <div class="col-6 col-md-3">
-                    <div style="font-size:.65rem; text-transform:uppercase;
-                                letter-spacing:.08em; color:var(--text-muted);
-                                font-weight:600; margin-bottom:.18rem;">
-                      Número de orden
-                    </div>
-                    <div style="font-weight:700; color:var(--navy);
-                                font-family:var(--font-mono);">
-                      {{ d.numero_orden }}
-                    </div>
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Número de orden</div>
+                    <div style="font-weight:700; color:var(--navy); font-family:var(--font-mono);">{{ d.numero_orden }}</div>
                   </div>
                   <div class="col-6 col-md-3">
-                    <div style="font-size:.65rem; text-transform:uppercase;
-                                letter-spacing:.08em; color:var(--text-muted);
-                                font-weight:600; margin-bottom:.18rem;">
-                      Producto
-                    </div>
-                    <div style="font-weight:600; color:var(--text-main);">
-                      {{ d.producto }}
-                    </div>
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Producto</div>
+                    <div style="font-weight:600; color:var(--text-main);">{{ d.producto }}</div>
                   </div>
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase;
-                                letter-spacing:.08em; color:var(--text-muted);
-                                font-weight:600; margin-bottom:.18rem;">
-                      Cantidad
-                    </div>
-                    <div style="font-weight:600; color:var(--text-main);">
-                      {{ d.cantidad }} unidad{{ d.cantidad|pluralize }}
-                    </div>
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Cantidad</div>
+                    <div style="font-weight:600; color:var(--text-main);">{{ d.cantidad }} unidad{{ d.cantidad|pluralize }}</div>
                   </div>
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase;
-                                letter-spacing:.08em; color:var(--text-muted);
-                                font-weight:600; margin-bottom:.18rem;">
-                      Estado
-                    </div>
-                    <div style="font-weight:600; color:var(--text-main);">
-                      {{ d.get_estado_display }}
-                    </div>
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Estado</div>
+                    <div style="font-weight:600; color:var(--text-main);">{{ d.get_estado_display }}</div>
                   </div>
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase;
-                                letter-spacing:.08em; color:var(--text-muted);
-                                font-weight:600; margin-bottom:.18rem;">
-                      Creado
-                    </div>
-                    <div style="font-family:var(--font-mono); font-size:.83rem;
-                                color:var(--text-main);">
-                      {{ d.fecha_creacion|date:"d/m/Y H:i" }}
-                    </div>
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Creado</div>
+                    <div style="font-family:var(--font-mono); font-size:.83rem; color:var(--text-main);">{{ d.fecha_creacion|date:"d/m/Y H:i" }}</div>
                   </div>
                   <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase;
-                                letter-spacing:.08em; color:var(--text-muted);
-                                font-weight:600; margin-bottom:.18rem;">
-                      Motivo
-                    </div>
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Motivo</div>
                     <div style="color:var(--text-main);">{{ d.motivo }}</div>
                   </div>
                 </div>
@@ -207,19 +190,16 @@
 
         {% empty %}
         <tr>
-          <td colspan="7" style="text-align:center; padding:3.5rem 1rem;">
+          <td colspan="8" style="text-align:center; padding:3.5rem 1rem;">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
                  stroke="var(--text-muted)" stroke-width="1.3"
                  style="opacity:.35; display:block; margin:0 auto .75rem;">
               <path d="M22 12H16L14 15H10L8 12H2"/>
               <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
             </svg>
-            <p style="font-family:var(--font-ui); color:var(--text-muted);
-                      font-size:.88rem; margin:0;">
+            <p style="font-family:var(--font-ui); color:var(--text-muted); font-size:.88rem; margin:0;">
               No hay devoluciones registradas aún.<br>
-              <span style="font-size:.8rem;">
-                Usa <strong>Nueva Devolución</strong> para agregar una.
-              </span>
+              <span style="font-size:.8rem;">Usa <strong>Nueva Devolución</strong> para agregar una.</span>
             </p>
           </td>
         </tr>
@@ -230,105 +210,59 @@
   </div>
 </div>
 
+
 <!-- ══════════════════════════════════════
-     MINE-100/101/102 — MODAL NUEVA DEVOLUCIÓN
+     MINE-100/101/102 — MODAL CREAR
 ══════════════════════════════════════ -->
-<div class="modal fade" id="modalDevolucion" tabindex="-1"
-     aria-labelledby="modalDevolucionLabel" aria-hidden="true">
+<div class="modal fade" id="modalCrear" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
-
-      <!-- Header dark igual que préstamos -->
       <div class="modal-header">
-        <h5 class="modal-title" id="modalDevolucionLabel">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2"
-               style="opacity:.7; margin-right:.4rem;">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
           </svg>
           Nueva Devolución
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                aria-label="Cerrar"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
-
-      <!-- Body -->
       <form method="post" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="action" value="crear">
         <div class="modal-body" style="padding:1.5rem;">
-
-          <!-- Separador de sección -->
-          <div style="font-family:var(--font-mono); font-size:.65rem;
-                      letter-spacing:.13em; text-transform:uppercase;
-                      color:var(--navy); border-bottom:1px solid rgba(9,77,146,.18);
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.18);
                       padding-bottom:.4rem; margin-bottom:1.1rem;">
             Datos de la devolución
           </div>
-
           <div class="row g-3">
-
-            <!-- Número de orden -->
             <div class="col-md-6">
-              <label class="form-label"
-                     for="{{ form.numero_orden.id_for_label }}">
-                Número de orden *
-              </label>
-              {{ form.numero_orden }}
-              {% for e in form.numero_orden.errors %}
-                <div class="form-error">{{ e }}</div>
-              {% endfor %}
+              <label class="form-label" for="{{ form_crear.numero_orden.id_for_label }}">Número de orden *</label>
+              {{ form_crear.numero_orden }}
+              {% for e in form_crear.numero_orden.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
-
-            <!-- Producto -->
             <div class="col-md-6">
-              <label class="form-label"
-                     for="{{ form.producto.id_for_label }}">
-                Producto *
-              </label>
-              {{ form.producto }}
-              {% for e in form.producto.errors %}
-                <div class="form-error">{{ e }}</div>
-              {% endfor %}
+              <label class="form-label" for="{{ form_crear.producto.id_for_label }}">Producto *</label>
+              {{ form_crear.producto }}
+              {% for e in form_crear.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
-
-            <!-- Cantidad -->
             <div class="col-md-4">
-              <label class="form-label"
-                     for="{{ form.cantidad.id_for_label }}">
-                Cantidad *
-              </label>
-              {{ form.cantidad }}
-              {% for e in form.cantidad.errors %}
-                <div class="form-error">{{ e }}</div>
-              {% endfor %}
+              <label class="form-label" for="{{ form_crear.cantidad.id_for_label }}">Cantidad *</label>
+              {{ form_crear.cantidad }}
+              {% for e in form_crear.cantidad.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
-
-            <!-- Motivo -->
             <div class="col-md-8">
-              <label class="form-label"
-                     for="{{ form.motivo.id_for_label }}">
-                Motivo *
-              </label>
-              {{ form.motivo }}
-              {% for e in form.motivo.errors %}
-                <div class="form-error">{{ e }}</div>
-              {% endfor %}
+              <label class="form-label" for="{{ form_crear.motivo.id_for_label }}">Motivo *</label>
+              {{ form_crear.motivo }}
+              {% for e in form_crear.motivo.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
-
           </div>
         </div>
-
-        <!-- Footer -->
         <div class="modal-footer">
-          <button type="button" class="btn-outline-mine"
-                  data-bs-dismiss="modal">
-            Cancelar
-          </button>
+          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn-primary-mine">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
               <polyline points="17 21 17 13 7 13 7 21"/>
               <polyline points="7 3 7 8 15 8"/>
@@ -336,7 +270,93 @@
             Guardar devolución
           </button>
         </div>
+      </form>
+    </div>
+  </div>
+</div>
 
+
+<!-- ══════════════════════════════════════
+     MINE-106/107/108/109 — MODAL EDITAR
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Editar Devolución <span id="edit-modal-id" style="opacity:.5; font-size:.85rem;"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="editar">
+        <input type="hidden" name="devolucion_id" id="edit-devolucion-id">
+        <div class="modal-body" style="padding:1.5rem;">
+
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.18);
+                      padding-bottom:.4rem; margin-bottom:1.1rem;">
+            Datos de la devolución
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Número de orden *</label>
+              <input type="text" name="numero_orden" id="edit-numero-orden" class="form-control" required>
+              {% for e in edit_form.numero_orden.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Producto *</label>
+              <input type="text" name="producto" id="edit-producto" class="form-control" required>
+              {% for e in edit_form.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Cantidad *</label>
+              <input type="number" name="cantidad" id="edit-cantidad" class="form-control" min="1" required>
+              {% for e in edit_form.cantidad.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Motivo *</label>
+              <textarea name="motivo" id="edit-motivo" class="form-control" rows="3"></textarea>
+              {% for e in edit_form.motivo.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            </div>
+
+            <!-- MINE-108: campo de estado -->
+            <div class="col-md-12">
+              <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                          text-transform:uppercase; color:var(--navy);
+                          border-bottom:1px solid rgba(9,77,146,.18);
+                          padding-bottom:.4rem; margin-bottom:.75rem; margin-top:.5rem;">
+                Estado de la devolución
+              </div>
+              <label class="form-label">Estado *</label>
+              <select name="estado" id="edit-estado" class="form-select">
+                <option value="pendiente">Pendiente</option>
+                <option value="aprobada">Aprobada</option>
+                <option value="rechazada">Rechazada</option>
+              </select>
+              {% for e in edit_form.estado.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-mine">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Guardar cambios
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -346,7 +366,7 @@
 
 {% block js %}
 <script>
-  // Rotar chevron al expandir/colapsar detalle de fila
+  // ── Chevron detalle fila ──
   document.querySelectorAll('[data-bs-target^="#detail-"]').forEach(btn => {
     const target = document.querySelector(btn.getAttribute('data-bs-target'));
     if (!target) return;
@@ -358,10 +378,27 @@
     });
   });
 
-  // Si hay errores de validación reabrir el modal automáticamente
-  {% if form.errors %}
-    var modal = new bootstrap.Modal(document.getElementById('modalDevolucion'));
-    modal.show();
+  // ── Reabrir modal crear si hubo errores ──
+  {% if form_crear.errors %}
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrear')).show();
+  {% endif %}
+
+  // ── MINE-106: poblar modal editar con datos de la fila ──
+  document.querySelectorAll('.btn-editar').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.getElementById('edit-devolucion-id').value  = this.dataset.id;
+      document.getElementById('edit-modal-id').textContent = '#' + this.dataset.id;
+      document.getElementById('edit-numero-orden').value   = this.dataset.orden;
+      document.getElementById('edit-producto').value       = this.dataset.producto;
+      document.getElementById('edit-cantidad').value       = this.dataset.cantidad;
+      document.getElementById('edit-motivo').value         = this.dataset.motivo;
+      document.getElementById('edit-estado').value         = this.dataset.estado;
+    });
+  });
+
+  // ── Reabrir modal editar si hubo errores ──
+  {% if edit_id %}
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditar')).show();
   {% endif %}
 </script>
 {% endblock js %}
