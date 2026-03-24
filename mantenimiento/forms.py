@@ -1,5 +1,6 @@
 from django import forms
 from .models import TipoEstado
+from django.core.exceptions import ValidationError #importamos para hacer validaciones de duplicados
 
 class TipoEstadoForm(forms.ModelForm):
     class Meta:
@@ -25,3 +26,24 @@ class TipoEstadoForm(forms.ModelForm):
             'color': 'Color asociado (opcional)',
             'activo': 'Estado activo',
         }
+        
+    #Codigo para validar duplicados
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if nombre:
+            qs = TipoEstado.objects.filter(nombre__iexact=nombre)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError("Ya existe un tipo de estado con este nombre.")
+        return nombre
+
+    def clean_codigo(self):
+        codigo = self.cleaned_data.get('codigo')
+        if codigo:
+            qs = TipoEstado.objects.filter(codigo__iexact=codigo)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError("Este código abreviado ya está en uso. Debe ser único.")
+        return codigo
