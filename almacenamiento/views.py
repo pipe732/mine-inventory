@@ -1,20 +1,25 @@
 from django.shortcuts import render, redirect
 from .forms import EstanteForm
+from .models import Estante
+
+
+def vista_estantes(request):
+    estantes = Estante.objects.all()
+    return render(request, 'almacenamiento/estantes.html', {
+        'estantes': estantes
+    })
+
 
 def crear_estante(request):
     if request.method == 'POST':
         form = EstanteForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('crear_estante')
+            return redirect('estantes')
     else:
         form = EstanteForm()
 
-    return render(request, 'crear_estante.html', {
-        'form': form,
-        'titulo': 'Registrar Estante'
+    return render(request, 'almacenamiento/crear_estante.html', {
+        'form': form
     })
 
-
-def vista_estantes(request):
-    return render(request, 'estantes.html')
