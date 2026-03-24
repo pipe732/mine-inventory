@@ -4,24 +4,10 @@ from .models import Estante
 class EstanteForm(forms.ModelForm):
     class Meta:
         model = Estante
-        fields = '__all__'
+        fields = ['almacen', 'codigo', 'detalles', 'capacidad']
         widgets = {
             'almacen': forms.Select(attrs={'class': 'form-control'}),
             'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'detalles': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'capacidad': forms.NumberInput(attrs={'class': 'form-control'}),
         }
-from django.shortcuts import render, redirect
-from .forms import EstanteForm
-
-def crear_estante(request):
-    if request.method == 'POST':
-        form = EstanteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('estantes')
-    else:
-        form = EstanteForm()
-
-    return render(request, 'crear_estante.html', {
-        'form': form,
-        'titulo': 'Registrar Estante'
-    })

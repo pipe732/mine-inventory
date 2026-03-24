@@ -5,21 +5,20 @@ from .models import Estante
 
 def vista_estantes(request):
     estantes = Estante.objects.all()
-    return render(request, 'almacenamiento/estantes.html', {
-        'estantes': estantes
-    })
+    form = EstanteForm()
 
-
-def crear_estante(request):
     if request.method == 'POST':
         form = EstanteForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('estantes')
-    else:
-        form = EstanteForm()
 
-    return render(request, 'almacenamiento/crear_estante.html', {
-        'form': form
+    return render(request, 'almacenamiento/estantes.html', {
+        'estantes': estantes,
+        'form': form,
+        'show_modal': form.errors  # reabre el modal si hubo errores
     })
 
+
+def crear_estante(request):
+    return redirect('estantes')
