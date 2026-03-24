@@ -56,7 +56,7 @@ def inventario(request):
         elif accion == "crear_categoria":
             nombre = request.POST.get("cat_nombre", "").strip()
             descripcion = request.POST.get("cat_descripcion", "").strip()
-            if nombre:
+            if nombre:      
                 Categoria.objects.create(nombre=nombre, descripcion=descripcion or None)
                 messages.success(request, f'Categoría "{nombre}" creada correctamente.')
             else:
