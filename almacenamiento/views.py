@@ -1,6 +1,13 @@
 from django.shortcuts import render, redirect
 from .forms import EstanteForm
-from .models import Estante
+from .models import Estante, Almacen
+
+
+def vista_almacenes(request):
+    almacenes = Almacen.objects.all()
+    return render(request, 'almacenamiento/almacenes.html', {
+        'almacenes': almacenes
+    })
 
 
 def vista_estantes(request):
@@ -16,7 +23,7 @@ def vista_estantes(request):
     return render(request, 'almacenamiento/estantes.html', {
         'estantes': estantes,
         'form': form,
-        'show_modal': form.errors  # reabre el modal si hubo errores
+        'show_modal': form.errors
     })
 
 
