@@ -365,38 +365,12 @@
 {% endblock %}
 
 {% block js %}
+<script src="{% static 'js/devoluciones.js' %}"></script>
 <script>
-  // ── Chevron detalle fila ──
-  document.querySelectorAll('[data-bs-target^="#detail-"]').forEach(btn => {
-    const target = document.querySelector(btn.getAttribute('data-bs-target'));
-    if (!target) return;
-    target.addEventListener('show.bs.collapse', () => {
-      btn.querySelector('.row-chevron').style.transform = 'rotate(90deg)';
-    });
-    target.addEventListener('hide.bs.collapse', () => {
-      btn.querySelector('.row-chevron').style.transform = 'rotate(0deg)';
-    });
-  });
-
-  // ── Reabrir modal crear si hubo errores ──
+  // Reabrir modales si hubo errores de validación
   {% if form_crear.errors %}
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrear')).show();
   {% endif %}
-
-  // ── MINE-106: poblar modal editar con datos de la fila ──
-  document.querySelectorAll('.btn-editar').forEach(btn => {
-    btn.addEventListener('click', function () {
-      document.getElementById('edit-devolucion-id').value  = this.dataset.id;
-      document.getElementById('edit-modal-id').textContent = '#' + this.dataset.id;
-      document.getElementById('edit-numero-orden').value   = this.dataset.orden;
-      document.getElementById('edit-producto').value       = this.dataset.producto;
-      document.getElementById('edit-cantidad').value       = this.dataset.cantidad;
-      document.getElementById('edit-motivo').value         = this.dataset.motivo;
-      document.getElementById('edit-estado').value         = this.dataset.estado;
-    });
-  });
-
-  // ── Reabrir modal editar si hubo errores ──
   {% if edit_id %}
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditar')).show();
   {% endif %}
