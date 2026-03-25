@@ -20,7 +20,7 @@
 {% endif %}
 
 <!-- ══ CABECERA ══ -->
-<div class="d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center justify-content-between mb-4">
   <div>
     <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
                color:var(--text-main); letter-spacing:.03em; margin:0;">
@@ -41,6 +41,67 @@
   </button>
 </div>
 
+<!-- ══ STATS ══ -->
+<div class="row g-3 mb-4">
+
+  <!-- Total -->
+  <div class="col-6 col-md-3">
+    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #0dcaf0;">
+      <div class="mb-1">
+        <i class="bi bi-clipboard2-data" style="font-size:1.5rem; color:#0dcaf0;"></i>
+      </div>
+      <div style="font-size: 3rem; font-weight: 800; color: #0dcaf0; line-height: 1;">
+        {{ total_prestamos|default:"0" }}
+      </div>
+      <small class="text-secondary text-uppercase mt-1 d-block"
+             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Total</small>
+    </div>
+  </div>
+
+  <!-- Activos -->
+  <div class="col-6 col-md-3">
+    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #9f86c0;">
+      <div class="mb-1">
+        <i class="bi bi-box-seam" style="font-size:1.5rem; color:#9f86c0;"></i>
+      </div>
+      <div style="font-size: 3rem; font-weight: 800; color: #9f86c0; line-height: 1;">
+        {{ prestamos_activos|default:"0" }}
+      </div>
+      <small class="text-secondary text-uppercase mt-1 d-block"
+             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Activos</small>
+    </div>
+  </div>
+
+  <!-- Devueltos -->
+  <div class="col-6 col-md-3">
+    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #2dd4bf;">
+      <div class="mb-1">
+        <i class="bi bi-arrow-return-left" style="font-size:1.5rem; color:#2dd4bf;"></i>
+      </div>
+      <div style="font-size: 3rem; font-weight: 800; color: #2dd4bf; line-height: 1;">
+        {{ prestamos_devueltos|default:"0" }}
+      </div>
+      <small class="text-secondary text-uppercase mt-1 d-block"
+             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Devueltos</small>
+    </div>
+  </div>
+
+  <!-- Vencidos -->
+  <div class="col-6 col-md-3">
+    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #931f1d;">
+      <div class="mb-1">
+        <i class="bi bi-exclamation-circle" style="font-size:1.5rem; color:#931f1d;"></i>
+      </div>
+      <div style="font-size: 3rem; font-weight: 800; color: #931f1d; line-height: 1;">
+        {{ prestamos_vencidos|default:"0" }}
+      </div>
+      <small class="text-secondary text-uppercase mt-1 d-block"
+             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Vencidos</small>
+    </div>
+  </div>
+
+</div>
+
 <!-- ══ TABLA ══ -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
@@ -50,11 +111,29 @@
       </svg>
       Préstamos registrados
     </span>
-    <span style="font-family:var(--font-mono); font-size:.72rem;
-                 background:rgba(152,71,62,.08); color:var(--rust);
-                 padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(152,71,62,.18);">
-      {{ prestamos|length }} registro{{ prestamos|length|pluralize }}
-    </span>
+
+    <!-- Badge dinámico según cantidad -->
+    {% with total=prestamos|length %}
+      {% if total == 0 %}
+        <span style="font-family:var(--font-mono); font-size:.72rem;
+                     background:rgba(0,0,0,.06); color:#999;
+                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(0,0,0,.1);">
+          0 registros
+        </span>
+      {% elif total < 10 %}
+        <span style="font-family:var(--font-mono); font-size:.72rem;
+                     background:rgba(13,202,240,.12); color:#0dcaf0;
+                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(13,202,240,.25);">
+          {{ total }} registro{{ total|pluralize:",s" }}
+        </span>
+      {% else %}
+        <span style="font-family:var(--font-mono); font-size:.72rem;
+                     background:rgba(159,134,192,.12); color:#9f86c0;
+                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(159,134,192,.25);">
+          {{ total }} registros
+        </span>
+      {% endif %}
+    {% endwith %}
   </div>
 
   <div class="table-responsive">
@@ -172,7 +251,7 @@
 </div>
 
 
-<!-- ══ MINE-118/119/120 — MODAL CREAR PRÉSTAMO ══ -->
+<!-- ══ MODAL CREAR PRÉSTAMO ══ -->
 <div class="modal fade" id="modalCrearPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
