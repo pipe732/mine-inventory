@@ -1,71 +1,113 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from .models import EstadoHerramienta
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
-import openpyxl # Para generar el Excel
+import openpyxl
 
-#Importaciones para el segundo modelo
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
-from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from .models import TipoEstado
+from .models import EstadoHerramienta, TipoEstado
 from .forms import TipoEstadoForm
 
+#1)Consultar estados de herramienta 
+@login_required
 def consultar_tipo_estado(request):
-    # 1. Obtener registros base
     estados = EstadoHerramienta.objects.all()
 
-    busqueda = request.GET.get('q') # Por palabra clave (nombre, código)
-    categoria_filtro = request.GET.get('categoria')
-    estado_filtro = request.GET.get('estado')
+    busqueda       = request.GET.get('q', '')
+    categoria_filtro = request.GET.get('categoria', '')
+    estado_filtro  = request.GET.get('estado', '')
 
     if busqueda:
-        #Busqueda por filtros
         estados = estados.filter(
-            Q(nombre_herramienta__icontains=busqueda) | 
+            Q(nombre_herramienta__icontains=busqueda) |
             Q(codigo__icontains=busqueda)
         )
-    
+
     if categoria_filtro:
         estados = estados.filter(categoria=categoria_filtro)
-    
+
     if estado_filtro:
         estados = estados.filter(estado=estado_filtro)
 
-    #Exportamos a excel con la libreria instalada
+    #Bloque para hacer importaciones a excel
     if 'export_excel' in request.GET:
         response = HttpResponse(content_type='application/ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="Reporte_Estados_Herramientas.xlsx"'
-        
+        response['Content-Disposition'] = (
+            'attachment; filename="Reporte_Estados_Herramientas.xlsx"'
+        )
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Estados Registrados"
-
-        #tablas de excel
-        columns = ['Nombre Herramienta', 'Estado Sistema', 'Código', 'Descripción', 'Categoría']
-        ws.append(columns)
+        ws.append(['Nombre Herramienta', 'Estado Sistema', 'Código', 'Descripción', 'Categoría'])
 
         for obj in estados:
-            ws.append([obj.nombre_herramienta, obj.estado, obj.codigo, obj.description, obj.get_categoria_display()])
+            ws.append([
+                obj.nombre_herramienta,
+                obj.estado,
+                obj.codigo,
+                obj.descripcion,          # ← corregido (antes era obj.description)
+                obj.get_categoria_display(),
+            ])
 
         wb.save(response)
         return response
 
-    # Enviamos datos a consultar_estado
-    return render(request, 'mantenimiento/consultar_estado.html', {
-        'estados': estados,
-        'busqueda': busqueda,
+    return render(request, 'mantenimiento/consultar_estado.html', {  # ← ruta corregida
+        'estados':   estados,
+        'busqueda':  busqueda,
     })
 
-class TipoEstadoCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
-    model = TipoEstado
-    form_class = TipoEstadoForm
-    template_name = 'mantenimiento/tipo_estado_form.html'
-    success_url = reverse_lazy('mantenimiento:consultar_estado')  # ← vuelve a tu lista actual
-    success_message = '✅ Tipo de estado "%(nombre)s" registrado correctamente.'
-    permission_required = 'mantenimiento.add_tipoestado'   # Django lo crea automáticamente
+#2)Crear un nuevo tipo de estado
+@login_required
+@permission_required('mantenimiento.add_tipoestado', raise_exception=True)
+def tipo_estado_nuevo(request):
+    if request.method == 'POST':
+        form = TipoEstadoForm(request.POST)
+        if form.is_valid():
+            tipo_estado = form.save(commit=False)
+            tipo_estado.creado_por = request.user
+            tipo_estado.save()
+            messages.success(
+                request,
+                f'Tipo de estado "{tipo_estado.nombre}" registrado correctamente.'
+            )
+            return redirect('mantenimiento:tipo_estado_lista')
+    else:
+        form = TipoEstadoForm()
 
-    def form_valid(self, form):
-        form.instance.creado_por = self.request.user
-        return super().form_valid(form)
+    return render(request, 'mantenimiento/tipo_estado_form.html', {'form': form})
+
+#3)Listar los tipos de estado
+@login_required
+@permission_required('mantenimiento.view_tipoestado', raise_exception=True)
+def tipo_estado_lista(request):
+    estados = TipoEstado.objects.all().order_by('nombre')
+    return render(request, 'mantenimiento/tipo_estado_list.html', {
+        'estados': estados,
+    })
+
+#4) Editar tipos de estado
+@login_required
+@permission_required('mantenimiento.change_tipoestado', raise_exception=True)
+def tipo_estado_editar(request, pk):
+    tipo_estado = get_object_or_404(TipoEstado, pk=pk)
+
+    if request.method == 'POST':
+        form = TipoEstadoForm(request.POST, instance=tipo_estado)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Tipo de estado "{tipo_estado.nombre}" actualizado correctamente.'
+            )
+            return redirect('mantenimiento:tipo_estado_lista')
+    else:
+        form = TipoEstadoForm(instance=tipo_estado)
+
+    return render(request, 'mantenimiento/editar_tipo_estado.html', {
+        'form':         form,
+        'title':        'Editar Tipo de Estado',
+        'boton_texto':  'Guardar Cambios',
+    })
+
+#AQUI VAN LOS MODELOS SIGUIENTES POR EL MOMENTO TENEMOS (4 MODELOS)

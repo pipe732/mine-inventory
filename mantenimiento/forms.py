@@ -1,22 +1,36 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from .models import TipoEstado
-from django.core.exceptions import ValidationError #importamos para hacer validaciones de duplicados
 
 class TipoEstadoForm(forms.ModelForm):
+
     class Meta:
         model = TipoEstado
-        fields = ['nombre', 'codigo', 'descripcion', 'categoria', 
+        fields = ['nombre', 'codigo', 'descripcion', 'categoria',
                 'impacto_disponibilidad', 'color', 'activo']
-        
+
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Dañado severo'}),
-            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: DS'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Dañado severo'
+            }),
+            'codigo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: DS'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3
+            }),
             'categoria': forms.Select(attrs={'class': 'form-select'}),
             'impacto_disponibilidad': forms.Select(attrs={'class': 'form-select'}),
-            'color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color w-25'}),
+            'color': forms.TextInput(attrs={
+                'type': 'color',
+                'class': 'form-control form-control-color w-25'
+            }),
             'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
         labels = {
             'nombre': 'Nombre del estado *',
             'codigo': 'Código abreviado *',
@@ -26,8 +40,7 @@ class TipoEstadoForm(forms.ModelForm):
             'color': 'Color asociado (opcional)',
             'activo': 'Estado activo',
         }
-        
-    #Codigo para validar duplicados
+
     def clean_nombre(self):
         nombre = self.cleaned_data.get('nombre')
         if nombre:
