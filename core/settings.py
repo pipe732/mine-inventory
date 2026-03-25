@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'devoluciones',
     'usuario',
     'prestamo',
+
     'inventario',
 ]
 
