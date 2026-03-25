@@ -58,14 +58,21 @@ def iniciar_sesion(request):
         documento = request.POST.get('documento')
         password = request.POST.get('password')
 
-        user = authenticate(request, username=documento, password=password)
+        if not documento or not password:
+            messages.error(request, "Por favor ingresa tu documento y contraseña.")
+            return render(request, 'usuario/login.html', {"documento": documento})
 
+        if not User.objects.filter(username=documento).exists():
+            messages.error(request, "El usuario no existe.")
+            return render(request, 'usuario/login.html', {"documento": documento})
+
+        user = authenticate(request, username=documento, password=password)
         if user is not None:
             login(request, user)
             messages.success(request, f"¡Bienvenido, {user.first_name or documento}!")
             return redirect('inicio')
         else:
-            messages.error(request, "Documento o contraseña incorrectos.")
+            messages.error(request, "Contraseña incorrecta.")
             return render(request, 'usuario/login.html', {"documento": documento})
 
     return render(request, 'usuario/login.html')
