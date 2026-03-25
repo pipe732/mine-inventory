@@ -48,6 +48,36 @@
         </a>
 
         <span class="nav-section">Operaciones</span>
+        <div class="submenu-parent">
+    <a class="nav-link"
+       data-bs-toggle="collapse"
+       href="#menuAlmacen"
+       role="button"
+       aria-expanded="false">
+        <span class="nav-label">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg>
+            Almacén
+        </span>
+        <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </a>
+
+    <div class="collapse" id="menuAlmacen">
+        <ul class="sub-list">
+            <li>
+                <a class="nav-link" href="{% url 'almacenes' %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    Almacenes
+                </a>
+            </li>
+            <li>
+                <a class="nav-link" href="{% url 'estantes' %}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    Estantes
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
 
         <div class="submenu-parent">
             <a class="nav-link"

@@ -2,8 +2,7 @@
 
 {% block content %}
 <div class="container mt-4" style="max-width: 600px;">
-
-  <h2 class="text-info">Registrar Estante</h2>
+  <h2>Crear Estante</h2>
 
   <form method="POST">
     {% csrf_token %}
@@ -12,21 +11,16 @@
       <div class="mb-3">
         <label class="form-label fw-semibold">{{ field.label }}</label>
         {{ field }}
-
         {% if field.errors %}
-          <div class="text-danger small">
-            {{ field.errors }}
-          </div>
+          <div class="text-danger small">{{ field.errors }}</div>
         {% endif %}
       </div>
     {% endfor %}
 
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-success">Guardar</button>
-      <a href="{% url 'estantes' %}" class="btn btn-outline-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-danger">Guardar</button>
+      <a href="{% url 'estantes' %}" class="btn btn-secondary">Cancelar</a>
     </div>
-
   </form>
-
 </div>
 {% endblock %}
