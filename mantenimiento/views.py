@@ -29,7 +29,7 @@ def consultar_tipo_estado(request):
     if estado_filtro:
         estados = estados.filter(estado=estado_filtro)
 
-    #Bloque para hacer importaciones a excel
+#Bloque para hacer importaciones a excel
     if 'export_excel' in request.GET:
         response = HttpResponse(content_type='application/ms-excel')
         response['Content-Disposition'] = (
@@ -45,14 +45,14 @@ def consultar_tipo_estado(request):
                 obj.nombre_herramienta,
                 obj.estado,
                 obj.codigo,
-                obj.descripcion,          # ← corregido (antes era obj.description)
+                obj.descripcion,       
                 obj.get_categoria_display(),
             ])
 
         wb.save(response)
         return response
 
-    return render(request, 'mantenimiento/consultar_estado.html', {  # ← ruta corregida
+    return render(request, 'mantenimiento/consultar_estado.html', { 
         'estados':   estados,
         'busqueda':  busqueda,
     })

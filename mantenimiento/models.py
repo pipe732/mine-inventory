@@ -12,7 +12,7 @@ class EstadoHerramienta(models.Model):
         unique=True,
         verbose_name="Código"
     )
-    descripcion = models.CharField(          # ← nombre correcto en español
+    descripcion = models.CharField(         
         max_length=255,
         verbose_name="Descripción"
     )
