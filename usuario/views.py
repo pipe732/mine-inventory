@@ -10,10 +10,8 @@ from django.contrib import messages
 from .models import PerfilUsuario
 
 
-# Registro de usuario
 def registro(request):
     if request.method == "POST":
-
         username = request.POST.get('username')
         email = request.POST.get('email')
         documento = request.POST.get('documento')
@@ -28,15 +26,15 @@ def registro(request):
 
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden.")
-            return render(request, 'usuario/registro.html', contexto_error)
+            return render(request, 'registro.html', contexto_error)  
 
         if len(password1) < 8:
             messages.error(request, "La contraseña debe tener mínimo 8 caracteres.")
-            return render(request, 'usuario/registro.html', contexto_error)
+            return render(request, 'registro.html', contexto_error)  
 
         if User.objects.filter(username=documento).exists():
             messages.error(request, "Ya existe un usuario registrado con ese documento.")
-            return render(request, 'usuario/registro.html', contexto_error)
+            return render(request, 'registro.html', contexto_error)  
 
         try:
             user = User.objects.create_user(username=documento, email=email, password=password1)
@@ -47,12 +45,11 @@ def registro(request):
             return redirect('login')
         except Exception:
             messages.error(request, "Error al registrar. Intenta de nuevo.")
-            return render(request, 'usuario/registro.html', contexto_error)
+            return render(request, 'registro.html', contexto_error)  
 
-    return render(request, 'usuario/registro.html')
+    return render(request, 'registro.html')  
 
 
-# Login de usuario
 def iniciar_sesion(request):
     if request.method == "POST":
         documento = request.POST.get('documento')
@@ -60,11 +57,11 @@ def iniciar_sesion(request):
 
         if not documento or not password:
             messages.error(request, "Por favor ingresa tu documento y contraseña.")
-            return render(request, 'usuario/login.html', {"documento": documento})
+            return render(request, 'login.html', {"documento": documento})  
 
         if not User.objects.filter(username=documento).exists():
             messages.error(request, "El usuario no existe.")
-            return render(request, 'usuario/login.html', {"documento": documento})
+            return render(request, 'login.html', {"documento": documento})  
 
         user = authenticate(request, username=documento, password=password)
         if user is not None:
@@ -73,12 +70,11 @@ def iniciar_sesion(request):
             return redirect('inicio')
         else:
             messages.error(request, "Contraseña incorrecta.")
-            return render(request, 'usuario/login.html', {"documento": documento})
+            return render(request, 'login.html', {"documento": documento})  
 
-    return render(request, 'usuario/login.html')
+    return render(request, 'login.html')  
 
 
-# Olvido contraseña - solicitar correo
 def olvido_contrasena(request):
     if request.method == "POST":
         email = request.POST.get('email')
@@ -99,12 +95,11 @@ def olvido_contrasena(request):
         except User.DoesNotExist:
             messages.success(request, "Te enviamos un enlace a tu correo. Revisa tu bandeja de entrada.")
 
-        return render(request, 'usuario/olvido_contrasena.html')
+        return render(request, 'olvido_contrasena.html')  
 
-    return render(request, 'usuario/olvido_contrasena.html')
+    return render(request, 'olvido_contrasena.html')  
 
 
-# Nueva contraseña - restablecer
 def nueva_contrasena(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -122,15 +117,15 @@ def nueva_contrasena(request, uidb64, token):
 
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden.")
-            return render(request, 'usuario/nueva_contrasena.html', {'uidb64': uidb64, 'token': token})
+            return render(request, 'nueva_contrasena.html', {'uidb64': uidb64, 'token': token})  
 
         if len(password1) < 8:
             messages.error(request, "La contraseña debe tener mínimo 8 caracteres.")
-            return render(request, 'usuario/nueva_contrasena.html', {'uidb64': uidb64, 'token': token})
+            return render(request, 'nueva_contrasena.html', {'uidb64': uidb64, 'token': token})  
 
         user.set_password(password1)
         user.save()
         messages.success(request, "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión.")
         return redirect('login')
 
-    return render(request, 'usuario/nueva_contrasena.html', {'uidb64': uidb64, 'token': token})
+    return render(request, 'nueva_contrasena.html', {'uidb64': uidb64, 'token': token})  
