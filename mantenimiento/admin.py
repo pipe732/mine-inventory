@@ -14,4 +14,4 @@ class TipoEstadoAdmin(admin.ModelAdmin):
 class EstadoHerramientaAdmin(admin.ModelAdmin):
     list_display = ['nombre_herramienta', 'codigo', 'categoria', 'estado']
     list_filter = ['categoria', 'estado']
-    search_fields = ['nombre_herramienta', 'codigo']
+    search_fields = ['nombre_herramienta', 'codigo'] 

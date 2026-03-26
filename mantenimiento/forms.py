@@ -32,11 +32,11 @@ class TipoEstadoForm(forms.ModelForm):
         }
 
         labels = {
-            'nombre': 'Nombre del estado *',
-            'codigo': 'Código abreviado *',
+            'nombre': 'Nombre del estado',
+            'codigo': 'Código abreviado',
             'descripcion': 'Descripción breve',
             'categoria': 'Categoría',
-            'impacto_disponibilidad': 'Impacto en disponibilidad *',
+            'impacto_disponibilidad': 'Impacto en disponibilidad ',
             'color': 'Color asociado (opcional)',
             'activo': 'Estado activo',
         }

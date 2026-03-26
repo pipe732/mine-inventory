@@ -1,10 +1,10 @@
-{% extends "mantenimiento/base.html" %}
-{% block title %}Editar Tipo de Estado{% endblock %}
+{% extends "base.html" %}
+{% block title %}Editar Tipo de Estado{%endblock %} 
 {% block content %}
 
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3><i class="bi bi-pencil-square"></i> Editar Tipo de Estado</h3>
+    <h3><i class="bi bi-pencil-square"></i>Editar Tipo de Estado</h3>
     <a
       href="{% url 'mantenimiento:tipo_estado_lista' %}"
       class="btn btn-secondary"
@@ -43,8 +43,8 @@
     </div>
 
     <div class="col-md-4">
-      {{ form.impacto_disponibilidad.label_tag }} {{ form.impacto_disponibilidad
-      }}
+      {{ form.impacto_disponibilidad.label_tag }} 
+      {{ form.impacto_disponibilidad }}
     </div>
 
     <div class="col-md-4">{{ form.color.label_tag }} {{ form.color }}</div>
@@ -57,7 +57,7 @@
 
     <div class="col-12 mt-4">
       <button type="submit" class="btn btn-success btn-lg">
-        💾 Guardar Cambios
+        Guardar Cambios
       </button>
     </div>
   </form>

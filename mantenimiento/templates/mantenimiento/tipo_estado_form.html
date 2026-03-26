@@ -1,4 +1,4 @@
-{% extends "mantenimiento/base.html" %} 
+{% extends "base.html" %}
 {% block title %}Catálogo - Estados{% endblock %} 
 {%block content %}
 
@@ -7,8 +7,7 @@
     <h3><i class="bi bi-tags"></i> Agregar nuevo estado</h3>
     <a
       href="{% url 'mantenimiento:tipo_estado_lista' %}"
-      class="btn btn-secondary"
-    >
+      class="btn btn-secondary">
       Cancelar
     </a>
   </div>
@@ -43,8 +42,7 @@
     </div>
 
     <div class="col-md-4">
-      {{ form.impacto_disponibilidad.label_tag }} {{ form.impacto_disponibilidad
-      }}
+      {{form.impacto_disponibilidad.label_tag }} {{form.impacto_disponibilidad}}
     </div>
 
     <div class="col-md-4">{{ form.color.label_tag }} {{ form.color }}</div>
