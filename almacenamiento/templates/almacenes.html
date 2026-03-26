@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="mb-0">Almacenes</h4>
+      <small class="text-muted">Gestión de almacenes</small>
+    </div>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalAlmacen">
+      ➕ Nuevo Almacén
+    </button>
+  </div>
+
+  <table class="table table-bordered align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Detalles</th>
+        <th>Capacidad</th>
+        <th>Fecha Creación</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for almacen in almacenes %}
+      <tr>
+        <td>{{ almacen.id }}</td>
+        <td>{{ almacen.nombre }}</td>
+        <td>{{ almacen.detalles|default:"—" }}</td>
+        <td>{{ almacen.capacidad|default:"—" }}</td>
+        <td>{{ almacen.fecha_creacion|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center text-muted">No hay almacenes registrados</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Nuevo Almacén -->
+<div class="modal fade" id="modalAlmacen" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">➕ Nuevo Almacén</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" action="{% url 'almacenes' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p class="text-primary fw-semibold small mb-3">DATOS DEL ALMACÉN</p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">NOMBRE *</label>
+            {{ form.nombre }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            {{ form.detalles }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">CAPACIDAD</label>
+            {{ form.capacidad }}
+          </div>
+
+          {% if form.errors %}
+            <div class="alert alert-danger mt-3">{{ form.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Almacén</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% if show_modal %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('modalAlmacen')).show();
+  });
+</script>
+{% endif %}
+
+{% endblock %}

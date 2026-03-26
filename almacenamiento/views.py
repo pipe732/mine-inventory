@@ -1,29 +1,40 @@
 from django.shortcuts import render, redirect
-from .forms import EstanteForm
+from .forms import EstanteForm, AlmacenForm
 from .models import Estante, Almacen
 
 
 def vista_almacenes(request):
     almacenes = Almacen.objects.all()
-    return render(request, 'almacenamiento/almacenes.html', {
-        'almacenes': almacenes
+    form = AlmacenForm()
+
+    if request.method == 'POST':
+        form = AlmacenForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('almacenes')
+
+    return render(request, 'almacenes.html', {
+        'almacenes': almacenes,
+        'form': form,
+        'show_modal': bool(form.errors)
     })
 
 
 def vista_estantes(request):
-    estantes = Estante.objects.all()
-    form = EstanteForm()
-
     if request.method == 'POST':
         form = EstanteForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('estantes')
+    else:
+        form = EstanteForm()
 
-    return render(request, 'almacenamiento/estantes.html', {
+    estantes = Estante.objects.all()
+
+    return render(request, 'estantes.html', {
         'estantes': estantes,
         'form': form,
-        'show_modal': form.errors
+        'show_modal': bool(form.errors)
     })
 
 
