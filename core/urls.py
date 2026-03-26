@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-
+from usuario.views import iniciar_sesion
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('devoluciones/', include('devoluciones.urls')),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('prestamos/', include('prestamo.urls')),
     path('inventario/', include('inventario.urls')),
     path('almacenamiento/', include('almacenamiento.urls')),  
+    path('', iniciar_sesion, name='login'),
 ]
