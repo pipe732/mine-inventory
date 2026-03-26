@@ -5,448 +5,125 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inicio de Sesión · Centro Minero</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-
   <style>
-    :root {
-      --verde:       #39a900;
-      --verde-dark:  #2d8700;
-      --verde-ring:  rgba(57, 169, 0, 0.18);
-      --crema:       #e8e3d8;
-      --border:      #d8d3c8;
-      --text-dark:   #1a1a1a;
-      --text-soft:   #999;
-      --white:       #ffffff;
-      --font:        'Inter', sans-serif;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--font);
-      background: #111;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .app-wrapper {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .panel-left {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem;
-      background: #111;
-    }
-
-    .left-bg {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      opacity: 0.35;
-      filter: blur(4px);
-      z-index: 0;
-    }
-
-    .left-content {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.25rem;
-      width: 100%;
-      max-width: 600px;
-    }
-
-    .left-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.03em;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-      margin: 0;
-    }
-
-    .left-subtitle {
-      font-size: 13px;
-      color: rgba(255,255,255,0.5);
-      margin-top: 4px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .left-img-frame {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      border-radius: 20px;
-      border: 2.5px solid rgba(255,255,255,0.15);
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-
-    .left-img-frame img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .panel-right {
-      width: 390px;
-      height: 100vh;
-      overflow-y: auto;
-      background: var(--crema);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2.5rem 2.25rem;
-      border-left: 1px solid rgba(255,255,255,0.3);
-      box-shadow: -4px 0 32px rgba(0,0,0,0.15);
-    }
-
-    .form-panel { width: 100%; }
-
-    .brand-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(0,0,0,0.06);
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 1.5rem;
-    }
-
-    .brand-logo {
-      width: 42px;
-      height: 42px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-
-    .brand-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .brand-sub {
-      font-size: 11.5px;
-      color: var(--text-soft);
-      margin: 0;
-    }
-
-    .custom-tabs {
-      display: flex;
-      background: rgba(57,169,0,0.1);
-      border: 1.5px solid rgba(57,169,0,0.25);
-      border-radius: 12px;
-      padding: 3px;
-      gap: 3px;
-      margin-bottom: 1.5rem;
-    }
-
-    .custom-tab {
-      flex: 1;
-      padding: 9px;
-      border: none;
-      border-radius: 9px;
-      font-family: var(--font);
-      font-size: 12.5px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: transparent;
-      color: #3b6d11;
-    }
-
-    .custom-tab.active {
-      background: var(--verde);
-      color: #fff;
-      font-weight: 600;
-      box-shadow: 0 2px 10px rgba(57,169,0,0.35);
-    }
-
-    .custom-tab:not(.active):hover {
-      background: rgba(57,169,0,0.12);
-      color: var(--verde-dark);
-    }
-
-    .field-group { margin-bottom: 13px; }
-
-    .form-label.field-label {
-      font-size: 10.5px;
-      font-weight: 700;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 5px;
-    }
-
-    .input-shell {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .form-control.field-input {
-      padding: 11px 40px 11px 14px;
-      font-family: var(--font);
-      font-size: 13.5px;
-      color: var(--text-dark);
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-    }
-
-    .form-control.field-input::placeholder { color: #c0bbb0; }
-
-    .form-control.field-input:focus {
-      border-color: var(--verde);
-      box-shadow: 0 0 0 3px var(--verde-ring);
-    }
-
-    .field-icon {
-      position: absolute;
-      right: 12px;
-      font-size: 15px;
-      color: rgba(0,0,0,0.22);
-      pointer-events: none;
-    }
-
-    .forgot-link {
-      font-size: 11.5px;
-      color: var(--verde);
-      font-weight: 600;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .forgot-link:hover {
-      color: var(--verde-dark);
-      text-decoration: underline;
-    }
-
-    .btn-sena {
-      background-color: var(--verde);
-      border-color: var(--verde);
-      border-radius: 10px;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      padding: 12px;
-      transition: background-color 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-    }
-
-    .btn-sena:hover {
-      background-color: var(--verde-dark);
-      border-color: var(--verde-dark);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(57,169,0,0.4);
-    }
-
-    .btn-sena:active,
-    .btn-sena:focus {
-      background-color: var(--verde-dark) !important;
-      border-color: var(--verde-dark) !important;
-      box-shadow: 0 0 0 3px var(--verde-ring) !important;
-      transform: translateY(0);
-    }
-
-    .divider-row { display: flex; align-items: center; }
-    .divider-line { flex: 1; height: 1px; background: var(--border); }
-
-    .alert-msg {
-      display: flex;
-      align-items: center;
-      background: #fde8e8;
-      border: 1.5px solid #f5b8b8;
-      border-radius: 9px;
-      padding: 9px 13px;
-      margin-bottom: 14px;
-      font-size: 12.5px;
-      color: #b91c1c;
-      font-weight: 500;
-    }
-
-    .alert-success-msg {
-      display: flex;
-      align-items: center;
-      background: #e8fde8;
-      border: 1.5px solid #b8f5b8;
-      border-radius: 9px;
-      padding: 9px 13px;
-      margin-bottom: 14px;
-      font-size: 12.5px;
-      color: #166534;
-      font-weight: 500;
-    }
-
-    @media (max-width: 860px) {
-      .app-wrapper { flex-direction: column; }
-      .panel-left  { min-height: 260px; padding: 2rem 1.5rem; }
-      .panel-right { width: 100%; min-height: auto; border-left: none; }
-      .left-title  { font-size: 22px; }
-    }
-
-    @media (max-width: 480px) {
-      .panel-right { padding: 1.5rem 1.25rem 2.5rem; }
-    }
+    .left-bg    { position:absolute; inset:0; background-size:cover; background-position:center; opacity:.35; filter:blur(4px); }
+    @media(max-width:860px){ .panel-right{ width:100%!important; min-width:unset; border-left:none!important; } }
   </style>
 </head>
-<body>
-
+<body class="overflow-hidden bg-dark">
 
 {% static 'img/fondo.png' as bg_img %}
 
-<div class="app-wrapper">
+<div class="d-flex vh-100">
 
-  
-  <div class="panel-left">
-    <div class="left-bg" style="background-image: url('{{ bg_img }}');"></div>
-    <div class="left-content">
+  <!-- Panel izquierdo -->
+  <div class="flex-grow-1 position-relative overflow-hidden d-flex align-items-center justify-content-center p-5">
+    <div class="left-bg" style="background-image:url('{{ bg_img }}');"></div>
+    <div class="position-relative z-1 d-flex flex-column align-items-center gap-4 w-100" style="max-width:600px;">
       <div class="text-center">
-        <h2 class="left-title">Centro Minero</h2>
-        <p class="left-subtitle">Regional Boyacá · SENA</p>
+        <h2 class="fs-4 fw-bold text-white mb-1">Centro Minero</h2>
+        <p class="text-uppercase text-white-50 small mb-0">Regional Boyacá · SENA</p>
       </div>
-      <div class="left-img-frame">
-        <img src="{{ bg_img }}" alt="Campus Centro Minero" />
+      <div class="ratio ratio-16x9 w-100 border border-white border-2" style="border-radius:16px; overflow:hidden;">
+        <img src="{{ bg_img }}" alt="Campus Centro Minero" class="w-100 h-100 object-fit-cover" />
       </div>
     </div>
   </div>
-  
-  
-  <div class="panel-right">
-    <div class="form-panel">
 
-      <div class="brand-row">
-        <img src="{% static 'img/Logo-del-sena-Verde-150x150-removebg-preview.png' %}"
-             alt="SENA" class="brand-logo" />
+  <!-- Panel derecho -->
+  <div class="panel-right d-flex align-items-center justify-content-center p-4 overflow-y-auto bg-light border-start border-white border-opacity-25" style="width:400px; min-width:400px;">
+    <div class="w-100">
+
+      <!-- Marca -->
+      <div class="d-flex align-items-center gap-3 bg-black bg-opacity-10 rounded-3 p-3 mb-4">
+        <img src="{% static 'img/Logo-del-sena-Verde-150x150-removebg-preview.png' %}" alt="SENA" width="42" height="42" style="object-fit:contain;" />
         <div>
-          <p class="brand-name">Iniciar sesión</p>
-          <p class="brand-sub">Centro Minero · Regional Boyacá</p>
+          <p class="fw-bold mb-0">Iniciar sesión</p>
+          <p class="mb-0 text-muted small">Centro Minero · Regional Boyacá</p>
         </div>
       </div>
 
-      <div class="custom-tabs">
-        <button class="custom-tab active">Inicio Sesión</button>
-        <button class="custom-tab" onclick="window.location.href='{% url 'registro' %}'">Registro</button>
+      <!-- Tabs -->
+      <div class="d-flex rounded-3 p-1 gap-1 mb-4 bg-success-subtle border border-success-subtle">
+        <button class="flex-fill py-2 px-3 rounded-2 fw-semibold border-0 bg-success text-white">Inicio Sesión</button>
+        <button class="flex-fill py-2 px-3 rounded-2 fw-semibold border-0 bg-transparent text-success-emphasis" onclick="window.location.href='{% url 'registro' %}'">Registro</button>
       </div>
 
+      <!-- Mensajes Django -->
       {% if messages %}
         {% for message in messages %}
-          <div class="{% if message.tags == 'error' %}alert-msg{% else %}alert-success-msg{% endif %}">
-            <i class="bi {% if message.tags == 'error' %}bi-exclamation-circle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+          <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} d-flex align-items-center gap-2 py-2 px-3 small">
+            <i class="bi {% if message.tags == 'error' %}bi-exclamation-circle-fill{% else %}bi-check-circle-fill{% endif %}"></i>
             {{ message }}
           </div>
         {% endfor %}
       {% endif %}
 
+      <!-- Formulario -->
       <form method="POST" action="{% url 'login' %}" id="loginForm" autocomplete="off" novalidate>
         {% csrf_token %}
-
         <div id="msg-area"></div>
 
-        <div class="field-group">
-          <label class="form-label field-label" for="documento">Documento</label>
-          <div class="input-shell">
-            <input
-              type="text"
-              id="documento"
-              name="documento"
-              class="form-control field-input {% if form.documento.errors %}is-invalid{% endif %}"
-              placeholder="Número de cédula"
-              value="{{ form.documento.value|default:'' }}"
-              oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-            />
-          </div>
+        <div class="mb-3">
+          <label class="form-label text-uppercase fw-bold text-secondary" style="font-size:.65rem;letter-spacing:.06em;" for="documento">Documento</label>
+          <input type="text" id="documento" name="documento"
+                 class="form-control {% if form.documento.errors %}is-invalid{% endif %}"
+                 placeholder="Número de cédula" value="{{ form.documento.value|default:'' }}" />
           {% if form.documento.errors %}
-            <div class="alert-msg mt-1">
-              <i class="bi bi-exclamation-circle-fill me-2"></i>
-              {{ form.documento.errors|join:", " }}
-            </div>
+            <div class="invalid-feedback"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.documento.errors|join:", " }}</div>
           {% endif %}
         </div>
 
-        <div class="field-group">
-          <label class="form-label field-label" for="password">Contraseña</label>
-          <div class="input-shell">
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="form-control field-input {% if form.password.errors %}is-invalid{% endif %}"
-              placeholder="••••••••"
-            />
-            <i class="bi bi-lock field-icon"></i>
-          </div>
+        <div class="mb-3">
+          <label class="form-label text-uppercase fw-bold text-secondary" style="font-size:.65rem;letter-spacing:.06em;" for="password">Contraseña</label>
+          <input type="password" id="password" name="password"
+                 class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                 placeholder="••••••••"
+                 autocomplete="new-password" />
           {% if form.password.errors %}
-            <div class="alert-msg mt-1">
-              <i class="bi bi-exclamation-circle-fill me-2"></i>
-              {{ form.password.errors|join:", " }}
-            </div>
+            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.password.errors|join:", " }}</div>
           {% endif %}
         </div>
 
         {% if form.non_field_errors %}
-          <div class="alert-msg">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            {{ form.non_field_errors|join:", " }}
+          <div class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 small mb-3">
+            <i class="bi bi-exclamation-circle-fill"></i>{{ form.non_field_errors|join:", " }}
           </div>
         {% endif %}
 
         <div class="text-end mb-4">
-          <a href="{% url 'olvido_contrasena' %}" class="forgot-link">¿Olvidaste tu contraseña?</a>
+          <a href="{% url 'olvido_contrasena' %}" class="link-success small fw-semibold text-decoration-none">¿Olvidaste tu contraseña?</a>
         </div>
 
-        <button type="submit" class="btn btn-success w-100 btn-sena">
-          Iniciar Sesión
-          <i class="bi bi-arrow-right ms-2"></i>
+        <button type="submit" class="btn btn-success w-100 fw-bold py-2">
+          Iniciar Sesión <i class="bi bi-arrow-right ms-1"></i>
         </button>
- 
       </form>
 
-      <div class="divider-row my-3">
-        <span class="divider-line"></span>
-      </div>
-
+      <hr class="my-3" />
     </div>
   </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   document.getElementById('loginForm').addEventListener('submit', function(e) {
-    var doc  = document.getElementById('documento').value.trim();
-    var pwd  = document.getElementById('password').value.trim();
-    var area = document.getElementById('msg-area');
+    const doc = document.getElementById('documento').value.trim();
+    const pwd = document.getElementById('password').value.trim();
+    const area = document.getElementById('msg-area');
     area.innerHTML = '';
     if (!doc || !pwd) {
       e.preventDefault();
-      area.innerHTML = `
-        <div class="alert-msg">
-          <i class="bi bi-exclamation-circle-fill me-2"></i>
-          Por favor ingresa tu documento y contraseña.
-        </div>`;
+      area.innerHTML = `<div class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 small mb-3">
+        <i class="bi bi-exclamation-circle-fill"></i>Por favor ingresa tu documento y contraseña.</div>`;
     }
   });
-</script>
 
+  document.getElementById('documento').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
+</script>
 </body>
 </html>
