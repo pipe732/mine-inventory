@@ -1,131 +1,161 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+from django.contrib import messages
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.conf import settings
-from django.contrib import messages
-from .models import PerfilUsuario
+from django.utils.crypto import get_random_string
+from .models import Usuario, Rol
 
 
-def registro(request):
-    if request.method == "POST":
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        documento = request.POST.get('documento')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
+# ─────────────────────────────────────────────────────────────
+#  LOGIN
+# ─────────────────────────────────────────────────────────────
+def login_view(request):
+    if request.session.get('usuario_documento'):
+        return redirect('/mine/')
 
-        contexto_error = {
-            'username': username,
-            'email': email,
-            'documento': documento
-        }
-
-        if password1 != password2:
-            messages.error(request, "Las contraseñas no coinciden.")
-            return render(request, 'registro.html', contexto_error)  
-
-        if len(password1) < 8:
-            messages.error(request, "La contraseña debe tener mínimo 8 caracteres.")
-            return render(request, 'registro.html', contexto_error)  
-
-        if User.objects.filter(username=documento).exists():
-            messages.error(request, "Ya existe un usuario registrado con ese documento.")
-            return render(request, 'registro.html', contexto_error)  
-
-        try:
-            user = User.objects.create_user(username=documento, email=email, password=password1)
-            user.first_name = username
-            user.save()
-            PerfilUsuario.objects.create(user=user, documento=documento)
-            messages.success(request, "¡Usuario registrado correctamente! Ya puedes iniciar sesión.")
-            return redirect('login')
-        except Exception:
-            messages.error(request, "Error al registrar. Intenta de nuevo.")
-            return render(request, 'registro.html', contexto_error)  
-
-    return render(request, 'registro.html')  
-
-
-def iniciar_sesion(request):
-    if request.method == "POST":
-        documento = request.POST.get('documento')
-        password = request.POST.get('password')
+    if request.method == 'POST':
+        documento = request.POST.get('documento', '').strip()
+        password  = request.POST.get('password', '')
 
         if not documento or not password:
-            messages.error(request, "Por favor ingresa tu documento y contraseña.")
-            return render(request, 'login.html', {"documento": documento})  
-
-        if not User.objects.filter(username=documento).exists():
-            messages.error(request, "El usuario no existe.")
-            return render(request, 'login.html', {"documento": documento})  
-
-        user = authenticate(request, username=documento, password=password)
-        if user is not None:
-            login(request, user)
-            messages.success(request, f"¡Bienvenido, {user.first_name or documento}!")
-            return redirect('inicio')
-        else:
-            messages.error(request, "Contraseña incorrecta.")
-            return render(request, 'login.html', {"documento": documento})  
-
-    return render(request, 'login.html')  
-
-
-def olvido_contrasena(request):
-    if request.method == "POST":
-        email = request.POST.get('email')
+            messages.error(request, 'Completa todos los campos.')
+            return render(request, 'login.html')
 
         try:
-            user = User.objects.get(email=email)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            enlace = f"http://127.0.0.1:8000/nueva-contrasena/{uid}/{token}/"
-
-            send_mail(
-                subject="Recuperar contraseña - Centro Minero SENA",
-                message=f"Hola {user.first_name},\n\nHaz clic en el siguiente enlace para restablecer tu contraseña:\n\n{enlace}\n\nSi no solicitaste esto, ignora este correo.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
+            usuario = Usuario.objects.select_related('id_rol').get(
+                numero_documento=documento
             )
-            messages.success(request, "Te enviamos un enlace a tu correo. Revisa tu bandeja de entrada.")
-        except User.DoesNotExist:
-            messages.success(request, "Te enviamos un enlace a tu correo. Revisa tu bandeja de entrada.")
+        except Usuario.DoesNotExist:
+            messages.error(request, 'Número de documento o contraseña incorrectos.')
+            return render(request, 'login.html')
 
-        return render(request, 'olvido_contrasena.html')  
+        if not check_password(password, usuario.password):
+            messages.error(request, 'Número de documento o contraseña incorrectos.')
+            return render(request, 'login.html')
 
-    return render(request, 'olvido_contrasena.html')  
+        # Guardar nombre completo en sesión
+        request.session['usuario_documento'] = usuario.numero_documento
+        request.session['usuario_nombre']    = usuario.nombre_completo
+        request.session['usuario_rol']       = usuario.id_rol.nombre
+
+        return redirect('/mine/')
+
+    return render(request, 'login.html')
 
 
-def nueva_contrasena(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+# ─────────────────────────────────────────────────────────────
+#  LOGOUT
+# ─────────────────────────────────────────────────────────────
+def logout_view(request):
+    request.session.flush()
+    return redirect('/Usuario/login/')
 
-    if user is None or not default_token_generator.check_token(user, token):
-        messages.error(request, "El enlace no es válido o ha expirado.")
-        return redirect('olvido_contrasena')
 
-    if request.method == "POST":
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
+# ─────────────────────────────────────────────────────────────
+#  REGISTRO
+# ─────────────────────────────────────────────────────────────
+def registro_view(request):
+    if request.method == 'POST':
+        username  = request.POST.get('username', '').strip()
+        email     = request.POST.get('email', '').strip().lower()
+        documento = request.POST.get('documento', '').strip()
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
 
-        if password1 != password2:
-            messages.error(request, "Las contraseñas no coinciden.")
-            return render(request, 'nueva_contrasena.html', {'uidb64': uidb64, 'token': token})  
+        ctx = {'username': username, 'email': email, 'documento': documento}
+
+        if not all([username, email, documento, password1, password2]):
+            messages.error(request, 'Completa todos los campos.')
+            return render(request, 'registro.html', ctx)
+
+        if not documento.isdigit():
+            messages.error(request, 'El número de documento solo debe contener dígitos.')
+            return render(request, 'registro.html', ctx)
 
         if len(password1) < 8:
-            messages.error(request, "La contraseña debe tener mínimo 8 caracteres.")
-            return render(request, 'nueva_contrasena.html', {'uidb64': uidb64, 'token': token})  
+            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
+            return render(request, 'registro.html', ctx)
 
-        user.set_password(password1)
-        user.save()
-        messages.success(request, "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión.")
-        return redirect('login')
+        if password1 != password2:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'registro.html', ctx)
 
-    return render(request, 'nueva_contrasena.html', {'uidb64': uidb64, 'token': token})  
+        if Usuario.objects.filter(numero_documento=documento).exists():
+            messages.error(request, 'Ya existe un usuario con ese número de documento.')
+            return render(request, 'registro.html', ctx)
+
+        if Usuario.objects.filter(correo=email).exists():
+            messages.error(request, 'El correo ya está registrado.')
+            return render(request, 'registro.html', ctx)
+
+        # Crear rol por defecto si no existe
+        rol_default, _ = Rol.objects.get_or_create(
+            id=1,
+            defaults={'nombre': 'Usuario'}
+        )
+
+        usuario = Usuario.objects.create(
+            numero_documento=documento,
+            nombre_completo=username,
+            correo=email,
+            telefono='',
+            tipo_documento='CC',
+            password=make_password(password1),
+            id_rol=rol_default,
+        )
+
+        # Iniciar sesión automáticamente y redirigir a home
+        request.session['usuario_documento'] = usuario.numero_documento
+        request.session['usuario_nombre']    = usuario.nombre_completo
+        request.session['usuario_rol']       = rol_default.nombre
+
+        return redirect('/mine/')
+
+    return render(request, 'registro.html', {
+        'username': '', 'email': '', 'documento': ''
+    })
+
+
+# ─────────────────────────────────────────────────────────────
+#  OLVIDÓ CONTRASEÑA
+# ─────────────────────────────────────────────────────────────
+def olvido_contrasena_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+
+        if not email:
+            messages.error(request, 'Ingresa tu correo electrónico.')
+            return render(request, 'olvido_contrasena.html')
+
+        try:
+            usuario = Usuario.objects.get(correo=email)
+        except Usuario.DoesNotExist:
+            messages.success(
+                request,
+                'Si el correo está registrado, recibirás una contraseña temporal.'
+            )
+            return render(request, 'olvido_contrasena.html')
+
+        nueva_pass = get_random_string(10)
+        usuario.password = make_password(nueva_pass)
+        usuario.save(update_fields=['password'])
+
+        try:
+            send_mail(
+                subject='Recuperación de contraseña – SENA Centro Minero',
+                message=(
+                    f'Hola {usuario.nombre_completo},\n\n'
+                    f'Tu contraseña temporal es: {nueva_pass}\n\n'
+                    'Por seguridad, cámbiala después de iniciar sesión.\n\n'
+                    'SENA – Centro Minero · Regional Boyacá'
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            messages.success(request, 'Se envió una contraseña temporal a tu correo.')
+        except Exception:
+            messages.error(request, 'No se pudo enviar el correo. Contacta al administrador.')
+
+    return render(request, 'olvido_contrasena.html')
