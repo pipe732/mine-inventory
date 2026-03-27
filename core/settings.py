@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'inventario',
     'almacenamiento',
     'pagina_principal',
+    'mantenimiento',
 ]
 
 MIDDLEWARE = [
