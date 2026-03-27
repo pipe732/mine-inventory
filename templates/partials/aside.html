@@ -14,9 +14,9 @@
             <hr class="flex-grow-1 my-0 opacity-10">
         </div>
 
-        <a href="{% url 'dashboard' %}" 
+        <a href="{% url 'home' %}" 
         class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium 
-        {% if request.resolver_match.url_name == 'dashboard' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}" >
+        {% if request.resolver_match.url_name == 'home' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}" >
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             Principal
         </a>
@@ -197,32 +197,12 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="/Usuario/logout/">
+                    <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'logout' %}">
                         <i class="bi bi-box-arrow-right"></i> Cerrar sesión
                     </a>
                 </li>
             </ul>
         </div>
 
-      <ul class="dropdown-menu dropdown-menu-end" style="min-width: 190px">
-        <li>
-          <span class="dropdown-item-text small">
-            <i class="bi bi-shield-check me-1"></i>
-            {{ request.session.usuario_rol|default:"Sin rol" }}
-          </span>
-        </li>
-        <li><hr class="dropdown-divider" /></li>
-        <li>
-          <a class="dropdown-item" href="#">
-            <i class="bi bi-person me-2"></i>Mi perfil
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item text-danger" href="/Usuario/logout/">
-            <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
-          </a>
-        </li>
-      </ul>
     </div>
-  </div>
 </aside>

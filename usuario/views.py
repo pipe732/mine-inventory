@@ -11,8 +11,9 @@ from .models import Usuario, Rol
 #  LOGIN
 # ─────────────────────────────────────────────────────────────
 def login_view(request):
+    # Si ya está logueado, mándalo a la página principal
     if request.session.get('usuario_documento'):
-        return redirect('/mine/')
+        return redirect('home')
 
     if request.method == 'POST':
         documento = request.POST.get('documento', '').strip()
@@ -34,12 +35,12 @@ def login_view(request):
             messages.error(request, 'Número de documento o contraseña incorrectos.')
             return render(request, 'login.html')
 
-        # Guardar nombre completo en sesión
+        # Guardar datos en sesión
         request.session['usuario_documento'] = usuario.numero_documento
         request.session['usuario_nombre']    = usuario.nombre_completo
         request.session['usuario_rol']       = usuario.id_rol.nombre
 
-        return redirect('/mine/')
+        return redirect('home')
 
     return render(request, 'login.html')
 
@@ -47,9 +48,11 @@ def login_view(request):
 # ─────────────────────────────────────────────────────────────
 #  LOGOUT
 # ─────────────────────────────────────────────────────────────
+from django.urls import reverse
+
 def logout_view(request):
     request.session.flush()
-    return redirect('/Usuario/login/')
+    return redirect(reverse('login'))  # resuelve correctamente a '/'  # ✅ usa el name de la ruta, no una URL hardcodeada
 
 
 # ─────────────────────────────────────────────────────────────
@@ -110,7 +113,7 @@ def registro_view(request):
         request.session['usuario_nombre']    = usuario.nombre_completo
         request.session['usuario_rol']       = rol_default.nombre
 
-        return redirect('/mine/')
+        return redirect('home')  # ✅ usa el name de la ruta
 
     return render(request, 'registro.html', {
         'username': '', 'email': '', 'documento': ''
