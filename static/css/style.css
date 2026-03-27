@@ -35,13 +35,13 @@ a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
 
 body {
-    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
     background: var(--bg-body);
     color: var(--text-main);
     font-family: var(--font-ui);
     font-size: 15px;
-    display: flex;
-    flex-direction: column;
 }
 
 /* ── FOOTER oculto ── */
@@ -122,18 +122,38 @@ header .dropdown-item-text     { color: rgba(239,236,202,.35) !important; font-s
 ════════════════════════════════════ */
 .body-wrap {
     display: flex;
-    margin-top: 0;
-    min-height: 100vh;
+    height: 100vh;    /* ocupa toda la pantalla */
+    overflow: hidden; /* el scroll lo maneja main internamente */
 }
 
+/* ════════════════════════════════════
+   MAIN CONTENT
+════════════════════════════════════ */
 main {
-    margin-left: var(--aside-w);
     flex: 1;
-    padding: 2rem;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    height: 100%;
+    overflow-y: auto;
+    background: var(--bg-body);
+    padding: 2.5rem 4rem;  /* aire vertical y lateral uniforme en todas las páginas */
+}
+
+main::-webkit-scrollbar       { width: 5px; }
+main::-webkit-scrollbar-track { background: transparent; }
+main::-webkit-scrollbar-thumb { background: rgba(27,32,33,.15); border-radius: 3px; }
+
+/* Wrapper interior — centrado con aire lateral estilo dashboard */
+main > *:not(.modal):not(.modal-backdrop) {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Sobreescribe los paddings de Bootstrap para respetar el nuestro */
+main .container-fluid,
+main .container {
+    max-width: 1280px;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 /* ════════════════════════════════════
@@ -142,16 +162,14 @@ main {
 aside {
     width: var(--aside-w);
     background: var(--dark);
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
+    position: relative; /* parte del flex, no fixed */
+    height: 100%;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     z-index: 1030;
     overflow-y: auto;
     border-right: 1px solid rgba(255,255,255,.04);
-    transition: background .25s, border-color .25s;
 }
 
 aside::-webkit-scrollbar       { width: 3px; }
