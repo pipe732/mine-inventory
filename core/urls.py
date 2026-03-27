@@ -5,6 +5,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', include('pagina_principal.urls')),
     path('devoluciones/', include('devoluciones.urls')),
+    path('mantenimiento/', include('mantenimiento.urls')), #agregamos el archivo mantenimiento
     path('usuario/', include('usuario.urls')),
     path('prestamos/', include('prestamo.urls')),
     path('inventario/', include('inventario.urls')),
