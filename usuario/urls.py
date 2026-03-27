@@ -21,5 +21,5 @@ urlpatterns = [
     path('registro/', views.registro, name='registro'),
     path('login/', views.iniciar_sesion, name='login'),
     path('olvido-contrasena/', views.olvido_contrasena, name='olvido_contrasena'),
-    
+    path('', views.iniciar_sesion, name='home'),
 ]
