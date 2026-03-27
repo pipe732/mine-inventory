@@ -14,7 +14,9 @@
             <hr class="flex-grow-1 my-0 opacity-10">
         </div>
 
-        <a href="#" class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 text-white-50 fw-medium" style="font-size:.88rem;">
+        <a href="{% url 'dashboard' %}" 
+        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium 
+        {% if request.resolver_match.url_name == 'dashboard' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}" >
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             Principal
         </a>
