@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-)1t4q$yd=#qejd0tu*58*n89e8i^(=)&*=5()7it#l0b997(w^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'devoluciones',
     'mantenimiento', #Modulo de A l b e r t
+    'usuario',
+    'prestamo',
+    'inventario',
+    'almacenamiento',
+    'pagina_principal',
 ]
 
 MIDDLEWARE = [
@@ -119,3 +124,5 @@ USE_TZ = True
 # settings.py
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # ← agrega esta línea
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
