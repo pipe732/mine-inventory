@@ -282,8 +282,17 @@
               {% for e in form.usuario.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="{{ form.producto.id_for_label }}">Producto *</label>
-              {{ form.producto }}
+              <label class="form-label" for="id_producto">Herramienta / Producto *</label>
+              <select name="producto" id="id_producto" class="form-control form-select">
+                <option value="">— Selecciona una herramienta —</option>
+                {% for p in productos %}
+                  <option value="{{ p.nombre }}" {% if form.producto.value == p.nombre %}selected{% endif %}>
+                    {{ p.nombre }} — SKU: {{ p.codigo_sku }} (Stock: {{ p.stock }})
+                  </option>
+                {% empty %}
+                  <option disabled>No hay herramientas en inventario aún</option>
+                {% endfor %}
+              </select>
               {% for e in form.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
             <div class="col-md-4">

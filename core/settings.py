@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'almacenamiento',
     'pagina_principal',
     'mantenimiento',
+    'reportes',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,5 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #  CAMPO PK POR DEFECTO
 # ─────────────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Permite que JS lea la cookie CSRF
+CSRF_COOKIE_HTTPONLY = False
