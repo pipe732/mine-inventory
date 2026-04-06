@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- ══ CABECERA ══ -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
+               color:var(--text-main); letter-spacing:.03em; margin:0;">
+      Reportes
+    </h5>
+    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
+      Genera y descarga reportes en PDF o Excel de cada módulo
+    </p>
+  </div>
+</div>
+
+<!-- CSRF token oculto para JS -->
+<form style="display:none">{% csrf_token %}</form>
+
+<!-- ══ TOAST ══ -->
+<div id="toastWrap" style="position:fixed;top:1.2rem;right:1.4rem;z-index:99998;"></div>
+
+<!-- ══ MÓDULOS ══ -->
+<div class="row g-3 mb-5">
+  {% for slug, label, icon, desc in modulos %}
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card h-100" style="border-radius:var(--radius-lg); transition:box-shadow .2s;"
+         onmouseover="this.style.boxShadow='0 6px 24px rgba(27,32,33,.13)'"
+         onmouseout="this.style.boxShadow=''">
+      <div class="card-body d-flex flex-column gap-3" style="padding:1.3rem;">
+
+        <!-- Ícono + nombre -->
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:42px;height:42px;border-radius:10px;
+                      background:rgba(9,77,146,.08);border:1px solid rgba(9,77,146,.14);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi {{ icon }}" style="font-size:1.15rem;color:var(--navy);"></i>
+          </div>
+          <div>
+            <div style="font-family:var(--font-ui);font-weight:700;font-size:.95rem;
+                        color:var(--text-main);">{{ label }}</div>
+            <div style="font-family:var(--font-ui);font-size:.75rem;color:var(--text-muted);">
+              {{ desc }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de descarga -->
+        <div class="d-flex gap-2 mt-auto">
+          <button class="btn-reporte flex-fill"
+                  data-modulo="{{ slug }}" data-formato="pdf"
+                  style="background:rgba(152,71,62,.08);border:1px solid rgba(152,71,62,.2);
+                         color:var(--rust);border-radius:var(--radius-sm);padding:.42rem .6rem;
+                         font-family:var(--font-ui);font-weight:700;font-size:.8rem;
+                         cursor:pointer;transition:background .15s;display:flex;
+                         align-items:center;justify-content:center;gap:.35rem;">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+          </button>
+          <button class="btn-reporte flex-fill"
+                  data-modulo="{{ slug }}" data-formato="excel"
+                  style="background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.18);
+                         color:var(--navy);border-radius:var(--radius-sm);padding:.42rem .6rem;
+                         font-family:var(--font-ui);font-weight:700;font-size:.8rem;
+                         cursor:pointer;transition:background .15s;display:flex;
+                         align-items:center;justify-content:center;gap:.35rem;">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ══ HISTORIAL ══ -->
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <i class="bi bi-clock-history" style="color:var(--rust);"></i>
+      Historial de reportes generados
+    </span>
+    <span id="badgeHistorial"
+          style="font-family:var(--font-mono);font-size:.72rem;
+                 background:rgba(9,77,146,.1);color:var(--navy);
+                 padding:.18rem .6rem;border-radius:20px;border:1px solid rgba(9,77,146,.2);">
+      {{ historial|length }} registro{{ historial|length|pluralize:",s" }}
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table-app" style="width:100%;border-collapse:collapse;font-size:.9rem;">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Módulo</th>
+          <th>Formato</th>
+          <th>Archivo</th>
+          <th>Generado por</th>
+          <th>Registros</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyHistorial">
+        {% for r in historial %}
+        <tr>
+          <td><span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">#{{ r.pk }}</span></td>
+          <td style="font-weight:600;">{{ r.get_modulo_display }}</td>
+          <td>
+            {% if r.formato == 'pdf' %}
+              <span style="background:rgba(152,71,62,.1);color:var(--rust);font-family:var(--font-mono);
+                           font-size:.72rem;padding:.15rem .55rem;border-radius:20px;
+                           border:1px solid rgba(152,71,62,.2);">PDF</span>
+            {% else %}
+              <span style="background:rgba(9,77,146,.08);color:var(--navy);font-family:var(--font-mono);
+                           font-size:.72rem;padding:.15rem .55rem;border-radius:20px;
+                           border:1px solid rgba(9,77,146,.18);">EXCEL</span>
+            {% endif %}
+          </td>
+          <td style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">
+            {{ r.nombre_archivo }}
+          </td>
+          <td>{{ r.generado_por }}</td>
+          <td style="font-family:var(--font-mono);">{{ r.total_registros }}</td>
+          <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);">
+            {{ r.fecha_generado|date:"d/m/Y H:i" }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr id="rowEmpty">
+          <td colspan="7" style="text-align:center;padding:3rem 1rem;">
+            <i class="bi bi-clock-history" style="font-size:2rem;opacity:.2;display:block;margin-bottom:.5rem;"></i>
+            <p style="font-family:var(--font-ui);color:var(--text-muted);font-size:.88rem;margin:0;">
+              Aún no se han generado reportes.<br>
+              <span style="font-size:.8rem;">Selecciona un módulo arriba para empezar.</span>
+            </p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+<script>
+(function () {
+  /* ── Spinner overlay ── */
+  function showSpinner(btn, label) {
+    btn.disabled = true;
+    btn._original = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"
+                          style="width:12px;height:12px;border-width:2px;"></span> ${label}…`;
+  }
+  function hideSpinner(btn) {
+    btn.disabled = false;
+    btn.innerHTML = btn._original;
+  }
+
+  /* ── Toast ── */
+  function toast(msg, type) {
+    const color = type === 'ok'
+      ? 'rgba(58,122,66,.92)' : 'rgba(152,71,62,.92)';
+    const icon  = type === 'ok' ? 'bi-check-circle' : 'bi-exclamation-circle';
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div style="background:${color};color:#fff;padding:.65rem 1rem;
+                  border-radius:var(--radius-md);box-shadow:0 4px 18px rgba(0,0,0,.25);
+                  font-family:var(--font-ui);font-size:.88rem;font-weight:600;
+                  display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;
+                  animation:slideIn .2s ease;">
+        <i class="bi ${icon}"></i> ${msg}
+      </div>`;
+    document.getElementById('toastWrap').prepend(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  /* ── Insertar fila en historial ── */
+  function insertHistorialRow(data) {
+    const empty = document.getElementById('rowEmpty');
+    if (empty) empty.remove();
+
+    const badge = data.formato === 'pdf'
+      ? `<span style="background:rgba(152,71,62,.1);color:var(--rust);font-family:var(--font-mono);
+                      font-size:.72rem;padding:.15rem .55rem;border-radius:20px;
+                      border:1px solid rgba(152,71,62,.2);">PDF</span>`
+      : `<span style="background:rgba(9,77,146,.08);color:var(--navy);font-family:var(--font-mono);
+                      font-size:.72rem;padding:.15rem .55rem;border-radius:20px;
+                      border:1px solid rgba(9,77,146,.18);">EXCEL</span>`;
+
+    const tr = document.createElement('tr');
+    tr.style.animation = 'fadeIn .35s ease';
+    tr.innerHTML = `
+      <td><span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">#${data.id}</span></td>
+      <td style="font-weight:600;">${data.modulo_label}</td>
+      <td>${badge}</td>
+      <td style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">${data.filename}</td>
+      <td>${data.generado_por}</td>
+      <td style="font-family:var(--font-mono);">${data.total}</td>
+      <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);">${data.fecha}</td>`;
+
+    const tbody = document.getElementById('tbodyHistorial');
+    tbody.prepend(tr);
+
+    // Actualizar badge
+    const badge2 = document.getElementById('badgeHistorial');
+    const count  = tbody.querySelectorAll('tr').length;
+    badge2.textContent = `${count} registro${count !== 1 ? 's' : ''}`;
+  }
+
+  /* ── CSRF token desde el DOM (más confiable que la cookie) ── */
+  function getCsrf() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (el) return el.value;
+    const m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  /* ── Descarga via fetch ── */
+  document.querySelectorAll('.btn-reporte').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      const modulo  = btn.dataset.modulo;
+      const formato = btn.dataset.formato;
+      const label   = formato === 'pdf' ? 'PDF' : 'Excel';
+
+      showSpinner(btn, label);
+
+      try {
+        const fd = new FormData();
+        fd.append('modulo',  modulo);
+        fd.append('formato', formato);
+        fd.append('csrfmiddlewaretoken', getCsrf());
+
+        const res = await fetch("{% url 'generar_reporte' %}", {
+          method: 'POST', body: fd,
+        });
+
+        if (!res.ok) {
+          // La respuesta puede ser HTML (error Django) o JSON
+          const text = await res.text();
+          let msg = 'Error al generar el reporte';
+          try { msg = JSON.parse(text).error || msg; } catch (_) {}
+          throw new Error(msg);
+        }
+
+        /* Leer headers antes de consumir el body */
+        const filename     = (res.headers.get('Content-Disposition') || '')
+                              .match(/filename="([^"]+)"/)?.[1] || `reporte.${formato}`;
+        const historialRaw = res.headers.get('X-Historial');
+
+        /* Descargar */
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        a.remove(); URL.revokeObjectURL(url);
+
+        toast(`Reporte ${label} generado correctamente`, 'ok');
+
+        if (historialRaw) {
+          try { insertHistorialRow(JSON.parse(historialRaw)); } catch (_) {}
+        }
+
+      } catch (e) {
+        toast(e.message, 'err');
+      } finally {
+        hideSpinner(btn);
+      }
+    });
+  });
+
+  /* ── Animaciones CSS ── */
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+    @keyframes fadeIn  { from{opacity:0;background:rgba(9,77,146,.05)} to{opacity:1;background:transparent} }
+  `;
+  document.head.appendChild(style);
+})();
+</script>
+{% endblock js %}

@@ -1,75 +1,101 @@
 {% extends "base.html" %}
-{% block title %}Lista de Tipos de Estado - Catálogo{%endblock %} 
+{% load static %}
+{% block title %}Catálogo de Tipos de Estado{% endblock %}
 {% block content %}
 
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-tags"></i> Catálogo de Tipos de Estado</h3>
+<!-- ══ CABECERA ══ -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
+               color:var(--text-main); letter-spacing:.03em; margin:0;">
+      Catálogo de Tipos de Estado
+    </h5>
+    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
+      Gestión del catálogo de estados de mantenimiento
+    </p>
+  </div>
+  <a href="{% url 'mantenimiento:tipo_estado_nuevo' %}" class="btn-primary-mine">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="16"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Nuevo Tipo de Estado
+  </a>
+</div>
 
-    {% if perms.mantenimiento.add_tipoestado %}
-    <a
-      href="{% url 'mantenimiento:tipo_estado_nuevo' %}"
-      class="btn btn-success"
-    >
-      <i class="bi bi-plus-lg"></i> Nuevo Tipo de Estado
-    </a>
-    {% endif %}
+<!-- ══ TABLA ══ -->
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+        <line x1="7" y1="7" x2="7.01" y2="7"/>
+      </svg>
+      Estados registrados
+    </span>
+    <span style="font-family:var(--font-mono); font-size:.72rem;
+                 background:rgba(9,77,146,.08); color:var(--navy);
+                 padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(9,77,146,.18);">
+      {{ estados|length }} registro{{ estados|length|pluralize:",s" }}
+    </span>
   </div>
 
   <div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
-      <thead class="table-dark">
+    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+      <thead>
         <tr>
           <th>Código</th>
-          <th>Nombre del estado</th>
+          <th>Nombre</th>
           <th>Categoría</th>
-          <th>Impacto en disponibilidad</th>
-          <th>Color</th>
-          <th>Activo</th>
-          <th class="text-end">Acciones</th>
+          <th>Impacto disponibilidad</th>
+          <th style="text-align:center;">Color</th>
+          <th style="text-align:center;">Activo</th>
+          <th style="text-align:center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for estado in estados %}
         <tr>
-          <td><strong>{{ estado.codigo }}</strong></td>
-          <td>{{ estado.nombre }}</td>
+          <td><span style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">{{ estado.codigo }}</span></td>
+          <td style="font-weight:600;">{{ estado.nombre }}</td>
           <td>{{ estado.get_categoria_display|default:"—" }}</td>
-          <td>{{ estado.get_impacto_disponibilidad_display|default:"—" }}</td>
-          <td>
+          <td style="font-size:.85rem; color:var(--text-muted);">{{ estado.get_impacto_disponibilidad_display|default:"—" }}</td>
+          <td style="text-align:center;">
             {% if estado.color %}
-            <span
-              style="background-color: {{ estado.color }};
-                                         width: 24px; height: 24px;
-                                         display: inline-block;
-                                         border-radius: 4px;
-                                         border: 1px solid #ccc;"
-            >
-            </span>
-            {% else %} — {% endif %}
+              <span style="display:inline-block; width:20px; height:20px; border-radius:4px;
+                           background:{{ estado.color }}; border:1px solid rgba(0,0,0,.12);
+                           vertical-align:middle;" title="{{ estado.color }}"></span>
+            {% else %}—{% endif %}
           </td>
-          <td>
+          <td style="text-align:center;">
             {% if estado.activo %}
-            <span class="badge bg-success">Activo</span>
+              <span class="badge-state badge-aprobada">Activo</span>
             {% else %}
-            <span class="badge bg-secondary">Inactivo</span>
+              <span class="badge-state badge-rechazada">Inactivo</span>
             {% endif %}
           </td>
-          <td class="text-end">
-            {% if perms.mantenimiento.change_tipoestado %}
-            <a
-              href="{% url 'mantenimiento:tipo_estado_editar' estado.pk %}"
-              class="btn btn-sm btn-warning"
-            >
-              <i class="bi bi-pencil"></i> Editar
+          <td style="text-align:center;">
+            <a href="{% url 'mantenimiento:tipo_estado_editar' estado.pk %}"
+               style="width:28px; height:28px; border-radius:6px;
+                      background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.18);
+                      color:var(--navy); cursor:pointer; display:inline-flex;
+                      align-items:center; justify-content:center; padding:0;"
+               title="Editar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
             </a>
-            {% endif %}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="7" class="text-center py-5 text-muted">
-            Aún no hay tipos de estado registrados.
+          <td colspan="7" style="text-align:center; padding:3.5rem 1rem;">
+            <p style="font-family:var(--font-ui); color:var(--text-muted); font-size:.88rem; margin:0;">
+              Aún no hay tipos de estado registrados.<br>
+              <span style="font-size:.8rem;">Usa <strong>Nuevo Tipo de Estado</strong> para agregar uno.</span>
+            </p>
           </td>
         </tr>
         {% endfor %}
@@ -77,4 +103,5 @@
     </table>
   </div>
 </div>
+
 {% endblock %}
