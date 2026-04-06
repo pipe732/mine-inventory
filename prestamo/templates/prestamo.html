@@ -143,10 +143,10 @@
           <th style="width:46px;"></th>
           <th>#</th>
           <th>Usuario</th>
-          <th>Producto</th>
-          <th>Cant.</th>
+          <th>Ítems</th>
           <th>Estado</th>
           <th>Fecha</th>
+          <th style="text-align:center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -171,13 +171,20 @@
           </td>
           <td><span style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">#{{ p.pk }}</span></td>
           <td style="font-weight:600;">{{ p.usuario }}</td>
-          <td style="font-weight:600;">{{ p.producto }}</td>
-          <td>{{ p.cantidad }}</td>
+          <td>
+            {% for item in p.items.all %}
+              <span style="font-size:.82rem;">{{ item.producto.nombre }} ×{{ item.cantidad }}</span>{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              <span style="color:var(--text-muted); font-size:.8rem;">—</span>
+            {% endfor %}
+          </td>
           <td>
             {% if p.estado == 'activo' %}
               <span class="badge-state badge-pendiente">Activo</span>
             {% elif p.estado == 'devuelto' %}
               <span class="badge-state badge-aprobada">Devuelto</span>
+            {% elif p.estado == 'parcial' %}
+              <span class="badge-state badge-pendiente">Parcial</span>
             {% else %}
               <span class="badge-state badge-rechazada">Vencido</span>
             {% endif %}
@@ -185,9 +192,66 @@
           <td style="font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted);">
             {{ p.fecha_prestamo|date:"d/m/Y" }}
           </td>
+          <td style="text-align:center; white-space:nowrap;">
+            <!-- Editar (MINE-123 / MINE-124) -->
+            <button type="button"
+                    title="Editar préstamo"
+                    style="width:28px; height:28px; border-radius:6px;
+                           background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.18);
+                           color:var(--navy); cursor:pointer; display:inline-flex;
+                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalEditarPrestamo"
+                    data-pk="{{ p.pk }}"
+                    data-usuario="{{ p.usuario.pk }}"
+                    data-estado="{{ p.estado }}"
+                    data-observaciones="{{ p.observaciones|default:'' }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <!-- Cancelar préstamo (MINE-125 / MINE-126) -->
+            {% if p.estado == 'activo' or p.estado == 'parcial' %}
+            <button type="button"
+                    title="Cancelar préstamo"
+                    style="width:28px; height:28px; border-radius:6px;
+                           background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25);
+                           color:#d97706; cursor:pointer; display:inline-flex;
+                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalCancelarPrestamo"
+                    data-pk="{{ p.pk }}"
+                    data-usuario="{{ p.usuario }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+            </button>
+            {% endif %}
+            <!-- Eliminar (MINE-127) -->
+            <button type="button"
+                    title="Eliminar préstamo"
+                    style="width:28px; height:28px; border-radius:6px;
+                           background:rgba(147,31,29,.07); border:1px solid rgba(147,31,29,.2);
+                           color:#931f1d; cursor:pointer; display:inline-flex;
+                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalEliminarPrestamo"
+                    data-pk="{{ p.pk }}"
+                    data-usuario="{{ p.usuario }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </td>
         </tr>
 
-        <!-- Detalle desplegable -->
+        <!-- Detalle desplegable (MINE-136/139/140) -->
         <tr style="background:rgba(9,77,146,.02);">
           <td colspan="7" style="padding:0; border:none;">
             <div class="collapse" id="detail-p-{{ p.pk }}">
@@ -197,32 +261,109 @@
                   Detalle completo
                 </p>
                 <div class="row g-3" style="font-family:var(--font-ui);">
+
+                  <!-- Usuario -->
                   <div class="col-6 col-md-3">
                     <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Usuario</div>
                     <div style="font-weight:600; color:var(--text-main);">{{ p.usuario }}</div>
                   </div>
-                  <div class="col-6 col-md-3">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Producto</div>
-                    <div style="font-weight:600; color:var(--text-main);">{{ p.producto }}</div>
-                  </div>
-                  <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Cantidad</div>
-                    <div style="font-weight:600; color:var(--text-main);">{{ p.cantidad }} unidad{{ p.cantidad|pluralize }}</div>
-                  </div>
+
+                  <!-- Estado -->
                   <div class="col-6 col-md-2">
                     <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Estado</div>
                     <div style="font-weight:600; color:var(--text-main);">{{ p.get_estado_display }}</div>
                   </div>
+
+                  <!-- Fecha -->
                   <div class="col-6 col-md-2">
                     <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Fecha</div>
                     <div style="font-family:var(--font-mono); font-size:.83rem; color:var(--text-main);">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
                   </div>
+
+                  <!-- MINE-139/140: Herramientas prestadas con cantidad y formulario devolución -->
+                  <div class="col-12">
+                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em;
+                                color:var(--text-muted); font-weight:600; margin-bottom:.6rem;">
+                      Herramientas prestadas
+                    </div>
+
+                    {% for item in p.items.all %}
+                    <!-- MINE-136: Modelo detalle por ítem -->
+                    <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:.5rem;
+                                padding:.55rem .75rem; border-radius:var(--radius-md);
+                                background:rgba(9,77,146,.04); border:1px solid rgba(9,77,146,.08);">
+
+                      <!-- MINE-139: Nombre herramienta -->
+                      <span style="font-weight:600; color:var(--text-main); flex:1; min-width:0;
+                                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        {{ item.producto.nombre }}
+                      </span>
+
+                      <!-- MINE-140: Cantidad -->
+                      <span style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);
+                                   white-space:nowrap;">
+                        ×{{ item.cantidad }}
+                      </span>
+
+                      <!-- Stock disponible del producto -->
+                      <span style="font-family:var(--font-mono); font-size:.72rem; white-space:nowrap;
+                                   {% if item.producto.stock > 0 %}
+                                     color:#2dd4bf;
+                                   {% else %}
+                                     color:#931f1d;
+                                   {% endif %}">
+                        Stock: {{ item.producto.stock }}
+                      </span>
+
+                      <!-- Estado del ítem -->
+                      {% if item.devuelto %}
+                        <span class="badge-state badge-aprobada" style="font-size:.65rem; white-space:nowrap;">Devuelto</span>
+                      {% else %}
+                        <span class="badge-state badge-pendiente" style="font-size:.65rem; white-space:nowrap;">Pendiente</span>
+                      {% endif %}
+
+                      <!-- MINE-137/138: Formulario de devolución por ítem -->
+                      {% if not item.devuelto and p.estado != 'devuelto' %}
+                      <form method="post" style="margin:0; display:inline-flex; align-items:center; gap:.35rem;">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="devolver_item">
+                        <input type="hidden" name="item_pk" value="{{ item.pk }}">
+                        <!-- MINE-138: Cantidad a devolver -->
+                        <input type="number" name="cantidad_devuelta"
+                               min="1" max="{{ item.cantidad }}" value="{{ item.cantidad }}"
+                               style="width:52px; padding:.2rem .35rem; border-radius:5px;
+                                      border:1px solid rgba(9,77,146,.2); font-size:.78rem;
+                                      font-family:var(--font-mono); color:var(--text-main);
+                                      background:var(--bg-card); text-align:center;">
+                        <button type="submit"
+                                style="display:inline-flex; align-items:center; gap:.3rem;
+                                       padding:.25rem .6rem; border-radius:5px; white-space:nowrap;
+                                       background:rgba(45,212,191,.12); border:1px solid rgba(45,212,191,.3);
+                                       color:#0d9488; font-size:.75rem; font-weight:600;
+                                       font-family:var(--font-ui); cursor:pointer;">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+                          </svg>
+                          Devolver
+                        </button>
+                      </form>
+                      {% endif %}
+                    </div>
+                    {% empty %}
+                      <div style="color:var(--text-muted); font-size:.85rem; padding:.5rem 0;">
+                        Sin ítems registrados.
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                  <!-- Observaciones -->
                   {% if p.observaciones %}
                   <div class="col-12">
                     <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Observaciones</div>
                     <div style="color:var(--text-main);">{{ p.observaciones }}</div>
                   </div>
                   {% endif %}
+
                 </div>
               </div>
             </div>
@@ -275,36 +416,92 @@
                       padding-bottom:.4rem; margin-bottom:1.1rem;">
             Datos del préstamo
           </div>
+
+          <!-- Errores generales del formulario (stock insuficiente, etc.) -->
+          {% if form.non_field_errors %}
+            <div style="display:flex; align-items:flex-start; gap:.6rem; margin-bottom:1rem;
+                        padding:.75rem 1rem; border-radius:var(--radius-md);
+                        background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.28);
+                        color:#931f1d; font-family:var(--font-ui); font-size:.83rem;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" style="flex-shrink:0; margin-top:.1rem;">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div>
+                {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
           <div class="row g-3">
+
+            <!-- Usuario -->
             <div class="col-md-6">
               <label class="form-label" for="{{ form.usuario.id_for_label }}">Usuario *</label>
               {{ form.usuario }}
               {% for e in form.usuario.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
+
+            <!-- Producto — select con consulta de stock (MINE-128/129/130) -->
             <div class="col-md-6">
               <label class="form-label" for="id_producto">Herramienta / Producto *</label>
-              <select name="producto" id="id_producto" class="form-control form-select">
+              <select name="producto" id="id_producto" class="form-control form-select"
+                      data-stocks='{ {% for prod in productos %}"{{ prod.pk }}": {{ prod.stock }}{% if not forloop.last %},{% endif %}{% endfor %} }'>
                 <option value="">— Selecciona una herramienta —</option>
-                {% for p in productos %}
-                  <option value="{{ p.nombre }}" {% if form.producto.value == p.nombre %}selected{% endif %}>
-                    {{ p.nombre }} — SKU: {{ p.codigo_sku }} (Stock: {{ p.stock }})
+                {% for prod in productos %}
+                  <option value="{{ prod.pk }}"
+                          data-stock="{{ prod.stock }}"
+                    {% if form.producto.value == prod.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
                   </option>
                 {% empty %}
                   <option disabled>No hay herramientas en inventario aún</option>
                 {% endfor %}
               </select>
               {% for e in form.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+
+              <!-- MINE-129: Panel de disponibilidad -->
+              <div id="stock-info" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
+                                          border-radius:var(--radius-md); font-family:var(--font-ui);
+                                          font-size:.8rem; align-items:center; gap:.5rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="stock-icon">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span id="stock-label"></span>
+              </div>
+
+              <!-- MINE-130: Alerta si no hay stock -->
+              <div id="stock-alert" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
+                                           border-radius:var(--radius-md); font-size:.8rem;
+                                           background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.25);
+                                           color:#931f1d; font-family:var(--font-ui); display:none;
+                                           align-items:center; gap:.5rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Sin stock disponible — no es posible registrar el préstamo
+              </div>
             </div>
+
+            <!-- Cantidad -->
             <div class="col-md-4">
               <label class="form-label" for="{{ form.cantidad.id_for_label }}">Cantidad *</label>
               {{ form.cantidad }}
               {% for e in form.cantidad.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
+
+            <!-- Observaciones -->
             <div class="col-md-8">
               <label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
               {{ form.observaciones }}
               {% for e in form.observaciones.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
+
           </div>
         </div>
         <div class="modal-footer">
@@ -323,13 +520,182 @@
   </div>
 </div>
 
+<!-- ══ MODAL EDITAR PRÉSTAMO (MINE-123 / MINE-124) ══ -->
+<div class="modal fade" id="modalEditarPrestamo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Editar Préstamo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form method="post" id="formEditarPrestamo" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="editar">
+        <input type="hidden" name="prestamo_pk" id="edit_pk">
+        <div class="modal-body" style="padding:1.5rem;">
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.18);
+                      padding-bottom:.4rem; margin-bottom:1.1rem;">
+            Modificar datos del préstamo
+          </div>
+          <div class="row g-3">
+            <!-- Usuario -->
+            <div class="col-md-6">
+              <label class="form-label">Usuario *</label>
+              <select name="usuario" id="edit_usuario" class="form-control form-select">
+                {% for u in usuarios %}
+                  <option value="{{ u.pk }}">{{ u }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <!-- Estado -->
+            <div class="col-md-6">
+              <label class="form-label">Estado *</label>
+              <select name="estado" id="edit_estado" class="form-control form-select">
+                <option value="activo">Activo</option>
+                <option value="devuelto">Devuelto</option>
+                <option value="parcial">Parcial</option>
+                <option value="vencido">Vencido</option>
+              </select>
+            </div>
+            <!-- Observaciones -->
+            <div class="col-12">
+              <label class="form-label">Observaciones</label>
+              <textarea name="observaciones" id="edit_observaciones"
+                        class="form-control" rows="3"
+                        placeholder="Notas u observaciones del préstamo..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-mine">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CANCELAR PRÉSTAMO (MINE-125 / MINE-126) ══ -->
+<div class="modal fade" id="modalCancelarPrestamo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="margin-right:.4rem;">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Cancelar Préstamo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem; font-family:var(--font-ui);">
+        <p style="color:var(--text-main); margin-bottom:.4rem;">
+          ¿Confirmas que deseas <strong>cancelar</strong> el préstamo de
+          <strong id="cancelar_usuario_label"></strong>?
+        </p>
+        <p style="color:var(--text-muted); font-size:.85rem; margin:0;">
+          Esta acción marcará el préstamo como cancelado y devolverá el stock al inventario.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">No, mantener</button>
+        <form method="post" style="margin:0;">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="cancelar">
+          <input type="hidden" name="prestamo_pk" id="cancelar_pk">
+          <button type="submit"
+                  style="display:inline-flex; align-items:center; gap:.4rem;
+                         padding:.45rem 1rem; border-radius:var(--radius-md);
+                         background:rgba(245,158,11,.12); border:1px solid rgba(217,119,6,.3);
+                         color:#d97706; font-family:var(--font-ui); font-size:.82rem;
+                         font-weight:600; cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Sí, cancelar préstamo
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL ELIMINAR PRÉSTAMO (MINE-127) ══ -->
+<div class="modal fade" id="modalEliminarPrestamo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#931f1d" stroke-width="2" style="margin-right:.4rem;">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+          Eliminar Préstamo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem; font-family:var(--font-ui);">
+        <p style="color:var(--text-main); margin-bottom:.4rem;">
+          ¿Estás seguro de que deseas <strong>eliminar</strong> el préstamo de
+          <strong id="eliminar_usuario_label"></strong>?
+        </p>
+        <p style="color:var(--text-muted); font-size:.85rem; margin:0;">
+          Esta acción es <strong>permanente</strong> y no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" style="margin:0;">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="eliminar">
+          <input type="hidden" name="prestamo_pk" id="eliminar_pk">
+          <button type="submit"
+                  style="display:inline-flex; align-items:center; gap:.4rem;
+                         padding:.45rem 1rem; border-radius:var(--radius-md);
+                         background:rgba(147,31,29,.1); border:1px solid rgba(147,31,29,.25);
+                         color:#931f1d; font-family:var(--font-ui); font-size:.82rem;
+                         font-weight:600; cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            Sí, eliminar registro
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block js %}
+<!-- URL global para prestamos.js (no puede usar Django tags desde un .js estático) -->
+<script>window.PRESTAMO_URL = "{% url 'prestamo' %}";</script>
 <script src="{% static 'js/prestamos.js' %}"></script>
 <script>
-  // Reabrir modal si hubo errores de validación
-  {% if form.errors %}
+  // Reabrir modal si hubo errores de validación del backend
+  {% if form.errors or form.non_field_errors %}
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrearPrestamo')).show();
   {% endif %}
 </script>

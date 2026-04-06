@@ -13,7 +13,7 @@
         <div class="card-body">
           <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Total herramientas</p>
           <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--text-main);">{{ total_productos }}</h2>
-          <small style="color:var(--text-muted);">{{ total_categorias }} categorías</small>
+          <small style="color:var(--text-muted);">{{ total_categorias }} categoría{{ total_categorias|pluralize:",s" }}</small>
         </div>
       </div>
     </div>
@@ -79,15 +79,23 @@
               <tbody>
                 {% for p in prestamos_recientes %}
                 <tr>
-                  <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">{{ p.id }}</td>
-                  <td><strong>{{ p.producto }}</strong></td>
+                  <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">#{{ p.id }}</td>
+                  <td>
+                    {% for item in p.items.all %}
+                      <strong>{{ item.producto.nombre }}</strong>{% if not forloop.last %}, {% endif %}
+                    {% empty %}—{% endfor %}
+                  </td>
                   <td>{{ p.usuario }}</td>
-                  <td style="font-family:var(--font-mono);">{{ p.cantidad }}</td>
+                  <td style="font-family:var(--font-mono);">
+                    {% for item in p.items.all %}{{ item.cantidad }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                  </td>
                   <td>
                     {% if p.estado == 'activo' %}
                       <span class="badge-state badge-aprobada">Activo</span>
                     {% elif p.estado == 'vencido' %}
                       <span class="badge-state badge-rechazada">Vencido</span>
+                    {% elif p.estado == 'parcial' %}
+                      <span class="badge-state badge-pendiente">Parcial</span>
                     {% else %}
                       <span class="badge-state badge-pendiente">Devuelto</span>
                     {% endif %}
@@ -96,18 +104,7 @@
                     {{ p.fecha_prestamo|date:"d M Y" }}
                   </td>
                   <td>
-                    <button class="btn-ghost"
-                            onclick="verPrestamo(
-                              {{ p.id }},
-                              '{{ p.producto|escapejs }}',
-                              '{{ p.usuario|escapejs }}',
-                              {{ p.cantidad }},
-                              '{{ p.estado }}',
-                              '{{ p.fecha_prestamo|date:"d M Y H:i" }}',
-                              '{{ p.observaciones|escapejs }}'
-                            )">
-                      Ver
-                    </button>
+                    <a href="{% url 'prestamo' %}" class="btn-ghost">Ver</a>
                   </td>
                 </tr>
                 {% empty %}
@@ -138,9 +135,11 @@
           <div class="d-flex align-items-start gap-3 px-3 py-2"
                style="border-bottom:1px solid var(--border-color);">
             <div class="flex-grow-1" style="min-width:0;">
-              <div class="fw-semibold text-truncate" style="font-size:.88rem;">{{ d.producto }}</div>
+              <div class="fw-semibold text-truncate" style="font-size:.88rem;">
+                Préstamo #{{ d.prestamo.id }} — {{ d.prestamo.usuario }}
+              </div>
               <div style="font-size:.75rem; color:var(--text-muted); font-family:var(--font-mono);">
-                Orden {{ d.numero_orden }} · {{ d.cantidad }} uds.
+                {{ d.fecha_creacion|date:"d M Y" }} · {% if d.devolucion_total %}Total{% else %}Parcial{% endif %}
               </div>
             </div>
             <span class="badge-state flex-shrink-0
@@ -317,6 +316,5 @@
 
 {% endblock content %}
 {% block extra_js %}
-<script href="{% static 'js/pagina_principal.js' %}">
-</script>
+<script src="{% static 'js/pagina_principal.js' %}"></script>
 {% endblock extra_js %}
