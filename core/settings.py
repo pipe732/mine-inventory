@@ -134,7 +134,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'mineinventory01@gmail.com'       
-EMAIL_HOST_PASSWORD = 'lwru rhsp qujx sqov'    
+EMAIL_HOST_PASSWORD = 'koww utbl mhzs cayf'    
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
