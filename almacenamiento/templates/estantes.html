@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
 
-  <!-- Encabezado -->
+  
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="mb-0">Estantes</h4>
@@ -14,7 +14,7 @@
     </button>
   </div>
 
-  <!-- Tabla -->
+  
   <table class="table table-bordered align-middle">
     <thead class="table-dark">
       <tr>
@@ -45,7 +45,7 @@
   </table>
 </div>
 
-<!-- Modal Nuevo Estante -->
+
 <div class="modal fade" id="modalEstante" tabindex="-1" aria-labelledby="modalEstanteLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -61,7 +61,7 @@
         <div class="modal-body">
           <p class="text-primary fw-semibold small mb-3">DATOS DEL ESTANTE</p>
 
-          <!-- Fila 1: Almacén y Código -->
+          
           <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold small">ALMACÉN *</label>
@@ -73,13 +73,13 @@
             </div>
           </div>
 
-          <!-- Descripción -->
+          
           <div class="mb-3">
             <label class="form-label fw-semibold small">DETALLES</label>
             {{ form.detalles }}
           </div>
 
-          <!-- Capacidad -->
+          
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold small">CAPACIDAD</label>
@@ -87,7 +87,7 @@
             </div>
           </div>
 
-          <!-- Errores -->
+          
           {% if form.errors %}
             <div class="alert alert-danger mt-3">
               {{ form.errors }}
