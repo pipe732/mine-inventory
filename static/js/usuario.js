@@ -84,3 +84,26 @@ if (regForm) {
     });
   }
 }
+
+// ── Nueva contraseña ─────────────────────────────────────────
+const newPassForm = document.getElementById('newPassForm');
+if (newPassForm) {
+  newPassForm.addEventListener('submit', function(e) {
+    const p1   = document.getElementById('password1').value;
+    const p2   = document.getElementById('password2').value;
+    const area = document.getElementById('msg-area');
+    area.innerHTML = '';
+
+    const error = msg => {
+      e.preventDefault();
+      area.innerHTML = `
+        <div class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 small mb-3">
+          <i class="bi bi-exclamation-circle-fill"></i>${msg}
+        </div>`;
+    };
+
+    if (!p1) return error('Ingresa tu nueva contraseña.');
+    if (p1.length < 8) return error('La contraseña debe tener al menos 8 caracteres.');
+    if (p1 !== p2) return error('Las contraseñas no coinciden.');
+  });
+}
