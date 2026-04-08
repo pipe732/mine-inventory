@@ -24,16 +24,14 @@ def prestamos_view(request):
             messages.success(request, f'Préstamo #{prestamo.pk} cancelado y stock repuesto.')
             return redirect('prestamo')
 
-        # ── Editar préstamo (MINE-123 / MINE-124) ──
+        # ── Editar préstamo (MINE-141 / MINE-142) ──
         elif accion == 'editar':
             prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'))
             prestamo.estado = request.POST.get('estado', prestamo.estado)
             prestamo.observaciones = request.POST.get('observaciones', '')
-            usuario_pk = request.POST.get('usuario')
-            if usuario_pk:
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                prestamo.usuario = get_object_or_404(User, pk=usuario_pk)
+            usuario_str = request.POST.get('usuario', '').strip()
+            if usuario_str:
+                prestamo.usuario = usuario_str
             prestamo.save()
             messages.success(request, f'Préstamo #{prestamo.pk} actualizado.')
             return redirect('prestamo')
