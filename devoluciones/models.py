@@ -10,25 +10,13 @@ class Devolucion(models.Model):
         ('rechazada', 'Rechazada'),
     ]
 
-    prestamo         = models.ForeignKey(
-                           Prestamo,
-                           on_delete=models.PROTECT,
-                           related_name='devoluciones',
-                           verbose_name='Préstamo'
-                       )
-    items            = models.ManyToManyField(
-                           ItemPrestamo,
-                           related_name='devoluciones',
-                           verbose_name='Ítems devueltos',
-                           blank=True,
-                       )
-    devolucion_total = models.BooleanField(
-                           default=True,
-                           help_text='True = todas las herramientas; False = devolución parcial'
-                       )
-    motivo           = models.TextField()
-    estado           = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
-    fecha_creacion      = models.DateTimeField(auto_now_add=True)
+    prestamo= models.ForeignKey(Prestamo,on_delete=models.PROTECT,related_name='devoluciones',verbose_name='Préstamo')
+    #prestamo = models.ForeignKey(Prestamo, on_delete=models.CASCADE, null=True, blank=True)
+    items= models.ManyToManyField(ItemPrestamo,related_name='devoluciones',verbose_name='Ítems devueltos',blank=True,)
+    devolucion_total = models.BooleanField(default=True,help_text='True = todas las herramientas; False = devolución parcial')
+    motivo = models.TextField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    fecha_creacion= models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     def __str__(self):
