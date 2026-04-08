@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Editar Tipo de Estado{% endblock %}
+{% block content %}
+
+<!-- ══ CABECERA ══ -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
+               color:var(--text-main); letter-spacing:.03em; margin:0;">
+      Editar Tipo de Estado
+    </h5>
+    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
+      Modifica los datos del estado seleccionado
+    </p>
+  </div>
+  <a href="{% url 'mantenimiento:tipo_estado_lista' %}" class="btn-outline-mine">Cancelar</a>
+</div>
+
+<!-- ══ FORM ══ -->
+<div class="card" style="max-width:860px;">
+  <div class="card-body" style="padding:1.5rem;">
+
+    <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                text-transform:uppercase; color:var(--navy);
+                border-bottom:1px solid rgba(9,77,146,.18);
+                padding-bottom:.4rem; margin-bottom:1.25rem;">
+      Modificar datos del estado
+    </div>
+
+    <form method="post" class="row g-3" novalidate>
+      {% csrf_token %}
+
+      <div class="col-md-6">
+        <label class="form-label">{{ form.nombre.label }}</label>
+        {{ form.nombre }}
+        {% for e in form.nombre.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">{{ form.codigo.label }}</label>
+        {{ form.codigo }}
+        {% for e in form.codigo.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">{{ form.descripcion.label }}</label>
+        {{ form.descripcion }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">{{ form.categoria.label }}</label>
+        {{ form.categoria }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">{{ form.impacto_disponibilidad.label }}</label>
+        {{ form.impacto_disponibilidad }}
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">{{ form.color.label }}</label>
+        {{ form.color }}
+      </div>
+
+      <div class="col-12">
+        <div class="form-check" style="display:flex; align-items:center; gap:.5rem;">
+          {{ form.activo }}
+          <label class="form-check-label" for="{{ form.activo.id_for_label }}"
+                 style="font-family:var(--font-ui); font-size:.88rem;">
+            {{ form.activo.label }}
+          </label>
+        </div>
+      </div>
+
+      <div class="col-12 pt-2">
+        <button type="submit" class="btn-primary-mine">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Guardar Cambios
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+{% endblock %}

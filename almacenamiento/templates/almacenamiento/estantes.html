@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="mb-0">Estantes</h4>
+      <small class="text-muted">Gestión de estantes por almacén</small>
+    </div>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalEstante">
+      ➕ Nuevo Estante
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <table class="table table-bordered align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Almacén</th>
+        <th>Código</th>
+        <th>Detalles</th>
+        <th>Capacidad</th>
+        <th>Fecha Creación</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for estante in estantes %}
+      <tr>
+        <td>{{ estante.id }}</td>
+        <td>{{ estante.almacen }}</td>
+        <td>{{ estante.codigo }}</td>
+        <td>{{ estante.detalles|default:"—" }}</td>
+        <td>{{ estante.capacidad|default:"—" }}</td>
+        <td>{{ estante.fecha_creacion|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center text-muted">No hay estantes registrados</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Nuevo Estante -->
+<div class="modal fade" id="modalEstante" tabindex="-1" aria-labelledby="modalEstanteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="modalEstanteLabel">➕ Nuevo Estante</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" action="{% url 'crear_estante' %}">
+        {% csrf_token %}
+
+        <div class="modal-body">
+          <p class="text-primary fw-semibold small mb-3">DATOS DEL ESTANTE</p>
+
+          <!-- Fila 1: Almacén y Código -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">ALMACÉN *</label>
+              {{ form.almacen }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CÓDIGO *</label>
+              {{ form.codigo }}
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            {{ form.detalles }}
+          </div>
+
+          <!-- Capacidad -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CAPACIDAD</label>
+              {{ form.capacidad }}
+            </div>
+          </div>
+
+          <!-- Errores -->
+          {% if form.errors %}
+            <div class="alert alert-danger mt-3">
+              {{ form.errors }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Estante</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% if show_modal %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('modalEstante')).show();
+  });
+</script>
+{% endif %}
+
+{% endblock %}
