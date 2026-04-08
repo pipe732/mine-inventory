@@ -3,7 +3,6 @@
 {% block content %}
 <div class="container mt-4">
 
-  
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="mb-0">Estantes</h4>
@@ -14,7 +13,6 @@
     </button>
   </div>
 
-  
   <table class="table table-bordered align-middle">
     <thead class="table-dark">
       <tr>
@@ -24,6 +22,7 @@
         <th>Detalles</th>
         <th>Capacidad</th>
         <th>Fecha Creación</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
@@ -35,33 +34,39 @@
         <td>{{ estante.detalles|default:"—" }}</td>
         <td>{{ estante.capacidad|default:"—" }}</td>
         <td>{{ estante.fecha_creacion|date:"d/m/Y H:i" }}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-secondary"
+                  onclick="abrirEditarEstante('{{ estante.pk }}','{{ estante.almacen.pk }}','{{ estante.codigo|escapejs }}','{{ estante.detalles|default:''|escapejs }}','{{ estante.capacidad|default:'' }}')">
+            ✏️ Editar
+          </button>
+          <button class="btn btn-sm btn-outline-danger"
+                  onclick="abrirEliminarEstante('{{ estante.pk }}','{{ estante.codigo|escapejs }}')">
+            🗑️ Eliminar
+          </button>
+        </td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="6" class="text-center text-muted">No hay estantes registrados</td>
+        <td colspan="7" class="text-center text-muted">No hay estantes registrados</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-
-<div class="modal fade" id="modalEstante" tabindex="-1" aria-labelledby="modalEstanteLabel" aria-hidden="true">
+<!-- Modal Crear -->
+<div class="modal fade" id="modalEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title" id="modalEstanteLabel">➕ Nuevo Estante</h5>
+        <h5 class="modal-title">➕ Nuevo Estante</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-
       <form method="POST" action="{% url 'estantes' %}">
         {% csrf_token %}
-
+        <input type="hidden" name="accion" value="crear">
         <div class="modal-body">
           <p class="text-primary fw-semibold small mb-3">DATOS DEL ESTANTE</p>
-
-          
           <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold small">ALMACÉN *</label>
@@ -72,38 +77,102 @@
               {{ form.codigo }}
             </div>
           </div>
-
-          
           <div class="mb-3">
             <label class="form-label fw-semibold small">DETALLES</label>
             {{ form.detalles }}
           </div>
-
-          
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold small">CAPACIDAD</label>
               {{ form.capacidad }}
             </div>
           </div>
-
-          
           {% if form.errors %}
-            <div class="alert alert-danger mt-3">
-              {{ form.errors }}
-            </div>
+            <div class="alert alert-danger mt-3">{{ form.errors }}</div>
           {% endif %}
         </div>
-
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-danger">💾 Guardar Estante</button>
         </div>
-
       </form>
     </div>
   </div>
 </div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditarEstante" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">✏️ Editar Estante</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'estantes' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="editar">
+        <input type="hidden" name="estante_id" id="edit_estante_id">
+        <div class="modal-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">ALMACÉN *</label>
+              <select name="almacen" id="edit_estante_almacen" class="form-control">
+                {% for almacen in almacenes %}
+                  <option value="{{ almacen.pk }}">{{ almacen.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CÓDIGO *</label>
+              <input type="text" name="codigo" id="edit_estante_codigo" class="form-control" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            <textarea name="detalles" id="edit_estante_detalles" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CAPACIDAD</label>
+              <input type="number" name="capacidad" id="edit_estante_capacidad" class="form-control" min="0">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminarEstante" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">🗑️ Eliminar Estante</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>¿Estás seguro de eliminar el estante</p>
+        <p id="eliminar_estante_codigo" class="fw-bold text-danger"></p>
+        <p class="text-muted small">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <form method="POST" action="{% url 'estantes' %}">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="eliminar">
+          <input type="hidden" name="estante_id" id="eliminar_estante_id">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% if show_modal %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -111,5 +180,23 @@
   });
 </script>
 {% endif %}
+
+<script>
+  function abrirEditarEstante(pk, almacenPk, codigo, detalles, capacidad) {
+    document.getElementById('edit_estante_id').value       = pk;
+    document.getElementById('edit_estante_codigo').value   = codigo;
+    document.getElementById('edit_estante_detalles').value = detalles;
+    document.getElementById('edit_estante_capacidad').value = capacidad;
+    const sel = document.getElementById('edit_estante_almacen');
+    for (let opt of sel.options) { opt.selected = opt.value == almacenPk; }
+    new bootstrap.Modal(document.getElementById('modalEditarEstante')).show();
+  }
+
+  function abrirEliminarEstante(pk, codigo) {
+    document.getElementById('eliminar_estante_id').value           = pk;
+    document.getElementById('eliminar_estante_codigo').textContent = '"' + codigo + '"';
+    new bootstrap.Modal(document.getElementById('modalEliminarEstante')).show();
+  }
+</script>
 
 {% endblock %}
