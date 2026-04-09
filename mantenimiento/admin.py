@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TipoEstado, EstadoHerramienta
+from .models import TipoEstado
 
 
 @admin.register(TipoEstado)
@@ -9,9 +9,3 @@ class TipoEstadoAdmin(admin.ModelAdmin):
     search_fields = ['nombre', 'codigo']
     readonly_fields = ['creado_en']
 
-
-@admin.register(EstadoHerramienta)
-class EstadoHerramientaAdmin(admin.ModelAdmin):
-    list_display = ['nombre_herramienta', 'codigo', 'categoria', 'estado']
-    list_filter = ['categoria', 'estado']
-    search_fields = ['nombre_herramienta', 'codigo'] 

@@ -230,17 +230,21 @@ class Mantenimiento(models.Model):
     actualizado_en = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        # Autollenar ubicación desde el ítem al crear
-        if not self.pk and self.producto.ubicacion:
+    # Snapshot de ubicación (solo al crear)
+        if not self.pk and self.producto and self.producto.ubicacion:
             self.ubicacion_snapshot = self.producto.ubicacion
 
-        # Actualizar disponibilidad del ítem según impacto del tipo_estado
-        if self.tipo_estado.impacto_disponibilidad == 'no_disponible':
-            self.producto.disponible = False
-            self.producto.save(update_fields=['disponible'])
+    # === LÓGICA DE DISPONIBILIDAD ===
+        if self.tipo_estado:
+            if (self.tipo_estado.impacto_disponibilidad == 'no_disponible' and
+            self.estado_registro in ['abierto', 'en_proceso']):
+                self.producto.disponible = False
+        else:
+            # Si está cerrado o el estado actual permite disponibilidad
+            self.producto.disponible = True
 
-        super().save(*args, **kwargs)
-
+        self.producto.save(update_fields=['disponible'])|super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"[{self.tipo_mantenimiento}] {self.producto} — {self.fecha_reporte}"
 

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .producto-sugerencia { cursor: pointer; }
+    .producto-sugerencia:hover { background-color: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+    <p class="text-muted">{{ subtitle }}</p>
+
+    <form method="post" id="mantenimientoForm">
+        {% csrf_token %}
+        {{ form.media }}
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Búsqueda de producto -->
+                <div class="mb-3">
+                    <label class="form-label">{{ form.producto_busqueda.label }}</label>
+                    <input type="text" id="producto_busqueda" class="form-control" 
+                           placeholder="Buscar por código, nombre o serie..." 
+                           value="{{ form.producto_busqueda.value|default:'' }}">
+                    {{ form.producto }}  <!-- campo oculto -->
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form.tipo_mantenimiento }}</div>
+                    <div class="col-md-6">{{ form.tipo_estado }}</div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-md-4">{{ form.fecha_reporte }}</div>
+                    <div class="col-md-4">{{ form.fecha_inicio }}</div>
+                    <div class="col-md-4">{{ form.fecha_fin_estimada }}</div>
+                </div>
+
+                <div class="mb-3 mt-3">{{ form.descripcion_problema }}</div>
+                <div class="mb-3">{{ form.acciones_realizadas }}</div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form.responsable }}</div>
+                    <div class="col-md-6">{{ form.estado_registro }}</div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form.costo_estimado }}</div>
+                    <div class="col-md-6">{{ form.costo_real }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">{{ boton_texto }}</button>
+            <a href="{% url 'mantenimiento:mantenimiento_lista' %}" class="btn btn-secondary btn-lg ms-2">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Autocompletado -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('producto_busqueda');
+    const hidden = document.getElementById('id_producto');
+
+    let timeout;
+
+    input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const q = this.value.trim();
+        if (q.length < 2) return;
+
+        timeout = setTimeout(() => {
+            fetch(`/mantenimiento/api/productos/?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    // Aquí puedes mejorar con un dropdown bonito si quieres
+                    console.log(data.resultados); // por ahora solo debug
+                    // Implementación básica de dropdown se puede agregar después
+                });
+        }, 300);
+    });
+});
+</script>
+{% endblock %}

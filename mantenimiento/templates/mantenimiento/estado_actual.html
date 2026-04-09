@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Estado Actual de Herramientas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Estado Actual de Herramientas</h2>
+        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
+        </a>
+    </div>
+
+    <p class="text-muted">
+        Total herramientas: <strong>{{ productos|length }}</strong> | 
+        Disponibles: <span class="badge bg-success">{{ total_disponibles }}</span> | 
+        No disponibles: <span class="badge bg-danger">{{ total_no_disponibles }}</span>
+    </p>
+
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por código, nombre, serie o ubicación..." value="{{ q }}">
+        </div>
+        <div class="col-md-3">
+            <select name="disponible" class="form-select">
+                <option value="">Todos los estados</option>
+                <option value="si" {% if disponible_filtro == 'si' %}selected{% endif %}>✅ Solo disponibles</option>
+                <option value="no" {% if disponible_filtro == 'no' %}selected{% endif %}>❌ Solo no disponibles</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Ubicación</th>
+                    <th>Disponible</th>
+                    <th>Último mantenimiento</th>
+                    <th>Estado actual</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in productos %}
+                <tr>
+                    <td><strong>{{ p.codigo_sku }}</strong></td>
+                    <td>{{ p.nombre }}</td>
+                    <td>{{ p.ubicacion|default:"—" }}</td>
+                    <td>
+                        {% if p.disponible %}
+                            <span class="badge bg-success">✅ Disponible</span>
+                        {% else %}
+                            <span class="badge bg-danger">❌ No disponible</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% with ultimo=p.mantenimientos.all|first %}
+                            {% if ultimo %}
+                                {{ ultimo.fecha_reporte|date:"d/m/Y" }}
+                                <small class="text-muted">({{ ultimo.get_tipo_mantenimiento_display }})</small>
+                            {% else %}
+                                <span class="text-muted">Sin mantenimiento</span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% with ultimo=p.mantenimientos.all|first %}
+                            {% if ultimo and ultimo.tipo_estado %}
+                                <span class="badge" style="background-color: {{ ultimo.tipo_estado.color|default:'#6c757d' }}; color: white;">
+                                    {{ ultimo.tipo_estado.nombre }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Sin estado</span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ p.pk }}" 
+                           class="btn btn-sm btn-primary">+ Mant.</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron herramientas</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
