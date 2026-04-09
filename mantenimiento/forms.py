@@ -39,13 +39,19 @@ class TipoEstadoForm(forms.ModelForm):
         }
 
         labels = {
-            'nombre': 'Nombre del estado',
-            'codigo': 'Código abreviado',
-            'descripcion': 'Descripción breve',
-            'categoria': 'Categoría',
-            'impacto_disponibilidad': 'Impacto en disponibilidad',
-            'color': 'Color asociado (opcional)',
-            'activo': 'Estado activo',
+            'producto': 'Ítem / Herramienta *',
+            'tipo_mantenimiento': 'Tipo de mantenimiento *',
+            'tipo_estado': 'Tipo de estado actual *',
+            'fecha_reporte': 'Fecha de reporte / detección *',
+            'fecha_inicio': 'Fecha inicio mantenimiento *',
+            'fecha_fin_estimada': 'Fecha estimada de entrega',
+            'fecha_fin_real': 'Fecha entrega (real)',
+            'descripcion_problema': 'Descripción del problema / falla *',
+            'acciones_realizadas': 'Acciones realizadas / planificadas',
+            'responsable': 'Responsable / Técnico *',
+            'costo_estimado': 'Costo estimado',
+            'costo_real': 'Costo real',
+            'estado_registro': 'Estado del registro',
         }
 
     def clean_nombre(self):

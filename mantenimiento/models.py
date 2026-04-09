@@ -132,7 +132,7 @@ class Mantenimiento(models.Model):
         ('cancelado',   'Cancelado'),
     ]
 
-    # ── Relaciones ──────────────────────────────────────────
+    # relaciones 
     producto = models.ForeignKey(
         Producto,
         on_delete=models.PROTECT,
@@ -160,7 +160,6 @@ class Mantenimiento(models.Model):
         verbose_name="Registrado por"
     )
 
-    # ── Tipo y estado del registro ───────────────────────────
     tipo_mantenimiento = models.CharField(
         max_length=30,
         choices=TIPO_CHOICES,
@@ -173,7 +172,6 @@ class Mantenimiento(models.Model):
         verbose_name="Estado del registro"
     )
 
-    # ── Fechas ───────────────────────────────────────────────
     fecha_reporte = models.DateField(
         verbose_name="Fecha de reporte / detección *"
     )
@@ -183,15 +181,13 @@ class Mantenimiento(models.Model):
     fecha_fin_estimada = models.DateField(
         blank=True,
         null=True,
-        verbose_name="Fecha fin estimada"
+        verbose_name="Fecha estimada de entrega"      # ← Cambiado
     )
     fecha_fin_real = models.DateField(
         blank=True,
         null=True,
-        verbose_name="Fecha fin real"
+        verbose_name="Fecha entrega (real)"           # ← Cambiado
     )
-
-    # ── Descripción y acciones ───────────────────────────────
     descripcion_problema = models.TextField(
         verbose_name="Descripción del problema / falla *"
     )
@@ -201,7 +197,6 @@ class Mantenimiento(models.Model):
         verbose_name="Acciones realizadas / planificadas"
     )
 
-    # ── Ubicación (autollenado desde ítem) ───────────────────
     ubicacion_snapshot = models.CharField(
         max_length=150,
         blank=True,
@@ -209,7 +204,6 @@ class Mantenimiento(models.Model):
         verbose_name="Almacén / Estante al momento del registro"
     )
 
-    # ── Costos ───────────────────────────────────────────────
     costo_estimado = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -225,26 +219,31 @@ class Mantenimiento(models.Model):
         verbose_name="Costo real"
     )
 
-    # ── Auditoría ────────────────────────────────────────────
+
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-    # Snapshot de ubicación (solo al crear)
+        # 1. Guardar snapshot de ubicación al crear
         if not self.pk and self.producto and self.producto.ubicacion:
             self.ubicacion_snapshot = self.producto.ubicacion
 
-    # === LÓGICA DE DISPONIBILIDAD ===
-        if self.tipo_estado:
-            if (self.tipo_estado.impacto_disponibilidad == 'no_disponible' and
-            self.estado_registro in ['abierto', 'en_proceso']):
+        # 2. Actualizar disponibilidad del producto según el tipo de estado
+        if self.tipo_estado and self.estado_registro in ['abierto', 'en_proceso']:
+            if self.tipo_estado.impacto_disponibilidad == 'no_disponible':
                 self.producto.disponible = False
+            else:
+                self.producto.disponible = True
         else:
-            # Si está cerrado o el estado actual permite disponibilidad
+            # Si el registro está cerrado, cancelado o no tiene tipo_estado → disponible
             self.producto.disponible = True
 
-        self.producto.save(update_fields=['disponible'])|super().save(*args, **kwargs)
-    
+        # Guardar el cambio de disponibilidad
+        if self.producto.pk:
+            self.producto.save(update_fields=['disponible'])
+
+        # Guardar el mantenimiento
+        super().save(*args, **kwargs)
     def __str__(self):
         return f"[{self.tipo_mantenimiento}] {self.producto} — {self.fecha_reporte}"
 

@@ -4,8 +4,9 @@
 
 {% block extra_head %}
 <style>
-    .producto-sugerencia { cursor: pointer; }
+    .producto-sugerencia { cursor: pointer; padding: 10px 12px; }
     .producto-sugerencia:hover { background-color: #f8f9fa; }
+    .dropdown-menu { max-height: 320px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 </style>
 {% endblock %}
 
@@ -16,17 +17,30 @@
 
     <form method="post" id="mantenimientoForm">
         {% csrf_token %}
-        {{ form.media }}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        {% for field in form %}
+            {% if field.errors %}
+                <div class="alert alert-danger">{{ field.errors }}</div>
+            {% endif %}
+        {% endfor %}
 
         <div class="row">
             <div class="col-md-8">
-                <!-- Búsqueda de producto -->
-                <div class="mb-3">
+
+                <div class="mb-3 position-relative">
                     <label class="form-label">{{ form.producto_busqueda.label }}</label>
                     <input type="text" id="producto_busqueda" class="form-control" 
                            placeholder="Buscar por código, nombre o serie..." 
                            value="{{ form.producto_busqueda.value|default:'' }}">
-                    {{ form.producto }}  <!-- campo oculto -->
+
+                    <div id="sugerencias" class="dropdown-menu w-100" style="display: none;"></div>
+
+                    {{ form.producto }}
                 </div>
 
                 <div class="row g-3">
@@ -62,28 +76,62 @@
     </form>
 </div>
 
-<!-- Autocompletado -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const input = document.getElementById('producto_busqueda');
-    const hidden = document.getElementById('id_producto');
-
+    const input      = document.getElementById('producto_busqueda');
+    const hidden     = document.getElementById('id_producto');
+    const sugerenciasDiv = document.getElementById('sugerencias');
     let timeout;
+
+    function mostrarSugerencias(resultados) {
+        sugerenciasDiv.innerHTML = '';
+        if (resultados.length === 0) {
+            sugerenciasDiv.style.display = 'none';
+            return;
+        }
+
+        resultados.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'producto-sugerencia dropdown-item';
+            div.textContent = item.texto;
+            div.dataset.id = item.id;
+
+            div.addEventListener('click', function() {
+                input.value = item.texto;
+                hidden.value = item.id;      
+                sugerenciasDiv.style.display = 'none';
+                console.log('Producto seleccionado → ID:', item.id);
+            });
+            sugerenciasDiv.appendChild(div);
+        });
+        sugerenciasDiv.style.display = 'block';
+    }
 
     input.addEventListener('input', function() {
         clearTimeout(timeout);
         const q = this.value.trim();
-        if (q.length < 2) return;
+
+        if (q.length < 2) {
+            hidden.value = '';
+            sugerenciasDiv.style.display = 'none';
+            return;
+        }
 
         timeout = setTimeout(() => {
             fetch(`/mantenimiento/api/productos/?q=${encodeURIComponent(q)}`)
                 .then(r => r.json())
                 .then(data => {
-                    // Aquí puedes mejorar con un dropdown bonito si quieres
-                    console.log(data.resultados); // por ahora solo debug
-                    // Implementación básica de dropdown se puede agregar después
-                });
+                    console.log('Resultados recibidos:', data.resultados);
+                    mostrarSugerencias(data.resultados);
+                })
+                .catch(err => console.error('Error AJAX:', err));
         }, 300);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !sugerenciasDiv.contains(e.target)) {
+            sugerenciasDiv.style.display = 'none';
+        }
     });
 });
 </script>
