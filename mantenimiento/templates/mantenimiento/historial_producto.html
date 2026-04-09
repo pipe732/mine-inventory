@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial - {{ producto.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2>📋 Historial de Mantenimientos</h2>
+            <h5 class="text-muted">
+                <strong>[{{ producto.codigo_sku }}]</strong> {{ producto.nombre }}
+                {% if producto.ubicacion %} — {{ producto.ubicacion }}{% endif %}
+            </h5>
+        </div>
+        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ producto.pk }}" 
+           class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" class="row g-3 mb-4 bg-light p-3 rounded">
+        <div class="col-md-3">
+            <input type="text" name="q" class="form-control" placeholder="Buscar en descripción..." value="{{ q }}">
+        </div>
+        <div class="col-md-2">
+            <select name="tipo" class="form-select">
+                <option value="">Todos los tipos</option>
+                {% for value, label in tipo_choices %}
+                    <option value="{{ value }}" {% if tipo_filtro == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="estado_registro" class="form-select">
+                <option value="">Todos los estados</option>
+                {% for value, label in estado_choices %}
+                    <option value="{{ value }}" {% if estado_filtro == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde }}">
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}">
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+    </form>
+
+    {% if mantenimientos %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Técnico</th>
+                        <th>Estado</th>
+                        <th>Costo Real</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in mantenimientos %}
+                    <tr>
+                        <td>{{ m.fecha_reporte|date:"d/m/Y" }}</td>
+                        <td><span class="badge bg-info">{{ m.get_tipo_mantenimiento_display }}</span></td>
+                        <td>
+                            <strong>{{ m.descripcion_problema|truncatewords:15 }}</strong>
+                            {% if m.acciones_realizadas %}
+                                <br><small class="text-muted">{{ m.acciones_realizadas|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ m.responsable.get_full_name|default:m.responsable.username }}</td>
+                        <td>
+                            <span class="badge {% if m.estado_registro == 'cerrado' %}bg-success{% elif m.estado_registro == 'cancelado' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ m.get_estado_registro_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if m.costo_real %}${{ m.costo_real }}{% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'mantenimiento:mantenimiento_detalle' m.pk %}" class="btn btn-sm btn-info text-white">Ver</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center py-5">
+            <h4>Este activo no tiene mantenimientos registrados aún.</h4>
+            <p class="mb-0">Cuando registres el primer mantenimiento aparecerá aquí.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-3">
+        <a href="{% url 'mantenimiento:mantenimiento_lista' %}" class="btn btn-secondary">← Volver a todos los mantenimientos</a>
+    </div>
+</div>
+{% endblock %}

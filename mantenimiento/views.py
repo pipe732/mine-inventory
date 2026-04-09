@@ -255,3 +255,57 @@ def estado_actual_lista(request):
     }
 
     return render(request, 'mantenimiento/estado_actual.html', context)
+
+# ══════════════════════════════════════════════
+# VISTA DE HISTORIAL POR ACTIVO / PRODUCTO
+# ══════════════════════════════════════════════
+
+@login_requerido
+def mantenimiento_historial_producto(request, producto_id):
+    """Historial completo de mantenimientos de un solo ítem/activo."""
+    producto = get_object_or_404(Producto, pk=producto_id)
+
+    mantenimientos = Mantenimiento.objects.filter(
+        producto=producto
+    ).select_related(
+        'tipo_estado', 'responsable', 'creado_por'
+    ).order_by('-fecha_reporte')
+
+    # Filtros
+    q = request.GET.get('q', '').strip()
+    tipo_filtro = request.GET.get('tipo', '')
+    estado_filtro = request.GET.get('estado_registro', '')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+
+    if q:
+        mantenimientos = mantenimientos.filter(
+            Q(descripcion_problema__icontains=q) |
+            Q(acciones_realizadas__icontains=q)
+        )
+
+    if tipo_filtro:
+        mantenimientos = mantenimientos.filter(tipo_mantenimiento=tipo_filtro)
+
+    if estado_filtro:
+        mantenimientos = mantenimientos.filter(estado_registro=estado_filtro)
+
+    if fecha_desde:
+        mantenimientos = mantenimientos.filter(fecha_reporte__gte=fecha_desde)
+    if fecha_hasta:
+        mantenimientos = mantenimientos.filter(fecha_reporte__lte=fecha_hasta)
+
+    context = {
+        'producto': producto,
+        'mantenimientos': mantenimientos,
+        'tipo_choices': Mantenimiento.TIPO_CHOICES,
+        'estado_choices': Mantenimiento.ESTADO_REGISTRO_CHOICES,
+        'q': q,
+        'tipo_filtro': tipo_filtro,
+        'estado_filtro': estado_filtro,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'total_registros': mantenimientos.count(),
+    }
+
+    return render(request, 'mantenimiento/historial_producto.html', context)

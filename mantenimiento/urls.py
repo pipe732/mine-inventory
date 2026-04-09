@@ -38,4 +38,10 @@ urlpatterns = [
     path('api/productos/',
          views.api_buscar_producto,
          name='api_buscar_producto'),
+    
+    # Dentro de urlpatterns = [ ... ]
+
+    path('historial/<int:producto_id>/', 
+         views.mantenimiento_historial_producto, 
+         name='historial_producto'),
 ]

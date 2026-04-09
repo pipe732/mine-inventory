@@ -1,81 +1,147 @@
 {% extends 'base.html' %}
 
-{% block title %}Todos los Mantenimientos{% endblock %}
+ {% block title %}
 
-{% block content %}
+ Todos los Mantenimientos
+
+ {% endblock%} 
+
+ {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>🔧 Todos los Mantenimientos</h2>
-        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Registro
-        </a>
-    </div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🔧 Todos los Mantenimientos</h2>
+    <a
+      href="{% url 'mantenimiento:mantenimiento_nuevo' %}"
+      class="btn btn-primary"
+    >
+      <i class="bi bi-plus-circle"></i> Nuevo Registro
+    </a>
+  </div>
 
-    <form method="get" class="row g-3 mb-4">
-        <div class="col-md-5">
-            <input type="text" name="q" class="form-control" placeholder="Buscar por ítem o descripción..." value="{{ q }}">
-        </div>
-        <div class="col-md-3">
-            <select name="tipo" class="form-select">
-                <option value="">Todos los tipos</option>
-                {% for value, label in tipo_choices %}
-                    <option value="{{ value }}" {% if tipo_filtro == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select name="estado_registro" class="form-select">
-                <option value="">Todos los estados</option>
-                {% for value, label in estado_choices %}
-                    <option value="{{ value }}" {% if estado_filtro == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-1">
-            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-        </div>
-    </form>
-
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Ítem</th>
-                    <th>Tipo</th>
-                    <th>Estado actual</th>
-                    <th>Responsable</th>
-                    <th>Estado del registro</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in registros %}
-                <tr>
-                    <td>{{ r.fecha_reporte|date:"d/m/Y" }}</td>
-                    <td><strong>[{{ r.producto.codigo_sku }}]</strong> {{ r.producto.nombre }}</td>
-                    <td>{{ r.get_tipo_mantenimiento_display }}</td>
-                    <td>
-                        <span class="badge" style="background-color: {{ r.tipo_estado.color|default:'#6c757d' }}">
-                            {{ r.tipo_estado.nombre }}
-                        </span>
-                    </td>
-                    <td>{{ r.responsable.get_full_name|default:r.responsable.username }}</td>
-                    <td>
-                        <span class="badge {% if r.estado_registro == 'cerrado' %}bg-success{% elif r.estado_registro == 'cancelado' %}bg-danger{% else %}bg-warning{% endif %}">
-                            {{ r.get_estado_registro_display }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{% url 'mantenimiento:mantenimiento_detalle' r.pk %}" class="btn btn-sm btn-info text-white">Ver</a>
-                        <a href="{% url 'mantenimiento:mantenimiento_editar' r.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="7" class="text-center py-4">No hay registros de mantenimiento</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-5">
+      <input
+        type="text"
+        name="q"
+        class="form-control"
+        placeholder="Buscar por ítem o descripción..."
+        value="{{ q }}"
+      />
     </div>
+    <div class="col-md-3">
+      <select name="tipo" class="form-select">
+        <option value="">Todos los tipos</option>
+        {% for value, label in tipo_choices %}
+        <option
+          value="{{ value }}"
+          {%
+          if
+          tipo_filtro=""
+          ="value"
+          %}selected{%
+          endif
+          %}
+        >
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="estado_registro" class="form-select">
+        <option value="">Todos los estados</option>
+        {% for value, label in estado_choices %}
+        <option
+          value="{{ value }}"
+          {%
+          if
+          estado_filtro=""
+          ="value"
+          %}selected{%
+          endif
+          %}
+        >
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Fecha</th>
+          <th>Ítem</th>
+          <th>Tipo</th>
+          <th>Estado actual</th>
+          <th>Responsable</th>
+          <th>Estado del registro</th>
+          <th>Acciones</th>
+          <th>Historial</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in registros %}
+        <td>
+          <a
+            href="{% url 'mantenimiento:historial_producto' r.producto.pk %}"
+            class="btn btn-sm btn-outline-primary"
+          >
+            📋 Ver historial
+          </a>
+        </td>
+        <tr>
+          <td>{{ r.fecha_reporte|date:"d/m/Y" }}</td>
+          <td>
+            <strong>[{{ r.producto.codigo_sku }}]</strong> {{ r.producto.nombre
+            }}
+          </td>
+          <td>{{ r.get_tipo_mantenimiento_display }}</td>
+          <td>
+            <span
+              class="badge"
+              style="background-color: {{ r.tipo_estado.color|default:'#6c757d' }}"
+            >
+              {{ r.tipo_estado.nombre }}
+            </span>
+          </td>
+          <td>
+            {{ r.responsable.get_full_name|default:r.responsable.username }}
+          </td>
+          <td>
+            <span
+              class="badge {% if r.estado_registro == 'cerrado' %}bg-success{% elif r.estado_registro == 'cancelado' %}bg-danger{% else %}bg-warning{% endif %}"
+            >
+              {{ r.get_estado_registro_display }}
+            </span>
+          </td>
+          <td>
+            <a
+              href="{% url 'mantenimiento:mantenimiento_detalle' r.pk %}"
+              class="btn btn-sm btn-info text-white"
+              >Ver</a
+            >
+            <a
+              href="{% url 'mantenimiento:mantenimiento_editar' r.pk %}"
+              class="btn btn-sm btn-warning"
+              >Editar</a
+            >
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            No hay registros de mantenimiento
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
