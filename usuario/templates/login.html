@@ -81,7 +81,6 @@
 
             <div class="col">
               <input type="text" id="documento" name="documento" class="form-control" placeholder="Número" required />
-              <div id="doc-hint" class="text-muted"></div>
             </div>
 
           </div>
@@ -97,7 +96,6 @@
         </div>
 
         <button type="submit" class="btn btn-success w-100 fw-bold py-2">
-          {% csrf_token %}
           Iniciar Sesión <i class="bi bi-arrow-right ms-1"></i>
         </button>
       </form>
@@ -118,7 +116,6 @@
   const tipoInput = document.getElementById('tipo_documento');
   const tipoBtn   = document.getElementById('doc-tipo-btn');
   const docInput  = document.getElementById('documento');
-  const hint      = document.getElementById('doc-hint');
 
   document.querySelectorAll('.dropdown-item').forEach(item => {
     item.addEventListener('click', (e) => {
@@ -134,11 +131,9 @@
   function applyRules() {
     const rules = DOC_RULES[tipoInput.value];
     if (!rules) return;
-    docInput.minLength = rules.min;
-    docInput.maxLength = rules.max;
+    docInput.minLength   = rules.min;
+    docInput.maxLength   = rules.max;
     docInput.placeholder = `Mín. ${rules.min} – Máx. ${rules.max} car.`;
-    hint.className   = 'text-muted';
-    hint.textContent = rules.hint;
     validateDoc();
   }
 
@@ -146,15 +141,11 @@
     const rules = DOC_RULES[tipoInput.value];
     if (!rules || docInput.value === '') {
       docInput.classList.remove('is-valid', 'is-invalid');
-      hint.className   = 'text-muted';
-      hint.textContent = rules?.hint ?? '';
       return;
     }
     const ok = rules.pattern.test(docInput.value);
     docInput.classList.toggle('is-valid',   ok);
     docInput.classList.toggle('is-invalid', !ok);
-    hint.className   = ok ? 'text-success fw-semibold' : 'text-danger fw-semibold';
-    hint.textContent = ok ? '✓ Formato correcto' : `✗ ${rules.hint}`;
   }
 
   docInput.addEventListener('keypress', (e) => {

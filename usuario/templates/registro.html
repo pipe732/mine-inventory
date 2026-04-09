@@ -82,7 +82,7 @@
                       class="btn btn-white dropdown-toggle fw-semibold border border-secondary-subtle"
                       data-bs-toggle="dropdown" aria-expanded="false"
                       id="doc-tipo-btn" style="min-width:4.5rem; background-color:#fff;">
-                {{ tipo_documento|default:'CC' }}
+                CC
               </button>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="#" data-value="CC">CC – Cédula de Ciudadanía</a></li>
@@ -96,8 +96,7 @@
           <div class="col">
             <label class="form-label text-uppercase fw-bold text-secondary" style="font-size:.65rem;letter-spacing:.06em;" for="documento">Número de documento</label>
             <input type="text" id="documento" name="documento" class="form-control" placeholder="Número" value="{{ documento|default:'' }}" required />
-            <div id="doc-hint" class="text-muted"></div>
-          </div>
+                  </div>
         </div>
 
         <div class="row g-2 mb-3">
@@ -132,7 +131,6 @@
   const tipoInput = document.getElementById('tipo_documento');
   const tipoBtn   = document.getElementById('doc-tipo-btn');
   const docInput  = document.getElementById('documento');
-  const hint      = document.getElementById('doc-hint');
 
   document.querySelectorAll('.dropdown-item').forEach(item => {
     item.addEventListener('click', (e) => {
@@ -151,8 +149,6 @@
     docInput.minLength   = rules.min;
     docInput.maxLength   = rules.max;
     docInput.placeholder = `Mín. ${rules.min} – Máx. ${rules.max} car.`;
-    hint.className       = 'text-muted';
-    hint.textContent     = rules.hint;
     validateDoc();
   }
 
@@ -160,15 +156,11 @@
     const rules = DOC_RULES[tipoInput.value];
     if (!rules || docInput.value === '') {
       docInput.classList.remove('is-valid', 'is-invalid');
-      hint.className   = 'text-muted';
-      hint.textContent = rules?.hint ?? '';
       return;
     }
     const ok = rules.pattern.test(docInput.value);
     docInput.classList.toggle('is-valid',   ok);
     docInput.classList.toggle('is-invalid', !ok);
-    hint.className   = ok ? 'text-success fw-semibold' : 'text-danger fw-semibold';
-    hint.textContent = ok ? '✓ Formato correcto' : `✗ ${rules.hint}`;
   }
 
   docInput.addEventListener('keypress', (e) => {
