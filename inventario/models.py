@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True, verbose_name="Nombre")
     descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
@@ -13,7 +12,6 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
-
 
 class Producto(models.Model):
     codigo_sku = models.CharField(
@@ -32,24 +30,26 @@ class Producto(models.Model):
         verbose_name="Categoría"
     )
     
-    #Campos para el registro de mantenimiento
+    # --- Aquí corregimos la indentación para que estén DENTRO de la clase ---
     numero_serie = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
+        max_length=100, 
+        blank=True, 
+        null=True, 
         verbose_name="Número de serie"
     )
+
     disponible = models.BooleanField(
-        default=True,
+        default=True, 
         verbose_name="Disponible para préstamo"
     )
+
     ubicacion = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
+        max_length=150, 
+        blank=True, 
+        null=True, 
         verbose_name="Almacén / Estante"
     )
-    
+
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

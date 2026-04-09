@@ -112,3 +112,139 @@ class TipoEstado(models.Model):
         verbose_name_plural = "Tipos de Estado (Catálogo)"
         ordering = ['nombre']
         db_table = 'mantenimiento_tipoestado'
+        
+from inventario.models import Producto
+
+class Mantenimiento(models.Model):
+
+    TIPO_CHOICES = [
+        ('correctivo',          'Correctivo'),
+        ('preventivo',          'Preventivo'),
+        ('calibracion',         'Calibración'),
+        ('reparacion_externa',  'Reparación externa'),
+        ('otro',                'Otro'),
+    ]
+
+    ESTADO_REGISTRO_CHOICES = [
+        ('abierto',     'Abierto'),
+        ('en_proceso',  'En proceso'),
+        ('cerrado',     'Cerrado'),
+        ('cancelado',   'Cancelado'),
+    ]
+
+    # ── Relaciones ──────────────────────────────────────────
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.PROTECT,
+        related_name='mantenimientos',
+        verbose_name="Ítem / Herramienta *"
+    )
+    tipo_estado = models.ForeignKey(
+        TipoEstado,
+        on_delete=models.PROTECT,
+        related_name='mantenimientos',
+        verbose_name="Tipo de estado actual *"
+    )
+    responsable = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='mantenimientos_responsable',
+        verbose_name="Responsable / Técnico *"
+    )
+    creado_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='mantenimientos_creados',
+        verbose_name="Registrado por"
+    )
+
+    # ── Tipo y estado del registro ───────────────────────────
+    tipo_mantenimiento = models.CharField(
+        max_length=30,
+        choices=TIPO_CHOICES,
+        verbose_name="Tipo de mantenimiento *"
+    )
+    estado_registro = models.CharField(
+        max_length=20,
+        choices=ESTADO_REGISTRO_CHOICES,
+        default='abierto',
+        verbose_name="Estado del registro"
+    )
+
+    # ── Fechas ───────────────────────────────────────────────
+    fecha_reporte = models.DateField(
+        verbose_name="Fecha de reporte / detección *"
+    )
+    fecha_inicio = models.DateField(
+        verbose_name="Fecha inicio mantenimiento *"
+    )
+    fecha_fin_estimada = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Fecha fin estimada"
+    )
+    fecha_fin_real = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Fecha fin real"
+    )
+
+    # ── Descripción y acciones ───────────────────────────────
+    descripcion_problema = models.TextField(
+        verbose_name="Descripción del problema / falla *"
+    )
+    acciones_realizadas = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Acciones realizadas / planificadas"
+    )
+
+    # ── Ubicación (autollenado desde ítem) ───────────────────
+    ubicacion_snapshot = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Almacén / Estante al momento del registro"
+    )
+
+    # ── Costos ───────────────────────────────────────────────
+    costo_estimado = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Costo estimado"
+    )
+    costo_real = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Costo real"
+    )
+
+    # ── Auditoría ────────────────────────────────────────────
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # Autollenar ubicación desde el ítem al crear
+        if not self.pk and self.producto.ubicacion:
+            self.ubicacion_snapshot = self.producto.ubicacion
+
+        # Actualizar disponibilidad del ítem según impacto del tipo_estado
+        if self.tipo_estado.impacto_disponibilidad == 'no_disponible':
+            self.producto.disponible = False
+            self.producto.save(update_fields=['disponible'])
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"[{self.tipo_mantenimiento}] {self.producto} — {self.fecha_reporte}"
+
+    class Meta:
+        verbose_name = "Mantenimiento"
+        verbose_name_plural = "Mantenimientos"
+        ordering = ['-fecha_reporte']
