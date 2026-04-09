@@ -22,14 +22,34 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=200, verbose_name="Nombre")
     descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
     stock = models.PositiveIntegerField(default=0, verbose_name="Stock / Cantidad")
+    
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="productos",
-        verbose_name="Categoría",
+        verbose_name="Categoría"
     )
+    
+    #Campos para el registro de mantenimiento
+    numero_serie = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Número de serie"
+    )
+    disponible = models.BooleanField(
+        default=True,
+        verbose_name="Disponible para préstamo"
+    )
+    ubicacion = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Almacén / Estante"
+    )
+    
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
