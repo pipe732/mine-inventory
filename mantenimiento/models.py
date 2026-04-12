@@ -1,4 +1,5 @@
 from django.db import models
+#MODELS.PY  
 
 #1) Consultar estado de herramientas
 class EstadoHerramienta(models.Model):

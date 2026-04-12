@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from .models import TipoEstado, Mantenimiento
 from inventario.models import Producto
 
-
+#FORMS.PY
 # ══════════════════════════════════════════════
 # 1) FORM EXISTENTE — Tipo de Estado
 # ══════════════════════════════════════════════

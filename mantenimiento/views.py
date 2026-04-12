@@ -7,7 +7,7 @@ from django.utils import timezone
 from .models import EstadoHerramienta, TipoEstado, Mantenimiento
 from .forms import TipoEstadoForm, MantenimientoForm
 from inventario.models import Producto
-
+#VIEWS.PY
 
 # ══════════════════════════════════════════════
 # DECORADOR DE SESIÓN
