@@ -1,106 +1,218 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Historial — {{ producto.nombre }}{% endblock %}
 
-{% block title %}Historial - {{ producto.nombre }}{% endblock %}
-<!--historial_producto.html-->
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2>📋 Historial de Mantenimientos</h2>
-            <h5 class="text-muted">
-                <strong>[{{ producto.codigo_sku }}]</strong> {{ producto.nombre }}
-                {% if producto.ubicacion %} — {{ producto.ubicacion }}{% endif %}
-            </h5>
-        </div>
-        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ producto.pk }}" 
-           class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
-        </a>
-    </div>
 
-    <!-- Filtros -->
-    <form method="get" class="row g-3 mb-4 bg-light p-3 rounded">
-        <div class="col-md-3">
-            <input type="text" name="q" class="form-control" placeholder="Buscar en descripción..." value="{{ q }}">
-        </div>
-        <div class="col-md-2">
-            <select name="tipo" class="form-select">
-                <option value="">Todos los tipos</option>
-                {% for value, label in tipo_choices %}
-                    <option value="{{ value }}" {% if tipo_filtro == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select name="estado_registro" class="form-select">
-                <option value="">Todos los estados</option>
-                {% for value, label in estado_choices %}
-                    <option value="{{ value }}" {% if estado_filtro == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde }}">
-        </div>
-        <div class="col-md-2">
-            <input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}">
-        </div>
-        <div class="col-md-1">
-            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-        </div>
+{# Cabecera: el subtítulo muestra el código y nombre del producto #}
+<!--
+{% include "mantenimiento/partials/_cabecera.html" with
+    titulo="Historial de Mantenimientos"
+    subtitulo=producto.codigo_sku|stringformat:"s"|add:" — "|add:producto.nombre
+    url_accion=url_nuevo_mant
+    label_accion="Nuevo Mantenimiento"
+%}
+-->
+{# ══ FILTROS ══ #}
+<div class="card mb-4">
+  <div class="card-body" style="padding:1.25rem;">
+    <form method="get" class="row g-3 align-items-end">
+
+      <div class="col-md-3">
+        <label class="form-label">Buscar</label>
+        <input type="text" name="q" class="form-control"
+               placeholder="Buscar en descripción..."
+               value="{{ q }}">
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-control form-select">
+          <option value="">Todos los tipos</option>
+          {% for value, label in tipo_choices %}
+            <option value="{{ value }}"
+              {% if tipo_filtro == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Estado registro</label>
+        <select name="estado_registro" class="form-control form-select">
+          <option value="">Todos</option>
+          {% for value, label in estado_choices %}
+            <option value="{{ value }}"
+              {% if estado_filtro == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Desde</label>
+        <input type="date" name="fecha_desde" class="form-control"
+               value="{{ fecha_desde }}">
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="fecha_hasta" class="form-control"
+               value="{{ fecha_hasta }}">
+      </div>
+
+      <div class="col-md-1 d-flex gap-2">
+        <button type="submit" class="btn-primary-mine flex-grow-1">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
+
     </form>
-
-    {% if mantenimientos %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Descripción</th>
-                        <th>Técnico</th>
-                        <th>Estado</th>
-                        <th>Costo Real</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in mantenimientos %}
-                    <tr>
-                        <td>{{ m.fecha_reporte|date:"d/m/Y" }}</td>
-                        <td><span class="badge bg-info">{{ m.get_tipo_mantenimiento_display }}</span></td>
-                        <td>
-                            <strong>{{ m.descripcion_problema|truncatewords:15 }}</strong>
-                            {% if m.acciones_realizadas %}
-                                <br><small class="text-muted">{{ m.acciones_realizadas|truncatewords:10 }}</small>
-                            {% endif %}
-                        </td>
-                        <td>{{ m.responsable.get_full_name|default:m.responsable.username }}</td>
-                        <td>
-                            <span class="badge {% if m.estado_registro == 'cerrado' %}bg-success{% elif m.estado_registro == 'cancelado' %}bg-danger{% else %}bg-warning{% endif %}">
-                                {{ m.get_estado_registro_display }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if m.costo_real %}${{ m.costo_real }}{% else %}—{% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'mantenimiento:mantenimiento_detalle' m.pk %}" class="btn btn-sm btn-info text-white">Ver</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="alert alert-info text-center py-5">
-            <h4>Este activo no tiene mantenimientos registrados aún.</h4>
-            <p class="mb-0">Cuando registres el primer mantenimiento aparecerá aquí.</p>
-        </div>
-    {% endif %}
-
-    <div class="mt-3">
-        <a href="{% url 'mantenimiento:mantenimiento_lista' %}" class="btn btn-secondary">← Volver a todos los mantenimientos</a>
-    </div>
+  </div>
 </div>
+
+{# ══ TABLA ══ #}
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
+                 a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      Registros de mantenimiento
+    </span>
+    <span style="font-family:var(--font-mono); font-size:.72rem;
+                 background:rgba(9,77,146,.08); color:var(--navy);
+                 padding:.18rem .6rem; border-radius:20px;
+                 border:1px solid rgba(9,77,146,.18);">
+      {{ total_registros }} registro{{ total_registros|pluralize:",s" }}
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Descripción</th>
+          <th>Técnico</th>
+          <th>Estado registro</th>
+          <th>Costo real</th>
+          <th style="text-align:center;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in mantenimientos %}
+        <tr>
+          <td>
+            <span style="font-family:var(--font-mono); font-size:.78rem;
+                         color:var(--text-muted);">
+              {{ m.fecha_reporte|date:"d/m/Y" }}
+            </span>
+          </td>
+          <td>
+            {% if m.tipo_mantenimiento == 'correctivo' %}
+              <span class="badge-state badge-rechazada">{{ m.get_tipo_mantenimiento_display }}</span>
+            {% elif m.tipo_mantenimiento == 'preventivo' %}
+              <span class="badge-state badge-aprobada">{{ m.get_tipo_mantenimiento_display }}</span>
+            {% else %}
+              <span class="badge-state badge-pendiente">{{ m.get_tipo_mantenimiento_display }}</span>
+            {% endif %}
+          </td>
+          <td style="max-width:260px;">
+            <span style="font-weight:600; font-size:.88rem;">
+              {{ m.descripcion_problema|truncatewords:12 }}
+            </span>
+            {% if m.acciones_realizadas %}
+              <br>
+              <small style="color:var(--text-muted); font-size:.78rem;">
+                {{ m.acciones_realizadas|truncatewords:8 }}
+              </small>
+            {% endif %}
+          </td>
+          <td>
+            {{ m.responsable.get_full_name|default:m.responsable.username }}
+          </td>
+          <td>
+            {% if m.estado_registro == 'cerrado' %}
+              <span class="badge-state badge-aprobada">{{ m.get_estado_registro_display }}</span>
+            {% elif m.estado_registro == 'cancelado' %}
+              <span class="badge-state badge-rechazada">{{ m.get_estado_registro_display }}</span>
+            {% else %}
+              <span class="badge-state badge-pendiente">{{ m.get_estado_registro_display }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if m.costo_real %}
+              <span style="font-family:var(--font-mono); font-size:.82rem;">
+                ${{ m.costo_real }}
+              </span>
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </td>
+          <td style="text-align:center;">
+            <a href="{% url 'mantenimiento:mantenimiento_detalle' m.pk %}"
+               style="width:28px; height:28px; border-radius:6px;
+                      background:rgba(9,77,146,.07);
+                      border:1px solid rgba(9,77,146,.18);
+                      color:var(--navy); display:inline-flex;
+                      align-items:center; justify-content:center; padding:0;"
+               title="Ver detalle">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </a>
+            <a href="{% url 'mantenimiento:mantenimiento_editar' m.pk %}"
+               style="width:28px; height:28px; border-radius:6px;
+                      background:rgba(9,77,146,.07);
+                      border:1px solid rgba(9,77,146,.18);
+                      color:var(--navy); display:inline-flex;
+                      align-items:center; justify-content:center;
+                      padding:0; margin-left:4px;"
+               title="Editar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14
+                         a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1
+                         1-4 9.5-9.5z"/>
+              </svg>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with
+              colspan=7
+              empty_mensaje="Este activo no tiene mantenimientos registrados aún."
+              empty_hint="Usa el botón <strong>Nuevo Mantenimiento</strong> para agregar el primero."
+          %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ══ PIE ══ #}
+<div class="mt-3">
+  <a href="{% url 'mantenimiento:mantenimiento_lista' %}"
+     class="btn-outline-mine">
+    ← Volver a todos los mantenimientos
+  </a>
+</div>
+
 {% endblock %}

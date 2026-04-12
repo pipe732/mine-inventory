@@ -174,10 +174,10 @@ class Mantenimiento(models.Model):
     )
 
     fecha_reporte = models.DateField(
-        verbose_name="Fecha de reporte / detección *"
+        verbose_name="Fecha de reporte / detección "
     )
     fecha_inicio = models.DateField(
-        verbose_name="Fecha inicio mantenimiento *"
+        verbose_name="Fecha inicio mantenimiento "
     )
     fecha_fin_estimada = models.DateField(
         blank=True,

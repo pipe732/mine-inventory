@@ -1,95 +1,722 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Estado Actual de Herramientas{% endblock %}
-<!--estado_actual.html-->
-{% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📊 Estado Actual de Herramientas</h2>
-        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
-        </a>
-    </div>
-
-    <p class="text-muted">
-        Total herramientas: <strong>{{ productos|length }}</strong> | 
-        Disponibles: <span class="badge bg-success">{{ total_disponibles }}</span> | 
-        No disponibles: <span class="badge bg-danger">{{ total_no_disponibles }}</span>
-    </p>
-
-    <form method="get" class="row g-3 mb-4">
-        <div class="col-md-6">
-            <input type="text" name="q" class="form-control" placeholder="Buscar por código, nombre, serie o ubicación..." value="{{ q }}">
-        </div>
-        <div class="col-md-3">
-            <select name="disponible" class="form-select">
-                <option value="">Todos los estados</option>
-                <option value="si" {% if disponible_filtro == 'si' %}selected{% endif %}>✅ Solo disponibles</option>
-                <option value="no" {% if disponible_filtro == 'no' %}selected{% endif %}>❌ Solo no disponibles</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
-        </div>
-    </form>
-
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Ubicación</th>
-                    <th>Disponible</th>
-                    <th>Último mantenimiento</th>
-                    <th>Estado actual</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in productos %}
-                <tr>
-                    <td><strong>{{ p.codigo_sku }}</strong></td>
-                    <td>{{ p.nombre }}</td>
-                    <td>{{ p.ubicacion|default:"—" }}</td>
-                    <td>
-                        {% if p.disponible %}
-                            <span class="badge bg-success">✅ Disponible</span>
-                        {% else %}
-                            <span class="badge bg-danger">❌ No disponible</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% with ultimo=p.mantenimientos.all|first %}
-                            {% if ultimo %}
-                                {{ ultimo.fecha_reporte|date:"d/m/Y" }}
-                                <small class="text-muted">({{ ultimo.get_tipo_mantenimiento_display }})</small>
-                            {% else %}
-                                <span class="text-muted">Sin mantenimiento</span>
-                            {% endif %}
-                        {% endwith %}
-                    </td>
-                    <td>
-                        {% with ultimo=p.mantenimientos.all|first %}
-                            {% if ultimo and ultimo.tipo_estado %}
-                                <span class="badge" style="background-color: {{ ultimo.tipo_estado.color|default:'#6c757d' }}; color: white;">
-                                    {{ ultimo.tipo_estado.nombre }}
-                                </span>
-                            {% else %}
-                                <span class="badge bg-secondary">Sin estado</span>
-                            {% endif %}
-                        {% endwith %}
-                    </td>
-                    <td>
-                        <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ p.pk }}" 
-                           class="btn btn-sm btn-primary">+ Mant.</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron herramientas</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+{% block title %}
+Inventario
 {% endblock %}
+
+{% block content %}
+
+<!-- ══ ALERTAS ══ -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
+         style="background:rgba(0, 0, 0, 0.13); border:1px solid rgba(0, 0, 0, 0.25);
+                border-radius:var(--radius-md); color:var(--text-main); font-family:var(--font-ui);"
+         role="alert">
+      {% if message.tags == 'error' %}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      {% else %}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#329843" stroke-width="2.2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      {% endif %}
+      {{ message }}
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
+              style="filter:opacity(.4);"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+    <!-- ══ CABECERA REUTILIZABLE (mismo estilo que los templates de mantenimiento) ══ -->
+<!--     
+{% include "mantenimiento/partials/_cabecera.html" with
+    titulo="Inventario"
+    subtitulo="Gestión de herramientas y materiales"
+    url_accion="javascript:new bootstrap.Modal(document.getElementById('modalNuevaHerramienta')).show();"
+    label_accion="Nueva Herramienta"
+%}
+-->
+<!-- ══ CABECERA MANUAL (se mantiene intacta, sin eliminar nada) ══ -->
+<div class="d-flex align-items-center justify-content-between">
+  <div>
+    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
+               color:var(--text-main); letter-spacing:.03em; margin:0;">
+      Inventario
+    </h5>
+    <p style="font-family:var(--font-ui); font-size:.8rem;
+              color:var(--text-muted); margin:0;">
+      Gestión de herramientas y materiales
+    </p>
+  </div>
+  <div style="display:flex; gap:.6rem;">
+    <button class="btn-outline-mine"
+            data-bs-toggle="modal" data-bs-target="#modalCategorias">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+        <line x1="7" y1="7" x2="7.01" y2="7"/>
+      </svg>
+      Categorías
+    </button>
+    <button class="btn-primary-mine"
+            data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      Nueva Herramienta
+    </button>
+  </div>
+</div>
+
+<!-- ══ FILTROS ══ -->
+<div class="card">
+  <div class="card-body" style="padding:.9rem 1.2rem;">
+    <form method="get" class="d-flex gap-3 align-items-end flex-wrap">
+      <div style="flex:2; min-width:180px;">
+        <label class="form-label">Buscar</label>
+        {{ form_filtro.busqueda }}
+      </div>
+      <div style="flex:1.5; min-width:150px;">
+        <label class="form-label">Categoría</label>
+        {{ form_filtro.categoria }}
+      </div>
+      <div style="display:flex; gap:.45rem;">
+        <button type="submit" class="btn-primary-mine">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Filtrar
+        </button>
+        <a href="{% url 'inventario:inventario' %}" class="btn-outline-mine">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ TABLA INVENTARIO ══ -->
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      Herramientas registradas
+    </span>
+    <span style="font-family:var(--font-mono); font-size:.72rem;
+                 background:rgba(152, 71, 62, 0.7); color:var(--rust);
+                 padding:.18rem .6rem; border-radius:20px;
+                 border:1px solid rgba(152, 71, 62, 0.88);">
+      {{ total }} registro{{ total|pluralize }}
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Categoría</th>
+          <th>Stock</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for producto in productos %}
+        <tr>
+          <td>
+            <span style="font-family:var(--font-mono); font-size:.78rem;
+                         color:var(--text-muted);">{{ producto.codigo_sku }}</span>
+          </td>
+          <td style="font-weight:600;">{{ producto.nombre }}</td>
+          <td style="color:var(--text-muted); max-width:220px;">
+            <span style="display:block; overflow:hidden; text-overflow:ellipsis;
+                         white-space:nowrap; max-width:210px;">
+              {{ producto.descripcion|default:"—" }}
+            </span>
+          </td>
+          <td>
+            {% if producto.categoria %}
+              <span class="badge-state badge-aprobada">{{ producto.categoria }}</span>
+            {% else %}
+              <span style="color:var(--text-muted); font-size:.82rem;">Sin categoría</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if producto.stock == 0 %}
+              <span class="badge-state badge-rechazada">Sin stock</span>
+            {% elif producto.stock <= 5 %}
+              <span class="badge-state badge-pendiente">{{ producto.stock }}</span>
+            {% else %}
+              <span class="badge-state badge-aprobada">{{ producto.stock }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <button type="button" class="btn-ghost" title="Editar"
+                    style="margin-right:.3rem;"
+                    onclick="abrirEditar(
+                      '{{ producto.pk }}',
+                      '{{ producto.codigo_sku|escapejs }}',
+                      '{{ producto.nombre|escapejs }}',
+                      '{{ producto.descripcion|default:''|escapejs }}',
+                      '{{ producto.stock }}',
+                      '{{ producto.categoria.pk|default:'' }}'
+                    )">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Editar
+            </button>
+            <button type="button" class="btn-ghost" title="Eliminar"
+                    style="color:var(--rust);"
+                    onclick="abrirEliminar('{{ producto.pk }}', '{{ producto.nombre|escapejs }}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+              Eliminar
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align:center; padding:3.5rem 1rem;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--text-muted)" stroke-width="1.3"
+                 style="opacity:.35; display:block; margin:0 auto .75rem;">
+              <path d="M22 12H16L14 15H10L8 12H2"/>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+            </svg>
+            <p style="font-family:var(--font-ui); color:var(--text-muted);
+                      font-size:.88rem; margin:0;">
+              No hay herramientas registradas aún.<br>
+              <span style="font-size:.8rem;">
+                Usa <strong>Nueva Herramienta</strong> para agregar una.
+              </span>
+            </p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL — Nueva Herramienta
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalNuevaHerramienta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Nueva Herramienta
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'inventario:inventario' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="crear_producto">
+        <div class="modal-body" style="padding:1.5rem;">
+
+          {% if form_modal_errors %}
+          <div class="d-flex align-items-center gap-2 mb-3"
+               style="background:rgba(0, 0, 0, 0.08); border:1px solid rgba(192,57,43,.3);
+                      border-radius:var(--radius-md); padding:.65rem 1rem;
+                      font-family:var(--font-ui); font-size:.85rem; color:#c0392b;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2" style="flex-shrink:0;">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            {{ error_producto }}
+          </div>
+          {% endif %}
+
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.18);
+                      padding-bottom:.4rem; margin-bottom:1.1rem;">
+            Datos de la herramienta
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Código / SKU *</label>
+              <input type="text" name="codigo_sku"
+                     class="form-control {% if form_modal_errors %}is-invalid{% endif %}"
+                     placeholder="Ej: SKU-001" value="{{ post_sku }}" required>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Nombre *</label>
+              <input type="text" name="nombre" class="form-control"
+                     placeholder="Nombre de la herramienta" value="{{ post_nombre }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              <textarea name="descripcion" class="form-control" rows="2" placeholder="Descripción opcional...">{{ post_descripcion }}</textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Stock *</label>
+              <input type="number" name="stock" class="form-control"
+                     value="{{ post_stock|default:'0' }}" min="0" required>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Categoría</label>
+              <select name="categoria" class="form-select">
+                <option value="">— Sin categoría —</option>
+                {% for cat in categorias %}
+                  <option value="{{ cat.pk }}" {% if cat.pk|stringformat:"s" == post_categoria %}selected{% endif %}>{{ cat.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-mine">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Guardar herramienta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL — Editar Herramienta
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalEditarHerramienta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Editar Herramienta
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'inventario:inventario' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="editar_producto">
+        <input type="hidden" name="producto_id" id="edit_producto_id">
+        <div class="modal-body" style="padding:1.5rem;">
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.18);
+                      padding-bottom:.4rem; margin-bottom:1.1rem;">
+            Datos de la herramienta
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Código / SKU *</label>
+              <input type="text" name="codigo_sku" id="edit_codigo_sku" class="form-control" required>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Nombre *</label>
+              <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              <textarea name="descripcion" id="edit_descripcion" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Stock *</label>
+              <input type="number" name="stock" id="edit_stock" class="form-control" min="0" required>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Categoría</label>
+              <select name="categoria" id="edit_categoria" class="form-select">
+                <option value="">— Sin categoría —</option>
+                {% for cat in categorias %}
+                  <option value="{{ cat.pk }}">{{ cat.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-mine">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL — Confirmar Eliminar
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Confirmar eliminación
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem; text-align:center;">
+        <p style="font-family:var(--font-ui); font-size:.95rem;
+                  color:var(--text-main); margin-bottom:.35rem;">
+          ¿Estás seguro de eliminar
+        </p>
+        <p id="eliminar_nombre_producto"
+           style="font-family:var(--font-ui); font-size:1rem; font-weight:700;
+                  color:var(--rust); margin-bottom:.5rem;"></p>
+        <p style="font-size:.8rem; color:var(--text-muted); margin:0;">
+          Esta acción no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <form method="post" action="{% url 'inventario:inventario' %}">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="eliminar_producto">
+          <input type="hidden" name="producto_id" id="eliminar_producto_id">
+          <div style="display:flex; gap:.6rem;">
+            <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn-primary-mine">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+              Sí, eliminar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL — Categorías
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalCategorias" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          Categorías
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:0;">
+
+        <!-- Nueva categoría -->
+        <div style="padding:1rem 1.4rem; background:rgba(9,77,146,.03);
+                    border-bottom:1px solid var(--border-color);">
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.18);
+                      padding-bottom:.4rem; margin-bottom:.9rem;">
+            Nueva categoría
+          </div>
+          {% if modal_categoria_errors %}
+          <div class="d-flex align-items-center gap-2 mb-3"
+               style="background:rgba(192,57,43,.08); border:1px solid rgba(192,57,43,.3);
+                      border-radius:var(--radius-md); padding:.65rem 1rem;
+                      font-family:var(--font-ui); font-size:.85rem; color:#c0392b;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2" style="flex-shrink:0;">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            {{ error_categoria }}
+          </div>
+          {% endif %}
+          <form method="post" action="{% url 'inventario:inventario' %}"
+                class="d-flex gap-3 align-items-end flex-wrap">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="crear_categoria">
+            <div style="flex:1; min-width:130px;">
+              <label class="form-label">Nombre *</label>
+              <input type="text" name="cat_nombre"
+                     class="form-control {% if modal_categoria_errors %}is-invalid{% endif %}"
+                     placeholder="Nombre" value="{{ post_cat_nombre }}" required>
+            </div>
+            <div style="flex:2; min-width:170px;">
+              <label class="form-label">Descripción</label>
+              <input type="text" name="cat_descripcion" class="form-control"
+                     placeholder="Opcional" value="{{ post_cat_descripcion }}">
+            </div>
+            <button type="submit" class="btn-primary-mine">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Agregar
+            </button>
+          </form>
+        </div>
+
+        <!-- Lista de categorías -->
+        <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Productos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in categorias %}
+            <tr>
+              <td style="font-weight:600;">{{ cat.nombre }}</td>
+              <td style="color:var(--text-muted);">{{ cat.descripcion|default:"—" }}</td>
+              <td>
+                <span class="badge-state badge-aprobada">{{ cat.productos.count }}</span>
+              </td>
+              <td>
+                <button class="btn-ghost" style="margin-right:.3rem;"
+                        onclick="abrirEditarCategoria('{{ cat.pk }}','{{ cat.nombre|escapejs }}','{{ cat.descripcion|default:''|escapejs }}')">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2.2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Editar
+                </button>
+                <button class="btn-ghost" style="color:var(--rust);"
+                        onclick="abrirEliminarCategoria('{{ cat.pk }}','{{ cat.nombre|escapejs }}')">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2.2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  </svg>
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" style="text-align:center; padding:2rem;
+                                     color:var(--text-muted); font-family:var(--font-ui);
+                                     font-size:.88rem;">
+                No hay categorías registradas aún.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL — Editar Categoría
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalEditarCategoria" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Editar Categoría
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'inventario:inventario' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="editar_categoria">
+        <input type="hidden" name="categoria_id" id="editcat_id">
+        <div class="modal-body" style="padding:1.5rem;">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Nombre *</label>
+              <input type="text" name="cat_nombre" id="editcat_nombre" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              <input type="text" name="cat_descripcion" id="editcat_descripcion" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-mine">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL — Eliminar Categoría
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalEliminarCategoria" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Eliminar Categoría
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem; text-align:center;">
+        <p style="font-family:var(--font-ui); font-size:.95rem;
+                  color:var(--text-main); margin-bottom:.35rem;">
+          ¿Eliminar la categoría
+        </p>
+        <p id="eliminarcat_nombre"
+           style="font-family:var(--font-ui); font-size:1rem; font-weight:700;
+                  color:var(--rust); margin-bottom:.5rem;"></p>
+        <p style="font-size:.8rem; color:var(--text-muted); margin:0;">
+          Los productos asociados quedarán sin categoría.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <form method="post" action="{% url 'inventario:inventario' %}">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="eliminar_categoria">
+          <input type="hidden" name="categoria_id" id="eliminarcat_id">
+          <div style="display:flex; gap:.6rem;">
+            <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn-primary-mine">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+              Sí, eliminar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+<script>
+  function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId) {
+    document.getElementById('edit_producto_id').value  = pk;
+    document.getElementById('edit_codigo_sku').value   = sku;
+    document.getElementById('edit_nombre').value       = nombre;
+    document.getElementById('edit_descripcion').value  = descripcion;
+    document.getElementById('edit_stock').value        = stock;
+    const sel = document.getElementById('edit_categoria');
+    for (let opt of sel.options) { opt.selected = opt.value == categoriaId; }
+    new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
+  }
+
+  function abrirEliminar(pk, nombre) {
+    document.getElementById('eliminar_producto_id').value          = pk;
+    document.getElementById('eliminar_nombre_producto').textContent = '"' + nombre + '"';
+    new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+  }
+
+  function abrirEditarCategoria(pk, nombre, descripcion) {
+    document.getElementById('editcat_id').value          = pk;
+    document.getElementById('editcat_nombre').value      = nombre;
+    document.getElementById('editcat_descripcion').value = descripcion;
+    new bootstrap.Modal(document.getElementById('modalEditarCategoria')).show();
+  }
+
+  function abrirEliminarCategoria(pk, nombre) {
+    document.getElementById('eliminarcat_id').value          = pk;
+    document.getElementById('eliminarcat_nombre').textContent = '"' + nombre + '"';
+    new bootstrap.Modal(document.getElementById('modalEliminarCategoria')).show();
+  }
+
+  {% if form_modal_errors %}
+  document.addEventListener("DOMContentLoaded", function () {
+    new bootstrap.Modal(document.getElementById('modalNuevaHerramienta')).show();
+  });
+  {% endif %}
+
+  {% if modal_categoria_errors %}
+  document.addEventListener("DOMContentLoaded", function () {
+    new bootstrap.Modal(document.getElementById('modalCategorias')).show();
+  });
+  {% endif %}
+</script>
+{% endblock js %}

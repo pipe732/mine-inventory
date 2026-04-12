@@ -1,0 +1,17 @@
+{# partials/_tabla_empty.html
+   Variables esperadas:
+   - empty_mensaje   (str) opcional — mensaje principal
+   - empty_hint      (str) opcional — sugerencia secundaria
+   - colspan         (int) requerido — número de columnas de la tabla
+#}
+<tr>
+  <td colspan="{{ colspan }}" style="text-align:center; padding:3.5rem 1rem;">
+    <p style="font-family:var(--font-ui); color:var(--text-muted);
+              font-size:.88rem; margin:0;">
+      {{ empty_mensaje|default:"No se encontraron registros." }}<br>
+      {% if empty_hint %}
+        <span style="font-size:.8rem;">{{ empty_hint }}</span>
+      {% endif %}
+    </p>
+  </td>
+</tr>
