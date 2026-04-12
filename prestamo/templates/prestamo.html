@@ -457,59 +457,63 @@
               {% for e in form.usuario.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
 
-            <!-- Producto — select con consulta de stock (MINE-128/129/130) -->
-            <div class="col-md-6">
-              <label class="form-label" for="id_producto">Herramienta / Producto *</label>
-              <select name="producto" id="id_producto" class="form-control form-select"
-                      data-stocks='{ {% for prod in productos %}"{{ prod.pk }}": {{ prod.stock }}{% if not forloop.last %},{% endif %}{% endfor %} }'>
-                <option value="">— Selecciona una herramienta —</option>
-                {% for prod in productos %}
-                  <option value="{{ prod.pk }}"
-                          data-stock="{{ prod.stock }}"
-                    {% if form.producto.value == prod.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
-                  </option>
-                {% empty %}
-                  <option disabled>No hay herramientas en inventario aún</option>
-                {% endfor %}
-              </select>
-              {% for e in form.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            <!-- ── Herramientas: lista dinámica multi-ítem ── -->
+            <div class="col-12">
+              <label class="form-label">Herramientas / Productos *</label>
 
-              <!-- MINE-129: Panel de disponibilidad -->
-              <div id="stock-info" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
-                                          border-radius:var(--radius-md); font-family:var(--font-ui);
-                                          font-size:.8rem; align-items:center; gap:.5rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="stock-icon">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <span id="stock-label"></span>
+              <!-- Contenedor de filas de ítems -->
+              <div id="items-container" style="display:flex; flex-direction:column; gap:.55rem;">
+                <!-- Fila 1 (siempre visible) -->
+                <div class="item-row" style="display:grid; grid-template-columns:1fr 90px 32px; gap:.5rem; align-items:start;">
+                  <div>
+                    <select name="producto[]" class="form-control form-select item-producto">
+                      <option value="">— Selecciona una herramienta —</option>
+                      {% for prod in productos %}
+                        <option value="{{ prod.pk }}" data-stock="{{ prod.stock }}">
+                          {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
+                        </option>
+                      {% empty %}
+                        <option disabled>No hay herramientas en inventario aún</option>
+                      {% endfor %}
+                    </select>
+                    <div class="item-stock-info" style="display:none; margin-top:.35rem; padding:.35rem .65rem;
+                         border-radius:var(--radius-md); font-family:var(--font-ui); font-size:.76rem;
+                         align-items:center; gap:.4rem;"></div>
+                  </div>
+                  <div>
+                    <input type="number" name="cantidad[]" class="form-control item-cantidad"
+                           min="1" value="1" placeholder="Cant.">
+                  </div>
+                  <div style="padding-top:.15rem;">
+                    <button type="button" class="btn-remove-item"
+                            title="Quitar herramienta"
+                            style="width:32px; height:36px; border-radius:6px; border:1px solid rgba(147,31,29,.25);
+                                   background:rgba(147,31,29,.07); color:#931f1d; cursor:pointer;
+                                   display:inline-flex; align-items:center; justify-content:center;
+                                   opacity:.4; pointer-events:none;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <!-- MINE-130: Alerta si no hay stock -->
-              <div id="stock-alert" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
-                                           border-radius:var(--radius-md); font-size:.8rem;
-                                           background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.25);
-                                           color:#931f1d; font-family:var(--font-ui); display:none;
-                                           align-items:center; gap:.5rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              <!-- Botón agregar ítem -->
+              <button type="button" id="btn-add-item"
+                      style="margin-top:.65rem; display:inline-flex; align-items:center; gap:.4rem;
+                             padding:.3rem .75rem; border-radius:6px; border:1px dashed rgba(9,77,146,.35);
+                             background:rgba(9,77,146,.05); color:var(--navy); font-family:var(--font-ui);
+                             font-size:.78rem; cursor:pointer; font-weight:600; transition:background .15s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
                 </svg>
-                Sin stock disponible — no es posible registrar el préstamo
-              </div>
-            </div>
-
-            <!-- Cantidad -->
-            <div class="col-md-4">
-              <label class="form-label" for="{{ form.cantidad.id_for_label }}">Cantidad *</label>
-              {{ form.cantidad }}
-              {% for e in form.cantidad.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                Agregar otra herramienta
+              </button>
             </div>
 
             <!-- Observaciones -->
-            <div class="col-md-8">
+            <div class="col-12">
               <label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
               {{ form.observaciones }}
               {% for e in form.observaciones.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
@@ -832,36 +836,131 @@
 
 
   // ══════════════════════════════════════════════════════════════
-  // MINE-128 / MINE-129 / MINE-130 — Panel de stock al seleccionar producto
+  // Multi-ítem: agregar / quitar herramientas en el modal Nuevo Préstamo
   // ══════════════════════════════════════════════════════════════
-  const productoSel  = document.getElementById('id_producto');
-  const stockInfo    = document.getElementById('stock-info');
-  const stockAlert   = document.getElementById('stock-alert');
-  const stockLabel   = document.getElementById('stock-label');
 
-  if (productoSel) {
-    function updateStock() {
-      const selected = productoSel.options[productoSel.selectedIndex];
-      const stock    = selected ? parseInt(selected.dataset.stock, 10) : NaN;
+  // Plantilla HTML de una fila de ítem (se clona al agregar)
+  function buildItemRow() {
+    // Tomar las opciones del primer select como base
+    const firstSel = document.querySelector('#items-container .item-producto');
+    const opts     = firstSel ? firstSel.innerHTML : '<option value="">— Selecciona —</option>';
 
-      stockAlert.style.display = 'none';
-      stockInfo.style.display  = 'none';
-
-      if (!selected || !selected.value) return;
-
-      if (isNaN(stock) || stock <= 0) {
-        stockAlert.style.display = 'flex';
-      } else {
-        stockLabel.textContent   = 'Disponible: ' + stock + ' unidad(es)';
-        stockInfo.style.background  = 'rgba(45,212,191,.09)';
-        stockInfo.style.border      = '1px solid rgba(45,212,191,.25)';
-        stockInfo.style.color       = '#0d9488';
-        stockInfo.style.display     = 'flex';
-      }
-    }
-    productoSel.addEventListener('change', updateStock);
-    updateStock();
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.style.cssText = 'display:grid; grid-template-columns:1fr 90px 32px; gap:.5rem; align-items:start;';
+    div.innerHTML = `
+      <div>
+        <select name="producto[]" class="form-control form-select item-producto">${opts}</select>
+        <div class="item-stock-info" style="display:none; margin-top:.35rem; padding:.35rem .65rem;
+             border-radius:var(--radius-md); font-family:var(--font-ui); font-size:.76rem;
+             align-items:center; gap:.4rem;"></div>
+      </div>
+      <div>
+        <input type="number" name="cantidad[]" class="form-control item-cantidad" min="1" value="1" placeholder="Cant.">
+      </div>
+      <div style="padding-top:.15rem;">
+        <button type="button" class="btn-remove-item" title="Quitar herramienta"
+                style="width:32px; height:36px; border-radius:6px; border:1px solid rgba(147,31,29,.25);
+                       background:rgba(147,31,29,.07); color:#931f1d; cursor:pointer;
+                       display:inline-flex; align-items:center; justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>`;
+    return div;
   }
+
+  // Actualiza el estado del botón eliminar (deshabilita si solo hay 1 fila)
+  function refreshRemoveButtons() {
+    const rows = document.querySelectorAll('#items-container .item-row');
+    rows.forEach(function (row) {
+      const btn = row.querySelector('.btn-remove-item');
+      if (!btn) return;
+      if (rows.length === 1) {
+        btn.style.opacity        = '.4';
+        btn.style.pointerEvents  = 'none';
+      } else {
+        btn.style.opacity        = '1';
+        btn.style.pointerEvents  = '';
+      }
+    });
+  }
+
+  // Muestra el stock disponible debajo del select de cada fila
+  function updateItemStock(selectEl) {
+    const row      = selectEl.closest('.item-row');
+    const infoDiv  = row.querySelector('.item-stock-info');
+    const selected = selectEl.options[selectEl.selectedIndex];
+    const stock    = selected ? parseInt(selected.dataset.stock, 10) : NaN;
+
+    infoDiv.style.display = 'none';
+    if (!selected || !selected.value) return;
+
+    infoDiv.style.display = 'flex';
+    if (isNaN(stock) || stock <= 0) {
+      infoDiv.style.background = 'rgba(147,31,29,.09)';
+      infoDiv.style.border     = '1px solid rgba(147,31,29,.25)';
+      infoDiv.style.color      = '#931f1d';
+      infoDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Sin stock disponible';
+    } else {
+      infoDiv.style.background = 'rgba(45,212,191,.09)';
+      infoDiv.style.border     = '1px solid rgba(45,212,191,.25)';
+      infoDiv.style.color      = '#0d9488';
+      infoDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Disponible: ' + stock + ' unidad(es)';
+    }
+  }
+
+  // Delegación de eventos en el contenedor (funciona para filas existentes y clonadas)
+  const itemsContainer = document.getElementById('items-container');
+  if (itemsContainer) {
+    itemsContainer.addEventListener('change', function (e) {
+      if (e.target.classList.contains('item-producto')) {
+        updateItemStock(e.target);
+      }
+    });
+
+    itemsContainer.addEventListener('click', function (e) {
+      const btn = e.target.closest('.btn-remove-item');
+      if (!btn) return;
+      const row = btn.closest('.item-row');
+      if (row && document.querySelectorAll('#items-container .item-row').length > 1) {
+        row.remove();
+        refreshRemoveButtons();
+      }
+    });
+  }
+
+  // Botón "Agregar otra herramienta"
+  const btnAddItem = document.getElementById('btn-add-item');
+  if (btnAddItem) {
+    btnAddItem.addEventListener('click', function () {
+      const newRow = buildItemRow();
+      itemsContainer.appendChild(newRow);
+      refreshRemoveButtons();
+    });
+  }
+
+  // Limpiar filas extra al cerrar el modal (deja solo la primera)
+  const modalCrear = document.getElementById('modalCrearPrestamo');
+  if (modalCrear) {
+    modalCrear.addEventListener('hidden.bs.modal', function () {
+      const rows = document.querySelectorAll('#items-container .item-row');
+      rows.forEach(function (row, i) {
+        if (i > 0) row.remove();
+      });
+      // Resetear el primer select y su info de stock
+      const firstSel  = document.querySelector('#items-container .item-producto');
+      const firstInfo = document.querySelector('#items-container .item-stock-info');
+      const firstQty  = document.querySelector('#items-container .item-cantidad');
+      if (firstSel)  { firstSel.selectedIndex = 0; }
+      if (firstInfo) { firstInfo.style.display = 'none'; }
+      if (firstQty)  { firstQty.value = 1; }
+      refreshRemoveButtons();
+    });
+  }
+
+  refreshRemoveButtons();
 
 
   // ══════════════════════════════════════════════════════════════

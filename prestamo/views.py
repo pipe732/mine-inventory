@@ -63,13 +63,67 @@ def prestamos_view(request):
             messages.success(request, f'Ítem "{item.producto.nombre}" devuelto correctamente.')
             return redirect('prestamo')
 
-        # ── Crear nuevo préstamo (flujo original) ──
+        # ── Crear nuevo préstamo (multi-ítem) ──
         else:
             form = PrestamoForm(request.POST)
             if form.is_valid():
-                form.save()  # valida stock y lo descuenta internamente
-                messages.success(request, 'Préstamo registrado exitosamente.')
-                return redirect('prestamo')
+                # Leer listas de productos y cantidades enviadas desde el modal
+                producto_ids = request.POST.getlist('producto[]')
+                cantidades   = request.POST.getlist('cantidad[]')
+
+                # Filtrar filas vacías (select sin selección)
+                items_raw = [
+                    (pid, qty)
+                    for pid, qty in zip(producto_ids, cantidades)
+                    if pid
+                ]
+
+                # Validar que haya al menos un ítem
+                if not items_raw:
+                    form.add_error(None, 'Debes seleccionar al menos una herramienta.')
+                else:
+                    # Validar stock para cada ítem antes de guardar nada
+                    errores = []
+                    items_validated = []
+                    for pid, qty_str in items_raw:
+                        try:
+                            producto = Producto.objects.get(pk=pid)
+                        except Producto.DoesNotExist:
+                            errores.append(f'Producto con id {pid} no existe.')
+                            continue
+                        try:
+                            cantidad = int(qty_str)
+                            if cantidad < 1:
+                                raise ValueError
+                        except (ValueError, TypeError):
+                            errores.append(f'Cantidad inválida para "{producto.nombre}".')
+                            continue
+                        if producto.stock <= 0:
+                            errores.append(f'"{producto.nombre}" no tiene stock disponible.')
+                        elif cantidad > producto.stock:
+                            errores.append(
+                                f'Stock insuficiente para "{producto.nombre}": '
+                                f'solo hay {producto.stock} unidad(es) disponibles.'
+                            )
+                        else:
+                            items_validated.append((producto, cantidad))
+
+                    if errores:
+                        for e in errores:
+                            form.add_error(None, e)
+                    else:
+                        # Todo válido: guardar préstamo e ítems
+                        prestamo = form.save()
+                        for producto, cantidad in items_validated:
+                            ItemPrestamo.objects.create(
+                                prestamo=prestamo,
+                                producto=producto,
+                                cantidad=cantidad,
+                            )
+                            producto.stock -= cantidad
+                            producto.save(update_fields=['stock'])
+                        messages.success(request, 'Préstamo registrado exitosamente.')
+                        return redirect('prestamo')
 
     else:
         form = PrestamoForm()
