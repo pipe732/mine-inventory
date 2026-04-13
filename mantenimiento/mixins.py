@@ -25,8 +25,8 @@ class ContextoMixin:
     subtitulo    = ''
     boton_texto  = 'Guardar'
     url_cancelar = None
-    url_accion   = None   # ← URL del botón principal en listas
-    label_accion = ''     # ← texto de ese botón
+    url_accion   = None   
+    label_accion = ''     
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

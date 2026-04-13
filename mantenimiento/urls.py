@@ -7,7 +7,7 @@ app_name = 'mantenimiento'
 urlpatterns = [
     # Estado actual
     path('estado-actual/',
-         views.EstadoActualListView.as_view(),        # .as_view() convierte la clase en función
+         views.EstadoActualListView.as_view(),      
          name='estado_actual_lista'),
 
     # Catálogo tipos de estado

@@ -3,9 +3,7 @@ from django.db import models
 from inventario.models import Producto  # ← import al tope, no en la mitad
 
 
-# ══════════════════════════════════════════════
-# CATÁLOGO DE TIPOS DE ESTADO
-# ══════════════════════════════════════════════
+#catalogo tiposo de estado
 
 class TipoEstado(models.Model):
 
@@ -53,11 +51,7 @@ class TipoEstado(models.Model):
         ordering             = ['nombre']
         db_table             = 'mantenimiento_tipoestado'
 
-
-# ══════════════════════════════════════════════
-# REGISTRO DE MANTENIMIENTO
-# ══════════════════════════════════════════════
-
+#registro de mantenimiento
 class Mantenimiento(models.Model):
 
     TIPO_CHOICES = [
@@ -75,7 +69,7 @@ class Mantenimiento(models.Model):
         ('cancelado',  'Cancelado'),
     ]
 
-    # ── Relaciones ────────────────────────────
+    #Relaciones
     producto    = models.ForeignKey(
         Producto,
         on_delete=models.PROTECT,
@@ -103,7 +97,7 @@ class Mantenimiento(models.Model):
         verbose_name="Registrado por"
     )
 
-    # ── Campos ───────────────────────────────
+    #Campos
     tipo_mantenimiento  = models.CharField(max_length=30, choices=TIPO_CHOICES, verbose_name="Tipo de mantenimiento")
     estado_registro     = models.CharField(max_length=20, choices=ESTADO_REGISTRO_CHOICES, default='abierto', verbose_name="Estado del registro")
     fecha_reporte       = models.DateField(verbose_name="Fecha de reporte / detección")
@@ -118,7 +112,6 @@ class Mantenimiento(models.Model):
     creado_en           = models.DateTimeField(auto_now_add=True)
     actualizado_en      = models.DateTimeField(auto_now=True)
 
-    # ── Lógica de negocio ────────────────────
     def _actualizar_disponibilidad(self):
         """
         Centraliza la lógica de disponibilidad en un método propio.
@@ -132,14 +125,13 @@ class Mantenimiento(models.Model):
             no_disp = self.tipo_estado.impacto_disponibilidad == 'no_disponible'
             self.producto.disponible = not no_disp
         else:
-            # Cerrado, cancelado, o sin tipo_estado → disponible
             self.producto.disponible = True
 
         if self.producto.pk:
             self.producto.save(update_fields=['disponible'])
 
     def save(self, *args, **kwargs):
-        # Snapshot de ubicación solo al crear
+        # Snapshot de ubicación 
         if not self.pk and self.producto_id and self.producto.ubicacion:
             self.ubicacion_snapshot = self.producto.ubicacion
 

@@ -182,9 +182,8 @@ class MantenimientoDetailView(SesionRequeridaMixin, DetailView):
         ctx['url_cancelar'] = reverse_lazy('mantenimiento:mantenimiento_lista')
         return ctx
 
-# ══════════════════════════════════════════════
-# ESTADO ACTUAL
-# ══════════════════════════════════════════════
+
+#estado actual
 
 class EstadoActualListView(SesionRequeridaMixin, ListView):
     model               = Producto
@@ -220,10 +219,7 @@ class EstadoActualListView(SesionRequeridaMixin, ListView):
         ctx['label_accion']         = 'Nuevo Mantenimiento'
         return ctx
 
-
-# ══════════════════════════════════════════════
-# HISTORIAL POR PRODUCTO
-# ══════════════════════════════════════════════
+#historial mantenimientos
 
 class HistorialProductoView(SesionRequeridaMixin, ListView):
     model               = Mantenimiento
@@ -231,7 +227,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
     context_object_name = 'mantenimientos'
 
     def get_queryset(self):
-        # get_object_or_404 lanza 404 limpio si el producto no existe
+        #mensaje por si falla
         self.producto = get_object_or_404(Producto, pk=self.kwargs['producto_id'])
 
         qs = Mantenimiento.objects.filter(
@@ -260,7 +256,6 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         if fecha_hasta:
             qs = qs.filter(fecha_reporte__lte=fecha_hasta)
 
-        # Guardamos el qs filtrado para reutilizarlo en get_context_data
         self._qs_filtrado = qs
         return qs
 
@@ -274,7 +269,6 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         ctx['estado_filtro']  = self.request.GET.get('estado_registro', '')
         ctx['fecha_desde']    = self.request.GET.get('fecha_desde', '')
         ctx['fecha_hasta']    = self.request.GET.get('fecha_hasta', '')
-        # ← Usa el qs ya construido, sin hacer una segunda consulta
         ctx['total_registros']= self._qs_filtrado.count()
         ctx['url_accion']     = (
             str(reverse_lazy('mantenimiento:mantenimiento_nuevo'))
@@ -283,11 +277,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         ctx['label_accion']   = 'Nuevo Mantenimiento'
         return ctx
 
-
-# ══════════════════════════════════════════════
-# API AJAX — FBV, no necesita CBV
-# ══════════════════════════════════════════════
-
+#api
 def login_requerido(view_func):
     """Decorador de sesión para vistas funcionales."""
     def wrapper(request, *args, **kwargs):

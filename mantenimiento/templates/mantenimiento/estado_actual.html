@@ -1,60 +1,109 @@
-{% extends "base.html" %}
-{% load static %}
-{% block title %}Estado Actual de Herramientas{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% load static %} {% block title %}Estado Actual de
+Herramientas{% endblock %} {% block content %}
 
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
-    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
-               color:var(--text-main); letter-spacing:.03em; margin:0;">
+    <h5
+      style="
+        font-family: var(--font-ui);
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-main);
+        letter-spacing: 0.03em;
+        margin: 0;
+      "
+    >
       Estado Actual de Herramientas
     </h5>
-    <p style="font-family:var(--font-ui); font-size:.8rem;
-              color:var(--text-muted); margin:0;">
+    <p
+      style="
+        font-family: var(--font-ui);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin: 0;
+      "
+    >
       Disponibilidad y último estado registrado de cada ítem
     </p>
   </div>
   <a href="{{ url_accion }}" class="btn-primary-mine">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="16"/>
-      <line x1="8" y1="12" x2="16" y2="12"/>
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="16" />
+      <line x1="8" y1="12" x2="16" y2="12" />
     </svg>
     Nuevo Mantenimiento
   </a>
 </div>
 
-{# ══ TOTALES ══ #}
+#totales
 <div class="d-flex gap-3 mb-4">
-  <span style="font-family:var(--font-ui); font-size:.85rem; color:var(--text-muted);">
-    Total: <strong style="color:var(--text-main);">{{ productos|length }}</strong>
+  <span
+    style="
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    "
+  >
+    Total:
+    <strong style="color: var(--text-main)">{{ productos|length }}</strong>
   </span>
-  <span class="badge-state badge-aprobada">Disponibles: {{ total_disponibles }}</span>
-  <span class="badge-state badge-rechazada">No disponibles: {{ total_no_disponibles }}</span>
+  <span class="badge-state badge-aprobada"
+    >Disponibles: {{ total_disponibles }}</span
+  >
+  <span class="badge-state badge-rechazada"
+    >No disponibles: {{ total_no_disponibles }}</span
+  >
 </div>
 
-{# ══ FILTROS ══ #}
+#filtros
 <div class="card mb-4">
-  <div class="card-body" style="padding:1.25rem;">
+  <div class="card-body" style="padding: 1.25rem">
     <form method="get" class="row g-3 align-items-end">
-
       <div class="col-md-6">
         <label class="form-label">Buscar ítem</label>
-        <input type="text" name="q" class="form-control"
-               placeholder="Código, nombre, serie o ubicación..."
-               value="{{ q }}">
+        <input
+          type="text"
+          name="q"
+          class="form-control"
+          placeholder="Código, nombre, serie o ubicación..."
+          value="{{ q }}"
+        />
       </div>
 
       <div class="col-md-3">
         <label class="form-label">Disponibilidad</label>
         <select name="disponible" class="form-control form-select">
           <option value="">Todos</option>
-          <option value="si" {% if disponible_filtro == 'si' %}selected{% endif %}>
+          <option
+            value="si"
+            {%
+            if
+            disponible_filtro=""
+            ="si"
+            %}selected{%
+            endif
+            %}
+          >
             Solo disponibles
           </option>
-          <option value="no" {% if disponible_filtro == 'no' %}selected{% endif %}>
+          <option
+            value="no"
+            {%
+            if
+            disponible_filtro=""
+            ="no"
+            %}selected{%
+            endif
+            %}
+          >
             Solo no disponibles
           </option>
         </select>
@@ -62,143 +111,200 @@
 
       <div class="col-md-3 d-flex gap-2">
         <button type="submit" class="btn-primary-mine flex-grow-1">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           Filtrar
         </button>
-        <a href="{% url 'mantenimiento:estado_actual_lista' %}"
-           class="btn-outline-mine flex-grow-1" style="text-align:center;">
+        <a
+          href="{% url 'mantenimiento:estado_actual_lista' %}"
+          class="btn-outline-mine flex-grow-1"
+          style="text-align: center"
+        >
           Limpiar
         </a>
       </div>
-
     </form>
   </div>
 </div>
 
-{# ══ TABLA ══ #}
+#tabla
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-        <line x1="8" y1="21" x2="16" y2="21"/>
-        <line x1="12" y1="17" x2="12" y2="21"/>
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
       </svg>
       Ítems registrados
     </span>
-    <span style="font-family:var(--font-mono); font-size:.72rem;
-                 background:rgba(9,77,146,.08); color:var(--navy);
-                 padding:.18rem .6rem; border-radius:20px;
-                 border:1px solid rgba(9,77,146,.18);">
+    <span
+      style="
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        background: rgba(9, 77, 146, 0.08);
+        color: var(--navy);
+        padding: 0.18rem 0.6rem;
+        border-radius: 20px;
+        border: 1px solid rgba(9, 77, 146, 0.18);
+      "
+    >
       {{ productos|length }} ítem{{ productos|length|pluralize:",s" }}
     </span>
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+    <table
+      class="table-app"
+      style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
+    >
       <thead>
         <tr>
           <th>Código</th>
           <th>Nombre</th>
           <th>Ubicación</th>
-          <th style="text-align:center;">Disponible</th>
+          <th style="text-align: center">Disponible</th>
           <th>Último mantenimiento</th>
           <th>Estado actual</th>
-          <th style="text-align:center;">Acciones</th>
+          <th style="text-align: center">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for p in productos %}
         <tr>
           <td>
-            <span style="font-family:var(--font-mono); font-size:.78rem;
-                         color:var(--text-muted);">
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.78rem;
+                color: var(--text-muted);
+              "
+            >
               {{ p.codigo_sku }}
             </span>
           </td>
-          <td style="font-weight:600;">{{ p.nombre }}</td>
-          <td style="color:var(--text-muted); font-size:.85rem;">
+          <td style="font-weight: 600">{{ p.nombre }}</td>
+          <td style="color: var(--text-muted); font-size: 0.85rem">
             {{ p.ubicacion|default:"—" }}
           </td>
-          <td style="text-align:center;">
+          <td style="text-align: center">
             {% if p.disponible %}
-              <span class="badge-state badge-aprobada">Disponible</span>
+            <span class="badge-state badge-aprobada">Disponible</span>
             {% else %}
-              <span class="badge-state badge-rechazada">No disponible</span>
+            <span class="badge-state badge-rechazada">No disponible</span>
             {% endif %}
           </td>
           <td>
-            {% with ultimo=p.mantenimientos.all|first %}
-              {% if ultimo %}
-                <span style="font-family:var(--font-mono); font-size:.78rem;">
-                  {{ ultimo.fecha_reporte|date:"d/m/Y" }}
-                </span>
-                <small style="color:var(--text-muted);">
-                  ({{ ultimo.get_tipo_mantenimiento_display }})
-                </small>
-              {% else %}
-                <span style="color:var(--text-muted);">Sin mantenimiento</span>
-              {% endif %}
-            {% endwith %}
+            {% with ultimo=p.mantenimientos.all|first %} {% if ultimo %}
+            <span style="font-family: var(--font-mono); font-size: 0.78rem">
+              {{ ultimo.fecha_reporte|date:"d/m/Y" }}
+            </span>
+            <small style="color: var(--text-muted)">
+              ({{ ultimo.get_tipo_mantenimiento_display }})
+            </small>
+            {% else %}
+            <span style="color: var(--text-muted)">Sin mantenimiento</span>
+            {% endif %} {% endwith %}
           </td>
           <td>
-            {% with ultimo=p.mantenimientos.all|first %}
-              {% if ultimo and ultimo.tipo_estado %}
-                <span class="badge-state"
-                      style="background:{{ ultimo.tipo_estado.color|default:'#6c757d' }};
-                             color:#fff; border:none;">
-                  {{ ultimo.tipo_estado.nombre }}
-                </span>
-              {% else %}
-                <span class="badge-state badge-pendiente">Sin estado</span>
-              {% endif %}
-            {% endwith %}
+            {% with ultimo=p.mantenimientos.all|first %} {% if ultimo and
+            ultimo.tipo_estado %}
+            <span
+              class="badge-state"
+              style="background:{{ ultimo.tipo_estado.color|default:'#6c757d' }};
+                             color:#fff; border:none;"
+            >
+              {{ ultimo.tipo_estado.nombre }}
+            </span>
+            {% else %}
+            <span class="badge-state badge-pendiente">Sin estado</span>
+            {% endif %} {% endwith %}
           </td>
-          <td style="text-align:center;">
-            <a href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ p.pk }}"
-               style="width:28px; height:28px; border-radius:6px;
-                      background:rgba(9,77,146,.07);
-                      border:1px solid rgba(9,77,146,.18);
-                      color:var(--navy); display:inline-flex;
-                      align-items:center; justify-content:center; padding:0;"
-               title="Nuevo mantenimiento">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2.5">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
+          <td style="text-align: center">
+            <a
+              href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ p.pk }}"
+              style="
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
+                background: rgba(9, 77, 146, 0.07);
+                border: 1px solid rgba(9, 77, 146, 0.18);
+                color: var(--navy);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+              "
+              title="Nuevo mantenimiento"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
             </a>
-            <a href="{% url 'mantenimiento:historial_producto' p.pk %}"
-               style="width:28px; height:28px; border-radius:6px;
-                      background:rgba(9,77,146,.07);
-                      border:1px solid rgba(9,77,146,.18);
-                      color:var(--navy); display:inline-flex;
-                      align-items:center; justify-content:center;
-                      padding:0; margin-left:4px;"
-               title="Ver historial">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2.2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
-                         a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
+            <a
+              href="{% url 'mantenimiento:historial_producto' p.pk %}"
+              style="
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
+                background: rgba(9, 77, 146, 0.07);
+                border: 1px solid rgba(9, 77, 146, 0.18);
+                color: var(--navy);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                margin-left: 4px;
+              "
+              title="Ver historial"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
+                         a2 2 0 0 0 2-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             </a>
           </td>
         </tr>
-        {% empty %}
-          {% include "mantenimiento/partials/_tabla_empty.html" with
-              colspan=7
-              empty_mensaje="No se encontraron herramientas con los filtros aplicados."
-          %}
-        {% endfor %}
+        {% empty %} {% include "mantenimiento/partials/_tabla_empty.html" with
+        colspan=7 empty_mensaje="No se encontraron herramientas con los filtros
+        aplicados." %} {% endfor %}
       </tbody>
     </table>
   </div>

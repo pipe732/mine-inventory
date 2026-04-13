@@ -5,11 +5,7 @@ from django.contrib.auth.models import User
 
 from .models import TipoEstado, Mantenimiento
 
-
-# ══════════════════════════════════════════════
-# TIPO DE ESTADO
-# ══════════════════════════════════════════════
-
+#tipo estado formulario
 class TipoEstadoForm(forms.ModelForm):
 
     class Meta:
@@ -25,7 +21,6 @@ class TipoEstadoForm(forms.ModelForm):
             'color':      forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color w-25'}),
             'activo':     forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-        # ← labels eliminados: eran de Mantenimiento, no de TipoEstado
 
     def clean_nombre(self):
         nombre = self.cleaned_data.get('nombre')
@@ -47,11 +42,7 @@ class TipoEstadoForm(forms.ModelForm):
                 raise ValidationError("Este código ya está en uso.")
         return codigo
 
-
-# ══════════════════════════════════════════════
-# MANTENIMIENTO
-# ══════════════════════════════════════════════
-
+#mantenimiento 
 class MantenimientoForm(forms.ModelForm):
 
     producto_busqueda = forms.CharField(
@@ -114,7 +105,6 @@ class MantenimientoForm(forms.ModelForm):
             lambda u: u.get_full_name() or u.username
         )
 
-        # Prellenar búsqueda al editar
         if self.instance.pk and self.instance.producto_id:
             p = self.instance.producto
             self.fields['producto_busqueda'].initial = f"[{p.codigo_sku}] {p.nombre}"
