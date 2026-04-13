@@ -1,5 +1,6 @@
 import re
-from django.shortcuts import render, redirect
+import csv
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
@@ -8,8 +9,10 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from .models import Usuario, Rol, validar_numero_documento
+from django.http import HttpResponse, JsonResponse
+from django.db.models import Q
 from django.core.exceptions import ValidationError
+from .models import Usuario, Rol, validar_numero_documento
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
@@ -173,7 +176,6 @@ def olvido_contrasena_view(request):
             messages.success(request, 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.')
             return render(request, 'olvido_contrasena.html')
 
-        # Genera token y lo guarda en sesión
         token = get_random_string(40)
         request.session[f'reset_token_{usuario.numero_documento}'] = token
 
@@ -233,10 +235,109 @@ def nueva_contrasena_view(request, uid, token):
         usuario.password = make_password(password1)
         usuario.save(update_fields=['password'])
 
-        # Invalida el token para que no se reutilice
         del request.session[f'reset_token_{documento}']
 
         messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
         return redirect('login')
 
     return render(request, 'nueva_contrasena.html')
+
+
+# ─────────────────────────────────────────────────────────────
+#  LISTA DE USUARIOS
+# ─────────────────────────────────────────────────────────────
+def lista_usuarios_view(request):
+    """Lista y fichas de usuarios con búsqueda y filtros."""
+    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+
+    q        = request.GET.get('q', '').strip()
+    rol_id   = request.GET.get('rol', '')
+    tipo_doc = request.GET.get('tipo_doc', '')
+
+    if q:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=q) |
+            Q(numero_documento__icontains=q) |
+            Q(correo__icontains=q)
+        )
+    if rol_id:
+        qs = qs.filter(id_rol__id=rol_id)
+    if tipo_doc:
+        qs = qs.filter(tipo_documento=tipo_doc)
+
+    ctx = {
+        'usuarios':  qs,
+        'roles':     Rol.objects.all(),
+        'tipos_doc': Usuario.TIPO_DOCUMENTO_CHOICES,
+        'q':         q,
+        'rol_id':    rol_id,
+        'tipo_doc':  tipo_doc,
+        'total':     qs.count(),
+    }
+    return render(request, 'lista_usuarios.html', ctx)
+
+
+# ─────────────────────────────────────────────────────────────
+#  DETALLE USUARIO (JSON para modal)
+# ─────────────────────────────────────────────────────────────
+def detalle_usuario_json(request, numero_documento):
+    """Devuelve los datos de un usuario en JSON para el modal."""
+    usuario = get_object_or_404(
+        Usuario.objects.select_related('id_rol', 'destinado', 'solicitado'),
+        numero_documento=numero_documento,
+    )
+
+    data = {
+        'numero_documento':       usuario.numero_documento,
+        'nombre_completo':        usuario.nombre_completo,
+        'correo':                 usuario.correo,
+        'telefono':               usuario.telefono,
+        'tipo_documento_display': usuario.get_tipo_documento_display(),
+        'rol':                    usuario.id_rol.nombre,
+        'destinado':      usuario.destinado.nombre_completo if usuario.destinado else None,
+        'destinado_doc':  usuario.destinado.numero_documento if usuario.destinado else None,
+        'solicitado':     usuario.solicitado.nombre_completo if usuario.solicitado else None,
+        'solicitado_doc': usuario.solicitado.numero_documento if usuario.solicitado else None,
+    }
+    return JsonResponse(data)
+
+
+# ─────────────────────────────────────────────────────────────
+#  EXPORTAR USUARIOS CSV
+# ─────────────────────────────────────────────────────────────
+def exportar_usuarios_csv(request):
+    """Exporta la lista filtrada de usuarios a CSV."""
+    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+
+    q        = request.GET.get('q', '').strip()
+    rol_id   = request.GET.get('rol', '')
+    tipo_doc = request.GET.get('tipo_doc', '')
+
+    if q:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=q) |
+            Q(numero_documento__icontains=q) |
+            Q(correo__icontains=q)
+        )
+    if rol_id:
+        qs = qs.filter(id_rol__id=rol_id)
+    if tipo_doc:
+        qs = qs.filter(tipo_documento=tipo_doc)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="usuarios.csv"'
+    response.write('\ufeff')  # BOM para Excel
+
+    writer = csv.writer(response)
+    writer.writerow(['Número de Documento', 'Tipo de Documento', 'Nombre Completo',
+                     'Correo', 'Teléfono', 'Rol'])
+    for u in qs:
+        writer.writerow([
+            u.numero_documento,
+            u.get_tipo_documento_display(),
+            u.nombre_completo,
+            u.correo,
+            u.telefono,
+            u.id_rol.nombre,
+        ])
+    return response
