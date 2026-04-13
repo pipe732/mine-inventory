@@ -4,18 +4,15 @@
 
 {% block content %}
 
-{# La cabecera recibe titulo/subtitulo/url_cancelar del ContextoMixin #}
-<!--
 {% include "mantenimiento/partials/_cabecera.html" with
     titulo=titulo
     subtitulo=subtitulo
     url_cancelar=url_cancelar
 %}
--->
+
 <div class="card" style="max-width:860px;">
   <div class="card-body" style="padding:1.5rem;">
 
-    {# Separador de sección — dinámico según create o update #}
     <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
                 text-transform:uppercase; color:var(--navy);
                 border-bottom:1px solid rgba(9,77,146,.18);
@@ -26,7 +23,6 @@
     <form method="post" class="row g-3" novalidate>
       {% csrf_token %}
 
-      {# Errores globales del form #}
       {% if form.non_field_errors %}
         <div class="col-12">
           {% for error in form.non_field_errors %}
@@ -90,7 +86,7 @@
             <polyline points="17 21 17 13 7 13 7 21"/>
             <polyline points="7 3 7 8 15 8"/>
           </svg>
-          {{ boton_texto }}  {# ← viene del ContextoMixin, diferente en crear vs editar #}
+          {{ boton_texto }}
         </button>
       </div>
 

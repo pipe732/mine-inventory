@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block extra_head %}
@@ -6,25 +7,25 @@
   .producto-sugerencia { cursor:pointer; padding:10px 12px; }
   .producto-sugerencia:hover { background-color:#f8f9fa; }
   .dropdown-menu { max-height:320px; overflow-y:auto;
-  .box-shadow:0 4px 12px rgba(0,0,0,.15); }
+                   box-shadow:0 4px 12px rgba(0,0,0,.15); }
 </style>
 {% endblock %}
 
 {% block content %}
-<!--
+
 {% include "mantenimiento/partials/_cabecera.html" with
     titulo=titulo
     subtitulo=subtitulo
     url_cancelar=url_cancelar
 %}
--->
+
 <div class="card" style="max-width:900px;">
   <div class="card-body" style="padding:1.5rem;">
     <form method="post" id="mantenimientoForm">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
       {% endif %}
       {% for field in form %}
         {% if field.errors %}
@@ -111,8 +112,7 @@
       <div class="mt-4">
         <button type="submit" class="btn-primary-mine">{{ boton_texto }}</button>
         {% if url_cancelar %}
-          <a href="{{ url_cancelar }}"
-             class="btn-outline-mine ms-2">Cancelar</a>
+          <a href="{{ url_cancelar }}" class="btn-outline-mine ms-2">Cancelar</a>
         {% endif %}
       </div>
 
@@ -120,11 +120,10 @@
   </div>
 </div>
 
-{# El JS de autocompletado no cambia — lógica específica de este form #}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const input = document.getElementById('producto_busqueda');
-  const hidden = document.getElementById('id_producto');
+  const input          = document.getElementById('producto_busqueda');
+  const hidden         = document.getElementById('id_producto');
   const sugerenciasDiv = document.getElementById('sugerencias');
   let timeout;
 
@@ -136,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
       div.className = 'producto-sugerencia dropdown-item';
       div.textContent = item.texto;
       div.addEventListener('click', function () {
-        input.value = item.texto;
+        input.value  = item.texto;
         hidden.value = item.id;
         sugerenciasDiv.style.display = 'none';
       });
@@ -148,7 +147,11 @@ document.addEventListener('DOMContentLoaded', function () {
   input.addEventListener('input', function () {
     clearTimeout(timeout);
     const q = this.value.trim();
-    if (q.length < 2) { hidden.value = ''; sugerenciasDiv.style.display = 'none'; return; }
+    if (q.length < 2) {
+      hidden.value = '';
+      sugerenciasDiv.style.display = 'none';
+      return;
+    }
     timeout = setTimeout(() => {
       fetch(`/mantenimiento/api/productos/?q=${encodeURIComponent(q)}`)
         .then(r => r.json())
@@ -163,4 +166,5 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 </script>
+
 {% endblock %}

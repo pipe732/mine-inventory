@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 
 from .mixins import SesionRequeridaMixin, ContextoMixin
-from .models import EstadoHerramienta, TipoEstado, Mantenimiento
+from .models import TipoEstado, Mantenimiento          # ← EstadoHerramienta eliminado
 from .forms import TipoEstadoForm, MantenimientoForm
 from inventario.models import Producto
 
@@ -18,14 +18,14 @@ from inventario.models import Producto
 # ══════════════════════════════════════════════
 
 class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
-    model                = TipoEstado
-    template_name        = 'mantenimiento/tipo_estado_list.html'
-    context_object_name  = 'estados'
-    ordering             = ['nombre']
-    titulo               = 'Catálogo de Tipos de Estado'
-    subtitulo            = 'Gestión del catálogo de estados de mantenimiento'
-    url_accion           = reverse_lazy('mantenimiento:tipo_estado_nuevo')
-    label_accion         = 'Nuevo Tipo de Estado'
+    model               = TipoEstado
+    template_name       = 'mantenimiento/tipo_estado_list.html'
+    context_object_name = 'estados'
+    ordering            = ['nombre']
+    titulo              = 'Catálogo de Tipos de Estado'
+    subtitulo           = 'Gestión del catálogo de estados de mantenimiento'
+    url_accion          = reverse_lazy('mantenimiento:tipo_estado_nuevo')
+    label_accion        = 'Nuevo Tipo de Estado'
 
 
 class TipoEstadoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
@@ -86,8 +86,8 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
 
         if q:
             qs = qs.filter(
-                Q(producto__nombre__icontains=q) |
-                Q(producto__codigo_sku__icontains=q) |
+                Q(producto__nombre__icontains=q)       |
+                Q(producto__codigo_sku__icontains=q)   |
                 Q(descripcion_problema__icontains=q)
             )
         if tipo:
@@ -98,11 +98,11 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['tipo_choices']   = Mantenimiento.TIPO_CHOICES
-        ctx['estado_choices'] = Mantenimiento.ESTADO_REGISTRO_CHOICES
-        ctx['q']              = self.request.GET.get('q', '')
-        ctx['tipo_filtro']    = self.request.GET.get('tipo', '')
-        ctx['estado_filtro']  = self.request.GET.get('estado_registro', '')
+        ctx['tipo_choices']  = Mantenimiento.TIPO_CHOICES
+        ctx['estado_choices']= Mantenimiento.ESTADO_REGISTRO_CHOICES
+        ctx['q']             = self.request.GET.get('q', '')
+        ctx['tipo_filtro']   = self.request.GET.get('tipo', '')
+        ctx['estado_filtro'] = self.request.GET.get('estado_registro', '')
         return ctx
 
 
@@ -125,6 +125,7 @@ class MantenimientoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
     def form_valid(self, form):
         mantenimiento = form.save(commit=False)
 
+        # Auditoría: asignar creado_por desde la sesión propia
         doc = self.request.session.get('usuario_documento')
         if doc:
             try:
@@ -176,6 +177,10 @@ class MantenimientoDetailView(SesionRequeridaMixin, DetailView):
             'producto', 'tipo_estado', 'responsable', 'creado_por'
         )
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['url_cancelar'] = reverse_lazy('mantenimiento:mantenimiento_lista')
+        return ctx
 
 # ══════════════════════════════════════════════
 # ESTADO ACTUAL
@@ -187,9 +192,9 @@ class EstadoActualListView(SesionRequeridaMixin, ListView):
     context_object_name = 'productos'
 
     def get_queryset(self):
-        qs          = Producto.objects.prefetch_related('mantenimientos').order_by('nombre')
-        q           = self.request.GET.get('q', '').strip()
-        disponible  = self.request.GET.get('disponible', '')
+        qs         = Producto.objects.prefetch_related('mantenimientos').order_by('nombre')
+        q          = self.request.GET.get('q', '').strip()
+        disponible = self.request.GET.get('disponible', '')
 
         if q:
             qs = qs.filter(
@@ -206,12 +211,13 @@ class EstadoActualListView(SesionRequeridaMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['q']                   = self.request.GET.get('q', '')
-        ctx['disponible_filtro']   = self.request.GET.get('disponible', '')
-        ctx['total_disponibles']   = Producto.objects.filter(disponible=True).count()
-        ctx['total_no_disponibles']= Producto.objects.filter(disponible=False).count()
-        ctx['url_accion']          = reverse_lazy('mantenimiento:mantenimiento_nuevo')
-        ctx['label_accion']        = 'Nuevo Mantenimiento'
+        ctx['q']                    = self.request.GET.get('q', '')
+        ctx['disponible_filtro']    = self.request.GET.get('disponible', '')
+        # Estos counts usan el queryset completo sin filtros, correcto para los totales globales
+        ctx['total_disponibles']    = Producto.objects.filter(disponible=True).count()
+        ctx['total_no_disponibles'] = Producto.objects.filter(disponible=False).count()
+        ctx['url_accion']           = reverse_lazy('mantenimiento:mantenimiento_nuevo')
+        ctx['label_accion']         = 'Nuevo Mantenimiento'
         return ctx
 
 
@@ -225,7 +231,9 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
     context_object_name = 'mantenimientos'
 
     def get_queryset(self):
+        # get_object_or_404 lanza 404 limpio si el producto no existe
         self.producto = get_object_or_404(Producto, pk=self.kwargs['producto_id'])
+
         qs = Mantenimiento.objects.filter(
             producto=self.producto
         ).select_related(
@@ -235,8 +243,8 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         q           = self.request.GET.get('q', '').strip()
         tipo        = self.request.GET.get('tipo', '')
         estado      = self.request.GET.get('estado_registro', '')
-        fecha_desde = self.request.GET.get('fecha_desde')
-        fecha_hasta = self.request.GET.get('fecha_hasta')
+        fecha_desde = self.request.GET.get('fecha_desde', '')
+        fecha_hasta = self.request.GET.get('fecha_hasta', '')
 
         if q:
             qs = qs.filter(
@@ -251,32 +259,37 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
             qs = qs.filter(fecha_reporte__gte=fecha_desde)
         if fecha_hasta:
             qs = qs.filter(fecha_reporte__lte=fecha_hasta)
+
+        # Guardamos el qs filtrado para reutilizarlo en get_context_data
+        self._qs_filtrado = qs
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['producto']      = self.producto
-        ctx['tipo_choices']  = Mantenimiento.TIPO_CHOICES
-        ctx['estado_choices']= Mantenimiento.ESTADO_REGISTRO_CHOICES
-        ctx['q']             = self.request.GET.get('q', '')
-        ctx['tipo_filtro']   = self.request.GET.get('tipo', '')
-        ctx['estado_filtro'] = self.request.GET.get('estado_registro', '')
-        ctx['fecha_desde']   = self.request.GET.get('fecha_desde', '')
-        ctx['fecha_hasta']   = self.request.GET.get('fecha_hasta', '')
-        ctx['total_registros']= self.object_list.count()
-        ctx['url_accion']    = (
+        ctx['producto']       = self.producto
+        ctx['tipo_choices']   = Mantenimiento.TIPO_CHOICES
+        ctx['estado_choices'] = Mantenimiento.ESTADO_REGISTRO_CHOICES
+        ctx['q']              = self.request.GET.get('q', '')
+        ctx['tipo_filtro']    = self.request.GET.get('tipo', '')
+        ctx['estado_filtro']  = self.request.GET.get('estado_registro', '')
+        ctx['fecha_desde']    = self.request.GET.get('fecha_desde', '')
+        ctx['fecha_hasta']    = self.request.GET.get('fecha_hasta', '')
+        # ← Usa el qs ya construido, sin hacer una segunda consulta
+        ctx['total_registros']= self._qs_filtrado.count()
+        ctx['url_accion']     = (
             str(reverse_lazy('mantenimiento:mantenimiento_nuevo'))
             + f'?producto={self.producto.pk}'
         )
-        ctx['label_accion']  = 'Nuevo Mantenimiento'
+        ctx['label_accion']   = 'Nuevo Mantenimiento'
         return ctx
 
 
 # ══════════════════════════════════════════════
-# API AJAX — se queda como FBV, no necesita CBV
+# API AJAX — FBV, no necesita CBV
 # ══════════════════════════════════════════════
 
 def login_requerido(view_func):
+    """Decorador de sesión para vistas funcionales."""
     def wrapper(request, *args, **kwargs):
         if not request.session.get('usuario_documento'):
             return redirect('login')
@@ -286,13 +299,14 @@ def login_requerido(view_func):
 
 @login_requerido
 def api_buscar_producto(request):
+    """Endpoint AJAX para autocompletado de productos en el formulario."""
     q          = request.GET.get('q', '').strip()
     resultados = []
 
     if len(q) >= 2:
         productos = Producto.objects.filter(
-            Q(nombre__icontains=q)        |
-            Q(codigo_sku__icontains=q)    |
+            Q(nombre__icontains=q)      |
+            Q(codigo_sku__icontains=q)  |
             Q(numero_serie__icontains=q)
         )[:10]
 

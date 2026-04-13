@@ -1,10 +1,10 @@
 {# partials/_cabecera.html
-   Variables esperadas:
-   - titulo        (str)  requerido
-   - subtitulo     (str)  opcional
-   - url_accion    (str)  URL del botón derecho, opcional
-   - label_accion  (str)  texto del botón derecho, opcional
-   - url_cancelar  (str)  URL del botón cancelar (para forms), opcional
+   Variables esperadas desde el contexto (nunca strings con tags):
+   - titulo       (str) requerido
+   - subtitulo    (str) opcional
+   - url_accion   (str) URL resuelta desde la vista, opcional
+   - label_accion (str) texto del botón, opcional
+   - url_cancelar (str) URL resuelta desde el mixin, opcional
 #}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -13,14 +13,13 @@
       {{ titulo }}
     </h5>
     {% if subtitulo %}
-    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
-      {{ subtitulo }}
-    </p>
+      <p style="font-family:var(--font-ui); font-size:.8rem;
+                color:var(--text-muted); margin:0;">
+        {{ subtitulo }}
+      </p>
     {% endif %}
   </div>
 
-  {# Botón derecho: si hay url_accion → botón primario (para listas)
-                    si hay url_cancelar → botón outline (para forms) #}
   {% if url_accion %}
     <a href="{{ url_accion }}" class="btn-primary-mine">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none"

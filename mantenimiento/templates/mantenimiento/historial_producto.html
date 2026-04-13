@@ -3,16 +3,13 @@
 {% block title %}Historial — {{ producto.nombre }}{% endblock %}
 
 {% block content %}
-
-{# Cabecera: el subtítulo muestra el código y nombre del producto #}
-<!--
 {% include "mantenimiento/partials/_cabecera.html" with
-    titulo="Historial de Mantenimientos"
-    subtitulo=producto.codigo_sku|stringformat:"s"|add:" — "|add:producto.nombre
-    url_accion=url_nuevo_mant
-    label_accion="Nuevo Mantenimiento"
+  titulo="Historial de Mantenimientos"
+  subtitulo=producto.nombre
+  url_accion=url_accion
+  label_accion=label_accion
 %}
--->
+
 {# ══ FILTROS ══ #}
 <div class="card mb-4">
   <div class="card-body" style="padding:1.25rem;">
@@ -31,7 +28,7 @@
           <option value="">Todos los tipos</option>
           {% for value, label in tipo_choices %}
             <option value="{{ value }}"
-              {% if tipo_filtro == value %}selected{% endif %}>
+                    {% if tipo_filtro == value %}selected{% endif %}>
               {{ label }}
             </option>
           {% endfor %}
@@ -44,7 +41,7 @@
           <option value="">Todos</option>
           {% for value, label in estado_choices %}
             <option value="{{ value }}"
-              {% if estado_filtro == value %}selected{% endif %}>
+                    {% if estado_filtro == value %}selected{% endif %}>
               {{ label }}
             </option>
           {% endfor %}
@@ -209,8 +206,7 @@
 
 {# ══ PIE ══ #}
 <div class="mt-3">
-  <a href="{% url 'mantenimiento:mantenimiento_lista' %}"
-     class="btn-outline-mine">
+  <a href="{% url 'mantenimiento:mantenimiento_lista' %}" class="btn-outline-mine">
     ← Volver a todos los mantenimientos
   </a>
 </div>

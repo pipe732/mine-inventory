@@ -3,14 +3,14 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<!--
+
 {% include "mantenimiento/partials/_cabecera.html" with
     titulo=titulo
     subtitulo=subtitulo
     url_accion=url_accion
     label_accion=label_accion
 %}
--->
+
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
@@ -61,7 +61,8 @@
             {% if estado.color %}
               <span style="display:inline-block; width:20px; height:20px;
                            border-radius:4px; background:{{ estado.color }};
-                           border:1px solid rgba(0,0,0,.12); vertical-align:middle;"
+                           border:1px solid rgba(0,0,0,.12);
+                           vertical-align:middle;"
                     title="{{ estado.color }}"></span>
             {% else %}—{% endif %}
           </td>
@@ -77,7 +78,7 @@
                style="width:28px; height:28px; border-radius:6px;
                       background:rgba(9,77,146,.07);
                       border:1px solid rgba(9,77,146,.18);
-                      color:var(--navy); cursor:pointer; display:inline-flex;
+                      color:var(--navy); display:inline-flex;
                       align-items:center; justify-content:center; padding:0;"
                title="Editar">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
