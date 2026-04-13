@@ -1,16 +1,19 @@
 import re
-from django.shortcuts import render, redirect
+import csv
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
-from .models import Usuario, Rol, validar_numero_documento
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.http import HttpResponse, JsonResponse
+from django.db.models import Q
 from django.core.exceptions import ValidationError
+from .models import Usuario, Rol, validar_numero_documento
 
-
-# ── Reglas de documento (espejo del frontend) ────────────────────────────────
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
     'CE': re.compile(r'^[A-Za-z0-9]{6,12}$'),
@@ -29,12 +32,9 @@ DOC_HINTS = {
     'PP': 'El Pasaporte debe tener entre 5 y 9 caracteres alfanuméricos.',
     'TI': 'La Tarjeta de Identidad debe tener 10 u 11 dígitos.',
 }
-
 TIPOS_VALIDOS = set(DOC_RULES.keys())
 
-
 def _validar_documento(tipo, numero):
-    """Devuelve None si es válido, o un string con el error."""
     if tipo not in TIPOS_VALIDOS:
         return 'Tipo de documento no válido.'
     if not DOC_RULES[tipo].match(numero):
@@ -54,23 +54,15 @@ def login_view(request):
         documento      = request.POST.get('documento', '').strip()
         password       = request.POST.get('password', '')
 
-        # ── Validaciones básicas ──────────────────────────────
         if not all([tipo_documento, documento, password]):
             messages.error(request, 'Completa todos los campos.')
-            return render(request, 'login.html', {
-                'tipo_documento': tipo_documento,
-                'documento': documento,
-            })
+            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
         error_doc = _validar_documento(tipo_documento, documento)
         if error_doc:
             messages.error(request, error_doc)
-            return render(request, 'login.html', {
-                'tipo_documento': tipo_documento,
-                'documento': documento,
-            })
+            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
-        # ── Buscar usuario por documento Y tipo ───────────────
         try:
             usuario = Usuario.objects.select_related('id_rol').get(
                 numero_documento=documento,
@@ -78,24 +70,16 @@ def login_view(request):
             )
         except Usuario.DoesNotExist:
             messages.error(request, 'Documento o contraseña incorrectos.')
-            return render(request, 'login.html', {
-                'tipo_documento': tipo_documento,
-                'documento': documento,
-            })
+            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
         if not check_password(password, usuario.password):
             messages.error(request, 'Documento o contraseña incorrectos.')
-            return render(request, 'login.html', {
-                'tipo_documento': tipo_documento,
-                'documento': documento,
-            })
+            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
-        # ── Sesión ────────────────────────────────────────────
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
         request.session['usuario_rol']            = usuario.id_rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-
         return redirect('home')
 
     return render(request, 'login.html')
@@ -121,25 +105,17 @@ def registro_view(request):
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
 
-        ctx = {
-            'username':       username,
-            'email':          email,
-            'tipo_documento': tipo_documento,
-            'documento':      documento,
-        }
+        ctx = {'username': username, 'email': email, 'tipo_documento': tipo_documento, 'documento': documento}
 
-        # ── Campos vacíos ─────────────────────────────────────
         if not all([username, email, tipo_documento, documento, password1, password2]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
-        # ── Formato de documento ──────────────────────────────
         error_doc = _validar_documento(tipo_documento, documento)
         if error_doc:
             messages.error(request, error_doc)
             return render(request, 'registro.html', ctx)
 
-        # ── Contraseña ────────────────────────────────────────
         if len(password1) < 8:
             messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
             return render(request, 'registro.html', ctx)
@@ -148,7 +124,6 @@ def registro_view(request):
             messages.error(request, 'Las contraseñas no coinciden.')
             return render(request, 'registro.html', ctx)
 
-        # ── Unicidad ──────────────────────────────────────────
         if Usuario.objects.filter(numero_documento=documento).exists():
             messages.error(request, 'Ya existe un usuario con ese número de documento.')
             return render(request, 'registro.html', ctx)
@@ -157,12 +132,7 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # ── Crear usuario ─────────────────────────────────────
-        rol_default, _ = Rol.objects.get_or_create(
-            id=1,
-            defaults={'nombre': 'Usuario'}
-        )
-
+        rol_default, _ = Rol.objects.get_or_create(id=1, defaults={'nombre': 'Usuario'})
         usuario = Usuario(
             numero_documento=documento,
             nombre_completo=username,
@@ -173,7 +143,6 @@ def registro_view(request):
             id_rol=rol_default,
         )
 
-        # Validación a nivel de modelo (llama a clean())
         try:
             usuario.full_clean()
         except ValidationError as e:
@@ -181,22 +150,17 @@ def registro_view(request):
             return render(request, 'registro.html', ctx)
 
         usuario.save()
-
-        # ── Sesión automática ─────────────────────────────────
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
         request.session['usuario_rol']            = rol_default.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-
         return redirect('home')
 
-    return render(request, 'registro.html', {
-        'username': '', 'email': '', 'tipo_documento': 'CC', 'documento': ''
-    })
+    return render(request, 'registro.html', {'username': '', 'email': '', 'tipo_documento': 'CC', 'documento': ''})
 
 
 # ─────────────────────────────────────────────────────────────
-#  OLVIDÓ CONTRASEÑA
+#  OLVIDÓ CONTRASEÑA — envía el link
 # ─────────────────────────────────────────────────────────────
 def olvido_contrasena_view(request):
     if request.method == 'POST':
@@ -209,32 +173,171 @@ def olvido_contrasena_view(request):
         try:
             usuario = Usuario.objects.get(correo=email)
         except Usuario.DoesNotExist:
-            # Respuesta genérica para no revelar si el correo existe
-            messages.success(
-                request,
-                'Si el correo está registrado, recibirás una contraseña temporal.'
-            )
+            messages.success(request, 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.')
             return render(request, 'olvido_contrasena.html')
 
-        nueva_pass = get_random_string(10)
-        usuario.password = make_password(nueva_pass)
-        usuario.save(update_fields=['password'])
+        token = get_random_string(40)
+        request.session[f'reset_token_{usuario.numero_documento}'] = token
+
+        uid  = urlsafe_base64_encode(force_bytes(usuario.numero_documento))
+        link = request.build_absolute_uri(
+            reverse('nueva_contrasena', kwargs={'uid': uid, 'token': token})
+        )
 
         try:
             send_mail(
                 subject='Recuperación de contraseña – SENA Centro Minero',
                 message=(
                     f'Hola {usuario.nombre_completo},\n\n'
-                    f'Tu contraseña temporal es: {nueva_pass}\n\n'
-                    'Por seguridad, cámbiala después de iniciar sesión.\n\n'
+                    f'Haz clic en el siguiente enlace para cambiar tu contraseña:\n\n{link}\n\n'
+                    'Si no solicitaste esto, ignora este mensaje.\n\n'
                     'SENA – Centro Minero · Regional Boyacá'
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
                 fail_silently=False,
             )
-            messages.success(request, 'Se envió una contraseña temporal a tu correo.')
+            messages.success(request, 'Te enviamos un enlace a tu correo para restablecer tu contraseña.')
         except Exception:
             messages.error(request, 'No se pudo enviar el correo. Contacta al administrador.')
 
     return render(request, 'olvido_contrasena.html')
+
+
+# ─────────────────────────────────────────────────────────────
+#  NUEVA CONTRASEÑA — formulario desde el link
+# ─────────────────────────────────────────────────────────────
+def nueva_contrasena_view(request, uid, token):
+    try:
+        documento = force_str(urlsafe_base64_decode(uid))
+        usuario   = Usuario.objects.get(numero_documento=documento)
+    except Exception:
+        messages.error(request, 'El enlace no es válido.')
+        return redirect('olvido_contrasena')
+
+    token_guardado = request.session.get(f'reset_token_{documento}')
+    if not token_guardado or token_guardado != token:
+        messages.error(request, 'El enlace ya fue usado o expiró. Solicita uno nuevo.')
+        return redirect('olvido_contrasena')
+
+    if request.method == 'POST':
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+
+        if len(password1) < 8:
+            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
+            return render(request, 'nueva_contrasena.html')
+
+        if password1 != password2:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'nueva_contrasena.html')
+
+        usuario.password = make_password(password1)
+        usuario.save(update_fields=['password'])
+
+        del request.session[f'reset_token_{documento}']
+
+        messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
+        return redirect('login')
+
+    return render(request, 'nueva_contrasena.html')
+
+
+# ─────────────────────────────────────────────────────────────
+#  LISTA DE USUARIOS
+# ─────────────────────────────────────────────────────────────
+def lista_usuarios_view(request):
+    """Lista y fichas de usuarios con búsqueda y filtros."""
+    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+
+    q        = request.GET.get('q', '').strip()
+    rol_id   = request.GET.get('rol', '')
+    tipo_doc = request.GET.get('tipo_doc', '')
+
+    if q:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=q) |
+            Q(numero_documento__icontains=q) |
+            Q(correo__icontains=q)
+        )
+    if rol_id:
+        qs = qs.filter(id_rol__id=rol_id)
+    if tipo_doc:
+        qs = qs.filter(tipo_documento=tipo_doc)
+
+    ctx = {
+        'usuarios':  qs,
+        'roles':     Rol.objects.all(),
+        'tipos_doc': Usuario.TIPO_DOCUMENTO_CHOICES,
+        'q':         q,
+        'rol_id':    rol_id,
+        'tipo_doc':  tipo_doc,
+        'total':     qs.count(),
+    }
+    return render(request, 'lista_usuarios.html', ctx)
+
+
+# ─────────────────────────────────────────────────────────────
+#  DETALLE USUARIO (JSON para modal)
+# ─────────────────────────────────────────────────────────────
+def detalle_usuario_json(request, numero_documento):
+    """Devuelve los datos de un usuario en JSON para el modal."""
+    usuario = get_object_or_404(
+        Usuario.objects.select_related('id_rol', 'destinado', 'solicitado'),
+        numero_documento=numero_documento,
+    )
+
+    data = {
+        'numero_documento':       usuario.numero_documento,
+        'nombre_completo':        usuario.nombre_completo,
+        'correo':                 usuario.correo,
+        'telefono':               usuario.telefono,
+        'tipo_documento_display': usuario.get_tipo_documento_display(),
+        'rol':                    usuario.id_rol.nombre,
+        'destinado':      usuario.destinado.nombre_completo if usuario.destinado else None,
+        'destinado_doc':  usuario.destinado.numero_documento if usuario.destinado else None,
+        'solicitado':     usuario.solicitado.nombre_completo if usuario.solicitado else None,
+        'solicitado_doc': usuario.solicitado.numero_documento if usuario.solicitado else None,
+    }
+    return JsonResponse(data)
+
+
+# ─────────────────────────────────────────────────────────────
+#  EXPORTAR USUARIOS CSV
+# ─────────────────────────────────────────────────────────────
+def exportar_usuarios_csv(request):
+    """Exporta la lista filtrada de usuarios a CSV."""
+    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+
+    q        = request.GET.get('q', '').strip()
+    rol_id   = request.GET.get('rol', '')
+    tipo_doc = request.GET.get('tipo_doc', '')
+
+    if q:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=q) |
+            Q(numero_documento__icontains=q) |
+            Q(correo__icontains=q)
+        )
+    if rol_id:
+        qs = qs.filter(id_rol__id=rol_id)
+    if tipo_doc:
+        qs = qs.filter(tipo_documento=tipo_doc)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="usuarios.csv"'
+    response.write('\ufeff')  # BOM para Excel
+
+    writer = csv.writer(response)
+    writer.writerow(['Número de Documento', 'Tipo de Documento', 'Nombre Completo',
+                     'Correo', 'Teléfono', 'Rol'])
+    for u in qs:
+        writer.writerow([
+            u.numero_documento,
+            u.get_tipo_documento_display(),
+            u.nombre_completo,
+            u.correo,
+            u.telefono,
+            u.id_rol.nombre,
+        ])
+    return response

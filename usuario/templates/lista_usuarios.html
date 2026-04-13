@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4 pb-3 border-bottom border-2" style="border-color:#094D92!important;">
+    <div>
+      <h1 class="h3 fw-semibold mb-0" style="color:#1B2021;">
+        Gestión de Usuarios
+        <span class="badge ms-2" style="background:#094D92;font-size:12px;">{{ total }}</span>
+      </h1>
+      <small style="color:#71816D;">SENA · Centro Minero · Regional Boyacá</small>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <form method="get" id="filtroForm">
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
+
+      <div class="input-group" style="max-width:300px;">
+        <span class="input-group-text bg-white" style="border-color:#dee2e6;">🔍</span>
+        <input type="text" name="q" id="qInput" value="{{ q }}" class="form-control" placeholder="Buscar…">
+      </div>
+
+      <select name="rol" class="form-select" style="max-width:160px;" onchange="this.form.submit()">
+        <option value="">Todos los roles</option>
+        {% for rol in roles %}
+          <option value="{{ rol.id }}" {% if rol_id == rol.id|stringformat:"s" %}selected{% endif %}>{{ rol.nombre }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="tipo_doc" class="form-select" style="max-width:170px;" onchange="this.form.submit()">
+        <option value="">Todos los tipos</option>
+        {% for val, label in tipos_doc %}
+          <option value="{{ val }}" {% if tipo_doc == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="btn btn-sm text-white" style="background:#71816D;border-color:#566159;">Filtrar</button>
+
+      {% if q or rol_id or tipo_doc %}
+        <a href="{% url 'lista_usuarios' %}" class="btn btn-sm" style="color:#98473E;border-color:#98473E;">✕ Limpiar</a>
+      {% endif %}
+
+      <div class="btn-group ms-auto" role="group">
+        <button type="button" id="btnLista"  class="btn btn-sm" onclick="setVista('lista')"
+                style="background:#094D92;color:#fff;border-color:#063870;">☰ Lista</button>
+        <button type="button" id="btnFichas" class="btn btn-sm btn-outline-secondary" onclick="setVista('fichas')">⊞ Fichas</button>
+      </div>
+
+    </div>
+  </form>
+
+  {% if usuarios %}
+
+  <!-- VISTA LISTA -->
+  <div id="vistaLista">
+    <div class="table-responsive rounded shadow-sm">
+      <table class="table table-hover align-middle mb-0 bg-white">
+        <thead>
+          <tr style="background:#1B2021;">
+            <th class="fw-medium text-uppercase small" style="color:#EFECCA;letter-spacing:.05em;">Nombre</th>
+            <th class="fw-medium text-uppercase small" style="color:#EFECCA;letter-spacing:.05em;">Documento</th>
+            <th class="fw-medium text-uppercase small" style="color:#EFECCA;letter-spacing:.05em;">Correo</th>
+            <th class="fw-medium text-uppercase small d-none d-md-table-cell" style="color:#EFECCA;letter-spacing:.05em;">Teléfono</th>
+            <th class="fw-medium text-uppercase small" style="color:#EFECCA;letter-spacing:.05em;">Tipo</th>
+            <th class="fw-medium text-uppercase small" style="color:#EFECCA;letter-spacing:.05em;">Rol</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                     style="width:32px;height:32px;min-width:32px;background:#e8ede7;color:#566159;font-size:11px;">
+                  {{ u.nombre_completo|slice:":2"|upper }}
+                </div>
+                <span class="fw-medium">{{ u.nombre_completo }}</span>
+              </div>
+            </td>
+            <td class="text-muted small">{{ u.numero_documento }}</td>
+            <td style="color:#094D92;" class="small">{{ u.correo }}</td>
+            <td class="d-none d-md-table-cell text-muted small">{{ u.telefono|default:"—" }}</td>
+            <td>
+              <span class="badge rounded-pill" style="background:#ddeaf7;color:#063870;font-weight:500;">
+                {{ u.get_tipo_documento_display }}
+              </span>
+            </td>
+            <td>
+              <span class="badge rounded-pill" style="background:#e8ede7;color:#566159;font-weight:500;">
+                {{ u.id_rol.nombre }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm fw-medium" onclick="verUsuario('{{ u.numero_documento }}')"
+                      style="background:#ddeaf7;color:#063870;border:none;">
+                Ver →
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VISTA FICHAS -->
+  <div id="vistaFichas" class="d-none">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3">
+      {% for u in usuarios %}
+      <div class="col">
+        <div class="card h-100 border shadow-sm">
+          <div class="card-header p-0" style="height:5px;background:#094D92;border:none;"></div>
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                   style="width:46px;height:46px;background:#e8ede7;color:#566159;font-size:16px;">
+                {{ u.nombre_completo|slice:":2"|upper }}
+              </div>
+              <div>
+                <p class="mb-0 fw-semibold" style="font-size:15px;color:#1B2021;">{{ u.nombre_completo }}</p>
+                <small style="color:#71816D;">{{ u.id_rol.nombre }}</small>
+              </div>
+            </div>
+            <hr class="my-2">
+            <dl class="row mb-0 small">
+              <dt class="col-4 text-uppercase fw-medium" style="font-size:10px;color:#71816D;">Tipo</dt>
+              <dd class="col-8 mb-1">
+                <span class="badge rounded-pill" style="background:#ddeaf7;color:#063870;">{{ u.get_tipo_documento_display }}</span>
+              </dd>
+              <dt class="col-4 text-uppercase fw-medium" style="font-size:10px;color:#71816D;">Doc.</dt>
+              <dd class="col-8 mb-1 text-muted">{{ u.numero_documento }}</dd>
+              <dt class="col-4 text-uppercase fw-medium" style="font-size:10px;color:#71816D;">Correo</dt>
+              <dd class="col-8 mb-0" style="color:#094D92;word-break:break-all;">{{ u.correo }}</dd>
+              {% if u.telefono %}
+              <dt class="col-4 text-uppercase fw-medium mt-1" style="font-size:10px;color:#71816D;">Tel.</dt>
+              <dd class="col-8 mb-0 mt-1 text-muted">{{ u.telefono }}</dd>
+              {% endif %}
+            </dl>
+          </div>
+          <div class="card-footer text-end" style="background:#EFECCA;border-color:#dee2e6;">
+            <button class="btn btn-sm text-white" onclick="verUsuario('{{ u.numero_documento }}')"
+                    style="background:#094D92;border-color:#063870;">
+              Ver ficha →
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5 rounded border" style="background:#fff;">
+    <p class="fs-1 mb-2">⊘</p>
+    <p class="fw-medium mb-1" style="color:#1B2021;">Sin resultados</p>
+    <p class="text-muted small mb-3">No se encontraron usuarios con los filtros aplicados.</p>
+    {% if q or rol_id or tipo_doc %}
+      <a href="{% url 'lista_usuarios' %}" class="btn btn-sm" style="color:#98473E;border-color:#98473E;">Limpiar filtros</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL DETALLE DE USUARIO
+══════════════════════════════════════════ -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow overflow-hidden">
+
+      <!-- Barra de color superior -->
+      <div style="height:5px;background:linear-gradient(90deg,#094D92 0%,#71816D 60%,#98473E 100%);"></div>
+
+      <!-- Header oscuro con avatar -->
+      <div class="d-flex align-items-center gap-3 p-4" style="background:#1B2021;">
+        <div id="modalAvatar"
+             class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+             style="width:54px;height:54px;background:#e8ede7;color:#566159;font-size:20px;border:2px solid #71816D;">
+        </div>
+        <div>
+          <h5 class="modal-title mb-1 fw-semibold" id="modalUsuarioLabel" style="color:#EFECCA;"></h5>
+          <span class="badge" id="modalRol" style="background:#094D92;"></span>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Cuerpo -->
+      <div class="modal-body p-4" id="modalCuerpo">
+        <!-- Skeleton de carga -->
+        <div id="modalSkeleton">
+          <div class="placeholder-glow mb-3">
+            <span class="placeholder col-4 me-2"></span><span class="placeholder col-6"></span>
+          </div>
+          <div class="placeholder-glow mb-3">
+            <span class="placeholder col-3 me-2"></span><span class="placeholder col-7"></span>
+          </div>
+          <div class="placeholder-glow">
+            <span class="placeholder col-5 me-2"></span><span class="placeholder col-5"></span>
+          </div>
+        </div>
+        <!-- Contenido real (oculto hasta que cargue) -->
+        <div id="modalDatos" class="d-none">
+
+          <p class="text-uppercase fw-semibold mb-2 d-flex align-items-center gap-2"
+             style="font-size:11px;color:#71816D;letter-spacing:.06em;">
+            Datos personales
+            <span class="flex-grow-1 border-top"></span>
+          </p>
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <p class="text-uppercase mb-1" style="font-size:10px;color:#71816D;font-weight:500;">Tipo de documento</p>
+              <span id="mTipoDoc" class="badge rounded-pill" style="background:#ddeaf7;color:#063870;font-weight:500;"></span>
+            </div>
+            <div class="col-6">
+              <p class="text-uppercase mb-1" style="font-size:10px;color:#71816D;font-weight:500;">Número de documento</p>
+              <span id="mNumDoc" class="fw-semibold small" style="color:#1B2021;"></span>
+            </div>
+            <div class="col-6">
+              <p class="text-uppercase mb-1" style="font-size:10px;color:#71816D;font-weight:500;">Correo electrónico</p>
+              <span id="mCorreo" class="small" style="color:#094D92;word-break:break-all;"></span>
+            </div>
+            <div class="col-6">
+              <p class="text-uppercase mb-1" style="font-size:10px;color:#71816D;font-weight:500;">Teléfono</p>
+              <span id="mTelefono" class="small text-muted"></span>
+            </div>
+          </div>
+
+          <p class="text-uppercase fw-semibold mb-2 d-flex align-items-center gap-2"
+             style="font-size:11px;color:#71816D;letter-spacing:.06em;">
+            Relaciones
+            <span class="flex-grow-1 border-top"></span>
+          </p>
+          <div class="row g-3" id="mRelaciones"></div>
+
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="background:#EFECCA;border-top:1px solid #dee2e6;">
+        <small id="mIdDoc" class="text-muted font-monospace me-auto"></small>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script>
+  /* ── Toggle vista ─────────────────────────────── */
+  function setVista(v) {
+    const esLista = v === 'lista';
+    document.getElementById('vistaLista').classList.toggle('d-none', !esLista);
+    document.getElementById('vistaFichas').classList.toggle('d-none', esLista);
+    document.getElementById('btnLista').style.cssText  = esLista  ? 'background:#094D92;color:#fff;border-color:#063870;' : '';
+    document.getElementById('btnFichas').style.cssText = !esLista ? 'background:#094D92;color:#fff;border-color:#063870;' : '';
+    localStorage.setItem('gu_vista', v);
+  }
+  const pref = localStorage.getItem('gu_vista');
+  if (pref) setVista(pref);
+
+  /* ── Búsqueda con debounce ────────────────────── */
+  let timer;
+  document.getElementById('qInput').addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(() => document.getElementById('filtroForm').submit(), 500);
+  });
+
+  /* ── Modal detalle via AJAX ───────────────────── */
+  function verUsuario(doc) {
+    // Resetear estado
+    document.getElementById('modalSkeleton').classList.remove('d-none');
+    document.getElementById('modalDatos').classList.add('d-none');
+    document.getElementById('modalUsuarioLabel').textContent = '';
+    document.getElementById('modalRol').textContent = '';
+    document.getElementById('modalAvatar').textContent = '';
+
+    // Abrir modal
+    const modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
+    modal.show();
+
+    // Fetch JSON
+    fetch(`/usuario/usuarios/${doc}/json/`)
+      .then(r => r.json())
+      .then(d => {
+        const iniciales = d.nombre_completo.slice(0, 2).toUpperCase();
+
+        document.getElementById('modalAvatar').textContent         = iniciales;
+        document.getElementById('modalUsuarioLabel').textContent   = d.nombre_completo;
+        document.getElementById('modalRol').textContent            = d.rol;
+        document.getElementById('mTipoDoc').textContent            = d.tipo_documento_display;
+        document.getElementById('mNumDoc').textContent             = d.numero_documento;
+        document.getElementById('mCorreo').textContent             = d.correo;
+        document.getElementById('mTelefono').textContent           = d.telefono || '—';
+        document.getElementById('mIdDoc').textContent              = 'ID: ' + d.numero_documento;
+
+        // Relaciones
+        let rel = '';
+        if (d.destinado) {
+          rel += `<div class="col-6">
+            <p class="text-uppercase mb-1" style="font-size:10px;color:#71816D;font-weight:500;">Destinado a</p>
+            <button class="btn btn-link p-0 small fw-medium text-decoration-none" style="color:#094D92;"
+                    onclick="verUsuario('${d.destinado_doc}')">${d.destinado}</button>
+          </div>`;
+        }
+        if (d.solicitado) {
+          rel += `<div class="col-6">
+            <p class="text-uppercase mb-1" style="font-size:10px;color:#71816D;font-weight:500;">Solicitado por</p>
+            <button class="btn btn-link p-0 small fw-medium text-decoration-none" style="color:#094D92;"
+                    onclick="verUsuario('${d.solicitado_doc}')">${d.solicitado}</button>
+          </div>`;
+        }
+        document.getElementById('mRelaciones').innerHTML = rel || '<div class="col-12"><small class="text-muted">Sin relaciones asignadas.</small></div>';
+
+        document.getElementById('modalSkeleton').classList.add('d-none');
+        document.getElementById('modalDatos').classList.remove('d-none');
+      })
+      .catch(() => {
+        document.getElementById('modalSkeleton').innerHTML =
+          '<p class="text-danger small">Error al cargar los datos del usuario.</p>';
+      });
+  }
+</script>
+{% endblock %}

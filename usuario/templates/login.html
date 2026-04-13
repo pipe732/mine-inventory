@@ -59,21 +59,31 @@
         <div class="mb-3">
           <label class="form-label text-uppercase fw-bold text-secondary" style="font-size:.65rem;letter-spacing:.06em;">Documento</label>
           <div class="row g-2">
-            <div class="col-5">
+
+            <div class="col-auto">
+              <input type="hidden" id="tipo_documento" name="tipo_documento" value="CC" />
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-card-text"></i></span>
-                <select id="tipo_documento" name="tipo_documento" class="form-select" required>
-                  <option value="CC" selected>CC – Cédula</option>
-                  <option value="CE">CE – Extranjería</option>
-                  <option value="PP">PP – Pasaporte</option>
-                  <option value="TI">TI – Tarjeta Identidad</option>
-                </select>
+                <button type="button"
+                        class="btn btn-white dropdown-toggle fw-semibold border border-secondary-subtle"
+                        data-bs-toggle="dropdown" aria-expanded="false"
+                        id="doc-tipo-btn" style="min-width:4.5rem; background-color:#fff;">
+                  CC
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#" data-value="CC">CC – Cédula de Ciudadanía</a></li>
+                  <li><a class="dropdown-item" href="#" data-value="CE">CE – Cédula de Extranjería</a></li>
+                  <li><a class="dropdown-item" href="#" data-value="PP">PP – Pasaporte</a></li>
+                  <li><a class="dropdown-item" href="#" data-value="TI">TI – Tarjeta de Identidad</a></li>
+                </ul>
               </div>
             </div>
-            <div class="col-7">
+
+            <div class="col">
               <input type="text" id="documento" name="documento" class="form-control" placeholder="Número" required />
               <div id="doc-hint" class="text-muted"></div>
             </div>
+
           </div>
         </div>
 
@@ -105,12 +115,24 @@
     TI: { min: 10, max: 11, onlyDigits: true,  pattern: /^\d{10,11}$/,          hint: 'Solo dígitos · 10 u 11 caracteres' },
   };
 
-  const tipoSel  = document.getElementById('tipo_documento');
-  const docInput = document.getElementById('documento');
-  const hint     = document.getElementById('doc-hint');
+  const tipoInput = document.getElementById('tipo_documento');
+  const tipoBtn   = document.getElementById('doc-tipo-btn');
+  const docInput  = document.getElementById('documento');
+  const hint      = document.getElementById('doc-hint');
+
+  document.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const val = item.dataset.value;
+      tipoInput.value     = val;
+      tipoBtn.textContent = val;
+      docInput.value      = '';
+      applyRules();
+    });
+  });
 
   function applyRules() {
-    const rules = DOC_RULES[tipoSel.value];
+    const rules = DOC_RULES[tipoInput.value];
     if (!rules) return;
     docInput.minLength = rules.min;
     docInput.maxLength = rules.max;
@@ -121,7 +143,7 @@
   }
 
   function validateDoc() {
-    const rules = DOC_RULES[tipoSel.value];
+    const rules = DOC_RULES[tipoInput.value];
     if (!rules || docInput.value === '') {
       docInput.classList.remove('is-valid', 'is-invalid');
       hint.className   = 'text-muted';
@@ -135,15 +157,13 @@
     hint.textContent = ok ? '✓ Formato correcto' : `✗ ${rules.hint}`;
   }
 
-  // Bloquear teclas no numéricas para CC y TI
   docInput.addEventListener('keypress', (e) => {
-    const rules = DOC_RULES[tipoSel.value];
+    const rules = DOC_RULES[tipoInput.value];
     if (rules?.onlyDigits && !/\d/.test(e.key)) e.preventDefault();
   });
 
-  // Limpiar al pegar si solo acepta dígitos
   docInput.addEventListener('paste', (e) => {
-    const rules = DOC_RULES[tipoSel.value];
+    const rules = DOC_RULES[tipoInput.value];
     if (!rules?.onlyDigits) return;
     e.preventDefault();
     const pasted = (e.clipboardData || window.clipboardData).getData('text');
@@ -151,13 +171,10 @@
     validateDoc();
   });
 
-  // Cambiar tipo limpia el número
-  tipoSel.addEventListener('change', () => { docInput.value = ''; applyRules(); });
   docInput.addEventListener('input', validateDoc);
 
-  // Validación final antes de enviar
   document.getElementById('loginForm').addEventListener('submit', (e) => {
-    const rules = DOC_RULES[tipoSel.value];
+    const rules = DOC_RULES[tipoInput.value];
     if (rules && !rules.pattern.test(docInput.value)) {
       e.preventDefault();
       docInput.classList.add('is-invalid');

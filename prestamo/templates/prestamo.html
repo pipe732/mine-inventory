@@ -203,7 +203,7 @@
                     data-bs-toggle="modal"
                     data-bs-target="#modalEditarPrestamo"
                     data-pk="{{ p.pk }}"
-                    data-usuario="{{ p.usuario.pk }}"
+                    data-usuario="{{ p.usuario }}"
                     data-estado="{{ p.estado }}"
                     data-observaciones="{{ p.observaciones|default:'' }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -322,31 +322,44 @@
                         <span class="badge-state badge-pendiente" style="font-size:.65rem; white-space:nowrap;">Pendiente</span>
                       {% endif %}
 
-                      <!-- MINE-137/138: Formulario de devolución por ítem -->
+                      <!-- MINE-137/138/145/146: Formulario de devolución por ítem con validación de cantidad -->
                       {% if not item.devuelto and p.estado != 'devuelto' %}
-                      <form method="post" style="margin:0; display:inline-flex; align-items:center; gap:.35rem;">
-                        {% csrf_token %}
-                        <input type="hidden" name="accion" value="devolver_item">
-                        <input type="hidden" name="item_pk" value="{{ item.pk }}">
-                        <!-- MINE-138: Cantidad a devolver -->
-                        <input type="number" name="cantidad_devuelta"
-                               min="1" max="{{ item.cantidad }}" value="{{ item.cantidad }}"
-                               style="width:52px; padding:.2rem .35rem; border-radius:5px;
-                                      border:1px solid rgba(9,77,146,.2); font-size:.78rem;
-                                      font-family:var(--font-mono); color:var(--text-main);
-                                      background:var(--bg-card); text-align:center;">
-                        <button type="submit"
-                                style="display:inline-flex; align-items:center; gap:.3rem;
-                                       padding:.25rem .6rem; border-radius:5px; white-space:nowrap;
-                                       background:rgba(45,212,191,.12); border:1px solid rgba(45,212,191,.3);
-                                       color:#0d9488; font-size:.75rem; font-weight:600;
-                                       font-family:var(--font-ui); cursor:pointer;">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
-                          </svg>
-                          Devolver
-                        </button>
-                      </form>
+                      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:.2rem;">
+                        <form class="devolver-form" method="post"
+                              style="margin:0; display:inline-flex; align-items:center; gap:.35rem;"
+                              data-max="{{ item.cantidad }}">
+                          {% csrf_token %}
+                          <input type="hidden" name="accion" value="devolver_item">
+                          <input type="hidden" name="item_pk" value="{{ item.pk }}">
+                          <!-- MINE-145: Input cantidad a devolver -->
+                          <input type="number" name="cantidad_devuelta"
+                                 class="devolver-cantidad"
+                                 min="1" max="{{ item.cantidad }}" value="{{ item.cantidad }}"
+                                 style="width:52px; padding:.2rem .35rem; border-radius:5px;
+                                        border:1px solid rgba(9,77,146,.2); font-size:.78rem;
+                                        font-family:var(--font-mono); color:var(--text-main);
+                                        background:var(--bg-card); text-align:center;"
+                                 aria-label="Cantidad a devolver">
+                          <button type="submit"
+                                  style="display:inline-flex; align-items:center; gap:.3rem;
+                                         padding:.25rem .6rem; border-radius:5px; white-space:nowrap;
+                                         background:rgba(45,212,191,.12); border:1px solid rgba(45,212,191,.3);
+                                         color:#0d9488; font-size:.75rem; font-weight:600;
+                                         font-family:var(--font-ui); cursor:pointer;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                              <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+                            </svg>
+                            Devolver
+                          </button>
+                        </form>
+                        <!-- MINE-146: Error si cantidad inválida -->
+                        <div class="devolver-error"
+                             style="display:none; font-size:.72rem; color:#931f1d;
+                                    font-family:var(--font-ui); white-space:nowrap;
+                                    background:rgba(147,31,29,.08); border:1px solid rgba(147,31,29,.22);
+                                    border-radius:4px; padding:.2rem .5rem;">
+                        </div>
+                      </div>
                       {% endif %}
                     </div>
                     {% empty %}
@@ -444,59 +457,63 @@
               {% for e in form.usuario.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
 
-            <!-- Producto — select con consulta de stock (MINE-128/129/130) -->
-            <div class="col-md-6">
-              <label class="form-label" for="id_producto">Herramienta / Producto *</label>
-              <select name="producto" id="id_producto" class="form-control form-select"
-                      data-stocks='{ {% for prod in productos %}"{{ prod.pk }}": {{ prod.stock }}{% if not forloop.last %},{% endif %}{% endfor %} }'>
-                <option value="">— Selecciona una herramienta —</option>
-                {% for prod in productos %}
-                  <option value="{{ prod.pk }}"
-                          data-stock="{{ prod.stock }}"
-                    {% if form.producto.value == prod.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
-                  </option>
-                {% empty %}
-                  <option disabled>No hay herramientas en inventario aún</option>
-                {% endfor %}
-              </select>
-              {% for e in form.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+            <!-- ── Herramientas: lista dinámica multi-ítem ── -->
+            <div class="col-12">
+              <label class="form-label">Herramientas / Productos *</label>
 
-              <!-- MINE-129: Panel de disponibilidad -->
-              <div id="stock-info" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
-                                          border-radius:var(--radius-md); font-family:var(--font-ui);
-                                          font-size:.8rem; align-items:center; gap:.5rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="stock-icon">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <span id="stock-label"></span>
+              <!-- Contenedor de filas de ítems -->
+              <div id="items-container" style="display:flex; flex-direction:column; gap:.55rem;">
+                <!-- Fila 1 (siempre visible) -->
+                <div class="item-row" style="display:grid; grid-template-columns:1fr 90px 32px; gap:.5rem; align-items:start;">
+                  <div>
+                    <select name="producto[]" class="form-control form-select item-producto">
+                      <option value="">— Selecciona una herramienta —</option>
+                      {% for prod in productos %}
+                        <option value="{{ prod.pk }}" data-stock="{{ prod.stock }}">
+                          {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
+                        </option>
+                      {% empty %}
+                        <option disabled>No hay herramientas en inventario aún</option>
+                      {% endfor %}
+                    </select>
+                    <div class="item-stock-info" style="display:none; margin-top:.35rem; padding:.35rem .65rem;
+                         border-radius:var(--radius-md); font-family:var(--font-ui); font-size:.76rem;
+                         align-items:center; gap:.4rem;"></div>
+                  </div>
+                  <div>
+                    <input type="number" name="cantidad[]" class="form-control item-cantidad"
+                           min="1" value="1" placeholder="Cant.">
+                  </div>
+                  <div style="padding-top:.15rem;">
+                    <button type="button" class="btn-remove-item"
+                            title="Quitar herramienta"
+                            style="width:32px; height:36px; border-radius:6px; border:1px solid rgba(147,31,29,.25);
+                                   background:rgba(147,31,29,.07); color:#931f1d; cursor:pointer;
+                                   display:inline-flex; align-items:center; justify-content:center;
+                                   opacity:.4; pointer-events:none;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <!-- MINE-130: Alerta si no hay stock -->
-              <div id="stock-alert" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
-                                           border-radius:var(--radius-md); font-size:.8rem;
-                                           background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.25);
-                                           color:#931f1d; font-family:var(--font-ui); display:none;
-                                           align-items:center; gap:.5rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              <!-- Botón agregar ítem -->
+              <button type="button" id="btn-add-item"
+                      style="margin-top:.65rem; display:inline-flex; align-items:center; gap:.4rem;
+                             padding:.3rem .75rem; border-radius:6px; border:1px dashed rgba(9,77,146,.35);
+                             background:rgba(9,77,146,.05); color:var(--navy); font-family:var(--font-ui);
+                             font-size:.78rem; cursor:pointer; font-weight:600; transition:background .15s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
                 </svg>
-                Sin stock disponible — no es posible registrar el préstamo
-              </div>
-            </div>
-
-            <!-- Cantidad -->
-            <div class="col-md-4">
-              <label class="form-label" for="{{ form.cantidad.id_for_label }}">Cantidad *</label>
-              {{ form.cantidad }}
-              {% for e in form.cantidad.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+                Agregar otra herramienta
+              </button>
             </div>
 
             <!-- Observaciones -->
-            <div class="col-md-8">
+            <div class="col-12">
               <label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
               {{ form.observaciones }}
               {% for e in form.observaciones.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
@@ -546,14 +563,13 @@
             Modificar datos del préstamo
           </div>
           <div class="row g-3">
-            <!-- Usuario -->
+            <!-- Usuario (MINE-141) -->
             <div class="col-md-6">
               <label class="form-label">Usuario *</label>
-              <select name="usuario" id="edit_usuario" class="form-control form-select">
-                {% for u in usuarios %}
-                  <option value="{{ u.pk }}">{{ u }}</option>
-                {% endfor %}
-              </select>
+              <input type="text" name="usuario" id="edit_usuario"
+                     class="form-control" placeholder="Nombre del usuario"
+                     maxlength="150" required>
+              <div id="edit_usuario_error" class="form-error" style="display:none;"></div>
             </div>
             <!-- Estado -->
             <div class="col-md-6">
@@ -694,9 +710,272 @@
 <script>window.PRESTAMO_URL = "{% url 'prestamo' %}";</script>
 <script src="{% static 'js/prestamos.js' %}"></script>
 <script>
-  // Reabrir modal si hubo errores de validación del backend
+  // ── Reabrir modal si hubo errores de validación del backend ──
   {% if form.errors or form.non_field_errors %}
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrearPrestamo')).show();
   {% endif %}
+
+  // ══════════════════════════════════════════════════════════════
+  // MINE-141 / MINE-142 — Modal Editar: poblar datos + guardar
+  // ══════════════════════════════════════════════════════════════
+  document.getElementById('modalEditarPrestamo')
+    .addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget;
+      if (!btn) return;
+
+      // Poblar campos con los data-* del botón disparador
+      document.getElementById('edit_pk').value            = btn.dataset.pk          || '';
+      document.getElementById('edit_usuario').value       = btn.dataset.usuario      || '';
+      document.getElementById('edit_observaciones').value = btn.dataset.observaciones || '';
+
+      // Seleccionar el estado correcto en el <select>
+      const estadoSel = document.getElementById('edit_estado');
+      const estadoVal = btn.dataset.estado || 'activo';
+      for (const opt of estadoSel.options) {
+        opt.selected = (opt.value === estadoVal);
+      }
+    });
+
+  // MINE-142: Validación mínima antes de enviar el formulario de edición
+  document.getElementById('formEditarPrestamo')
+    .addEventListener('submit', function (e) {
+      const usuarioInput = document.getElementById('edit_usuario');
+      const errorDiv     = document.getElementById('edit_usuario_error');
+      const val          = usuarioInput.value.trim();
+
+      if (!val) {
+        e.preventDefault();
+        errorDiv.textContent = 'El nombre de usuario no puede estar vacío.';
+        errorDiv.style.display = 'block';
+        usuarioInput.style.borderColor = '#931f1d';
+        usuarioInput.focus();
+      } else {
+        errorDiv.style.display = 'none';
+        usuarioInput.style.borderColor = '';
+      }
+    });
+
+  // Limpiar error al escribir en el campo usuario del modal editar
+  document.getElementById('edit_usuario').addEventListener('input', function () {
+    const errorDiv = document.getElementById('edit_usuario_error');
+    errorDiv.style.display = 'none';
+    this.style.borderColor = '';
+  });
+
+
+  // ══════════════════════════════════════════════════════════════
+  // MINE-143 / MINE-144 — Modal Eliminar: poblar datos + confirmar
+  // ══════════════════════════════════════════════════════════════
+  document.getElementById('modalEliminarPrestamo')
+    .addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget;
+      if (!btn) return;
+      document.getElementById('eliminar_pk').value          = btn.dataset.pk      || '';
+      document.getElementById('eliminar_usuario_label').textContent = btn.dataset.usuario || '';
+    });
+
+
+  // ══════════════════════════════════════════════════════════════
+  // MINE-125 / MINE-126 — Modal Cancelar: poblar datos
+  // ══════════════════════════════════════════════════════════════
+  document.getElementById('modalCancelarPrestamo')
+    .addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget;
+      if (!btn) return;
+      document.getElementById('cancelar_pk').value                   = btn.dataset.pk      || '';
+      document.getElementById('cancelar_usuario_label').textContent  = btn.dataset.usuario || '';
+    });
+
+
+  // ══════════════════════════════════════════════════════════════
+  // MINE-145 / MINE-146 — Validar cantidad en formularios devolver
+  // ══════════════════════════════════════════════════════════════
+  document.querySelectorAll('.devolver-form').forEach(function (form) {
+    const maxQty    = parseInt(form.dataset.max, 10);
+    const input     = form.querySelector('.devolver-cantidad');
+    const errorDiv  = form.closest('div').querySelector('.devolver-error');
+
+    function showError(msg) {
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+      input.style.borderColor = '#931f1d';
+    }
+    function clearError() {
+      errorDiv.style.display = 'none';
+      input.style.borderColor = '';
+    }
+
+    // MINE-145: Validar en tiempo real mientras el usuario escribe
+    input.addEventListener('input', function () {
+      const val = parseInt(this.value, 10);
+      if (isNaN(val) || val < 1) {
+        showError('La cantidad debe ser al menos 1.');
+      } else if (val > maxQty) {
+        showError('Máximo ' + maxQty + ' unidad(es) a devolver.');
+      } else {
+        clearError();
+      }
+    });
+
+    // MINE-146: Bloquear envío si la cantidad es inválida
+    form.addEventListener('submit', function (e) {
+      const val = parseInt(input.value, 10);
+      if (isNaN(val) || val < 1) {
+        e.preventDefault();
+        showError('La cantidad debe ser al menos 1.');
+        input.focus();
+      } else if (val > maxQty) {
+        e.preventDefault();
+        showError('No puedes devolver más de ' + maxQty + ' unidad(es).');
+        input.focus();
+      } else {
+        clearError();
+      }
+    });
+  });
+
+
+  // ══════════════════════════════════════════════════════════════
+  // Multi-ítem: agregar / quitar herramientas en el modal Nuevo Préstamo
+  // ══════════════════════════════════════════════════════════════
+
+  // Plantilla HTML de una fila de ítem (se clona al agregar)
+  function buildItemRow() {
+    // Tomar las opciones del primer select como base
+    const firstSel = document.querySelector('#items-container .item-producto');
+    const opts     = firstSel ? firstSel.innerHTML : '<option value="">— Selecciona —</option>';
+
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.style.cssText = 'display:grid; grid-template-columns:1fr 90px 32px; gap:.5rem; align-items:start;';
+    div.innerHTML = `
+      <div>
+        <select name="producto[]" class="form-control form-select item-producto">${opts}</select>
+        <div class="item-stock-info" style="display:none; margin-top:.35rem; padding:.35rem .65rem;
+             border-radius:var(--radius-md); font-family:var(--font-ui); font-size:.76rem;
+             align-items:center; gap:.4rem;"></div>
+      </div>
+      <div>
+        <input type="number" name="cantidad[]" class="form-control item-cantidad" min="1" value="1" placeholder="Cant.">
+      </div>
+      <div style="padding-top:.15rem;">
+        <button type="button" class="btn-remove-item" title="Quitar herramienta"
+                style="width:32px; height:36px; border-radius:6px; border:1px solid rgba(147,31,29,.25);
+                       background:rgba(147,31,29,.07); color:#931f1d; cursor:pointer;
+                       display:inline-flex; align-items:center; justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>`;
+    return div;
+  }
+
+  // Actualiza el estado del botón eliminar (deshabilita si solo hay 1 fila)
+  function refreshRemoveButtons() {
+    const rows = document.querySelectorAll('#items-container .item-row');
+    rows.forEach(function (row) {
+      const btn = row.querySelector('.btn-remove-item');
+      if (!btn) return;
+      if (rows.length === 1) {
+        btn.style.opacity        = '.4';
+        btn.style.pointerEvents  = 'none';
+      } else {
+        btn.style.opacity        = '1';
+        btn.style.pointerEvents  = '';
+      }
+    });
+  }
+
+  // Muestra el stock disponible debajo del select de cada fila
+  function updateItemStock(selectEl) {
+    const row      = selectEl.closest('.item-row');
+    const infoDiv  = row.querySelector('.item-stock-info');
+    const selected = selectEl.options[selectEl.selectedIndex];
+    const stock    = selected ? parseInt(selected.dataset.stock, 10) : NaN;
+
+    infoDiv.style.display = 'none';
+    if (!selected || !selected.value) return;
+
+    infoDiv.style.display = 'flex';
+    if (isNaN(stock) || stock <= 0) {
+      infoDiv.style.background = 'rgba(147,31,29,.09)';
+      infoDiv.style.border     = '1px solid rgba(147,31,29,.25)';
+      infoDiv.style.color      = '#931f1d';
+      infoDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Sin stock disponible';
+    } else {
+      infoDiv.style.background = 'rgba(45,212,191,.09)';
+      infoDiv.style.border     = '1px solid rgba(45,212,191,.25)';
+      infoDiv.style.color      = '#0d9488';
+      infoDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Disponible: ' + stock + ' unidad(es)';
+    }
+  }
+
+  // Delegación de eventos en el contenedor (funciona para filas existentes y clonadas)
+  const itemsContainer = document.getElementById('items-container');
+  if (itemsContainer) {
+    itemsContainer.addEventListener('change', function (e) {
+      if (e.target.classList.contains('item-producto')) {
+        updateItemStock(e.target);
+      }
+    });
+
+    itemsContainer.addEventListener('click', function (e) {
+      const btn = e.target.closest('.btn-remove-item');
+      if (!btn) return;
+      const row = btn.closest('.item-row');
+      if (row && document.querySelectorAll('#items-container .item-row').length > 1) {
+        row.remove();
+        refreshRemoveButtons();
+      }
+    });
+  }
+
+  // Botón "Agregar otra herramienta"
+  const btnAddItem = document.getElementById('btn-add-item');
+  if (btnAddItem) {
+    btnAddItem.addEventListener('click', function () {
+      const newRow = buildItemRow();
+      itemsContainer.appendChild(newRow);
+      refreshRemoveButtons();
+    });
+  }
+
+  // Limpiar filas extra al cerrar el modal (deja solo la primera)
+  const modalCrear = document.getElementById('modalCrearPrestamo');
+  if (modalCrear) {
+    modalCrear.addEventListener('hidden.bs.modal', function () {
+      const rows = document.querySelectorAll('#items-container .item-row');
+      rows.forEach(function (row, i) {
+        if (i > 0) row.remove();
+      });
+      // Resetear el primer select y su info de stock
+      const firstSel  = document.querySelector('#items-container .item-producto');
+      const firstInfo = document.querySelector('#items-container .item-stock-info');
+      const firstQty  = document.querySelector('#items-container .item-cantidad');
+      if (firstSel)  { firstSel.selectedIndex = 0; }
+      if (firstInfo) { firstInfo.style.display = 'none'; }
+      if (firstQty)  { firstQty.value = 1; }
+      refreshRemoveButtons();
+    });
+  }
+
+  refreshRemoveButtons();
+
+
+  // ══════════════════════════════════════════════════════════════
+  // Chevron animado en filas desplegables
+  // ══════════════════════════════════════════════════════════════
+  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (btn) {
+    const targetId = btn.dataset.bsTarget;
+    if (!targetId) return;
+    const collapseEl = document.querySelector(targetId);
+    if (!collapseEl) return;
+    const chevron = btn.querySelector('.row-chevron');
+    if (!chevron) return;
+
+    collapseEl.addEventListener('show.bs.collapse',  function () { chevron.style.transform = 'rotate(90deg)'; });
+    collapseEl.addEventListener('hide.bs.collapse',  function () { chevron.style.transform = 'rotate(0deg)'; });
+  });
 </script>
 {% endblock js %}

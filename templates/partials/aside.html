@@ -65,7 +65,21 @@
       Devoluciones
     </a>
 
-    <!-- SESIÓN -->
+    <!--Usuarios-->
+    <div class="d-flex align-items-center gap-2 px-3 pt-3 pb-1">
+      <span class="text-uppercase fw-semibold" style="font-size:.6rem; letter-spacing:.13em; color:rgba(255,255,255,.25);">Usuarios</span>
+      <hr class="flex-grow-1 my-0 opacity-10">
+    </div>
+
+    <a href="{% url 'lista_usuarios' %}"
+       class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium
+       {% if request.resolver_match.url_name == 'lista_usuarios' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}"
+       style="font-size:.88rem;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Lista de Usuarios
+    </a>
+    <!-- SESIÓN — solo visible si NO hay sesión activa -->
+    {% if not request.session.usuario_nombre %}
     <div class="d-flex align-items-center gap-2 px-3 pt-3 pb-1">
       <span class="text-uppercase fw-semibold" style="font-size:.6rem; letter-spacing:.13em; color:rgba(255,255,255,.25);">Sesión</span>
       <hr class="flex-grow-1 my-0 opacity-10">
@@ -78,6 +92,7 @@
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       Inicio de sesión
     </a>
+    {% endif %}
 
     <!-- OPERACIONES -->
     <div class="d-flex align-items-center gap-2 px-3 pt-3 pb-1">
@@ -192,7 +207,9 @@
              style="width:28px; height:28px; font-size:.65rem; letter-spacing:.03em;">
           {{ nombre|slice:":2"|upper }}
         </div>
-        <span class="flex-grow-1 text-start">{{ nombre }}</span>
+        {% with partes=nombre.split %}
+        <span class="flex-grow-1 text-start">{{ partes.0 }} {{ partes.2 }}</span>
+        {% endwith %}
         {% endwith %}
 
         <i class="bi bi-chevron-down opacity-25" style="font-size:.7rem;"></i>
@@ -220,4 +237,4 @@
     </div>
 
   </div>
-</aside>  
+</aside>
