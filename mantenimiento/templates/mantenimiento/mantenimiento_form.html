@@ -1,5 +1,10 @@
-{% extends 'base.html' %} {% load static %} {% block title %}{{ titulo }}{%
-endblock %} {% block extra_head %}
+{% extends 'base.html' %}
+{% load static %} 
+{% block title %}
+{{ titulo }}
+{%endblock %}
+
+{% block extra_head %}
 <style>
   .producto-sugerencia {
     cursor: pointer;
@@ -14,14 +19,15 @@ endblock %} {% block extra_head %}
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 </style>
-{% endblock %} {% block content %}
-<!--
+{% endblock %} 
+{% block content %}
+
 {% include "mantenimiento/partials/_cabecera.html" with
     titulo=titulo
     subtitulo=subtitulo
     url_cancelar=url_cancelar
 %}
--->
+
 <div class="card" style="max-width: 900px">
   <div class="card-body" style="padding: 1.5rem">
     <form method="post" id="mantenimientoForm">

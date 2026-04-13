@@ -1,14 +1,17 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Todos los
-Mantenimientos{% endblock %} {% block content %} {# url_accion y label_accion
-vienen resueltos desde MantenimientoListView #}
-<!--
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Todos los Mantenimientos
+{% endblock %} 
+{% block content %} 
+
 {% include "mantenimiento/partials/_cabecera.html" with
     titulo="Todos los Mantenimientos"
     subtitulo="Listado completo de registros de mantenimiento"
     url_accion=url_accion
     label_accion=label_accion
 %}
--->
+
 
 <div class="card mb-4">
   <div class="card-body" style="padding: 1.25rem">

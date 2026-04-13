@@ -1,13 +1,17 @@
-{% extends "base.html" %} {% load static %} {% block title %}{{ titulo }}{%
-endblock %} {% block content %}
-<!--
+{% extends "base.html" %}
+{% load static %} 
+{% block title %}
+{{ titulo }}
+{%endblock %} 
+{% block content %}
+
 {% include "mantenimiento/partials/_cabecera.html" with
     titulo=titulo
     subtitulo=subtitulo
     url_accion=url_accion
     label_accion=label_accion
 %}
--->
+
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">

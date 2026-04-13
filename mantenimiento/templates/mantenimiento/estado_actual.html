@@ -1,5 +1,9 @@
-{% extends "base.html" %} {% load static %} {% block title %}Estado Actual de
-Herramientas{% endblock %} {% block content %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Estado Actual de Herramientas{% endblock %}
+
+{% block content %}
 
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -26,6 +30,8 @@ Herramientas{% endblock %} {% block content %}
       Disponibilidad y último estado registrado de cada ítem
     </p>
   </div>
+
+  {% if url_accion %}
   <a href="{{ url_accion }}" class="btn-primary-mine">
     <svg
       width="13"
@@ -41,9 +47,10 @@ Herramientas{% endblock %} {% block content %}
     </svg>
     Nuevo Mantenimiento
   </a>
+  {% endif %}
 </div>
 
-#totales
+<!-- Totales -->
 <div class="d-flex gap-3 mb-4">
   <span
     style="
@@ -63,7 +70,7 @@ Herramientas{% endblock %} {% block content %}
   >
 </div>
 
-#filtros
+<!-- Filtros -->
 <div class="card mb-4">
   <div class="card-body" style="padding: 1.25rem">
     <form method="get" class="row g-3 align-items-end">
@@ -82,28 +89,10 @@ Herramientas{% endblock %} {% block content %}
         <label class="form-label">Disponibilidad</label>
         <select name="disponible" class="form-control form-select">
           <option value="">Todos</option>
-          <option
-            value="si"
-            {%
-            if
-            disponible_filtro=""
-            ="si"
-            %}selected{%
-            endif
-            %}
-          >
+          <option value="si" {% if disponible_filtro == "si" %}selected{% endif %}>
             Solo disponibles
           </option>
-          <option
-            value="no"
-            {%
-            if
-            disponible_filtro=""
-            ="no"
-            %}selected{%
-            endif
-            %}
-          >
+          <option value="no" {% if disponible_filtro == "no" %}selected{% endif %}>
             Solo no disponibles
           </option>
         </select>
@@ -136,7 +125,7 @@ Herramientas{% endblock %} {% block content %}
   </div>
 </div>
 
-#tabla
+<!-- Tabla -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
@@ -211,31 +200,35 @@ Herramientas{% endblock %} {% block content %}
             {% endif %}
           </td>
           <td>
-            {% with ultimo=p.mantenimientos.all|first %} {% if ultimo %}
-            <span style="font-family: var(--font-mono); font-size: 0.78rem">
-              {{ ultimo.fecha_reporte|date:"d/m/Y" }}
-            </span>
-            <small style="color: var(--text-muted)">
-              ({{ ultimo.get_tipo_mantenimiento_display }})
-            </small>
-            {% else %}
-            <span style="color: var(--text-muted)">Sin mantenimiento</span>
-            {% endif %} {% endwith %}
+            {% with ultimo=p.mantenimientos.all|first %}
+              {% if ultimo %}
+                <span style="font-family: var(--font-mono); font-size: 0.78rem">
+                  {{ ultimo.fecha_reporte|date:"d/m/Y" }}
+                </span>
+                <small style="color: var(--text-muted)">
+                  ({{ ultimo.get_tipo_mantenimiento_display }})
+                </small>
+              {% else %}
+                <span style="color: var(--text-muted)">Sin mantenimiento</span>
+              {% endif %}
+            {% endwith %}
           </td>
+          <!-- === BLOQUE CORREGIDO === -->
           <td>
-            {% with ultimo=p.mantenimientos.all|first %} {% if ultimo and
-            ultimo.tipo_estado %}
-            <span
-              class="badge-state"
-              style="background:{{ ultimo.tipo_estado.color|default:'#6c757d' }};
-                             color:#fff; border:none;"
-            >
-              {{ ultimo.tipo_estado.nombre }}
-            </span>
-            {% else %}
-            <span class="badge-state badge-pendiente">Sin estado</span>
-            {% endif %} {% endwith %}
+            {% with ultimo=p.mantenimientos.all|first %}
+              {% if ultimo and ultimo.tipo_estado %}
+                <span
+                  class="badge-state"
+                  style="background:{{ ultimo.tipo_estado.color|default:'#6c757d' }}; color:#fff; border:none;"
+                >
+                  {{ ultimo.tipo_estado.nombre }}
+                </span>
+              {% else %}
+                <span class="badge-state badge-pendiente">Sin estado</span>
+              {% endif %}
+            {% endwith %}
           </td>
+          <!-- ======================== -->
           <td style="text-align: center">
             <a
               href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ p.pk }}"
@@ -292,8 +285,7 @@ Herramientas{% endblock %} {% block content %}
                 stroke-width="2.2"
               >
                 <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
-                         a2 2 0 0 0 2-2V8z"
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12 a2 2 0 0 0 2-2V8z"
                 />
                 <polyline points="14 2 14 8 20 8" />
                 <line x1="16" y1="13" x2="8" y2="13" />
@@ -302,9 +294,9 @@ Herramientas{% endblock %} {% block content %}
             </a>
           </td>
         </tr>
-        {% empty %} {% include "mantenimiento/partials/_tabla_empty.html" with
-        colspan=7 empty_mensaje="No se encontraron herramientas con los filtros
-        aplicados." %} {% endfor %}
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="No se encontraron herramientas con los filtros aplicados." %}
+        {% endfor %}
       </tbody>
     </table>
   </div>
