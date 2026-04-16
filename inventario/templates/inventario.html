@@ -3,22 +3,22 @@
 
 {% block content %}
 
-<!-- ══ ALERTAS ══ -->
+<!-- ══ ALERTAS DE SISTEMA (mensajes Django) ══ -->
 {% if messages %}
   {% for message in messages %}
     <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
-         style="background:rgba(0, 0, 0, 0.13); border:1px solid rgba(0, 0, 0, 0.25);
-                border-radius:var(--radius-md); color:var(--text-main); font-family:var(--font-ui);"
-         role="alert">
+         style="background:rgba(0,0,0,0.13); border:1px solid rgba(0,0,0,0.25);
+                border-radius:var(--radius-md); color:var(--text-main);
+                font-family:var(--font-ui);" role="alert">
       {% if message.tags == 'error' %}
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
       {% else %}
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#329843" stroke-width="2.2">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#329843" stroke-width="2.2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
       {% endif %}
       {{ message }}
       <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
@@ -27,8 +27,41 @@
   {% endfor %}
 {% endif %}
 
+
+<!-- ══ ALERTA DE STOCK BAJO / SIN STOCK ══ -->
+{% if hay_alertas %}
+<div class="alert alert-dismissible fade show d-flex align-items-start gap-2 mb-3"
+     style="background:rgba(180,100,20,0.08); border:1px solid rgba(180,100,20,0.35);
+            border-radius:var(--radius-md); color:var(--text-main);
+            font-family:var(--font-ui); font-size:.85rem;" role="alert">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b46414" stroke-width="2.2"
+       style="flex-shrink:0; margin-top:.1rem;">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <div>
+    <strong style="color:#b46414;">Atención — stock bajo o agotado:</strong>
+    <span style="color:var(--text-muted);">
+      {% for nombre, stock in alertas_stock %}
+        <span style="margin-left:.5rem;">
+          {{ nombre }}
+          {% if stock == 0 %}
+            <span class="badge-state badge-rechazada" style="font-size:.7rem;">Sin stock</span>
+          {% else %}
+            <span class="badge-state badge-pendiente" style="font-size:.7rem;">{{ stock }} ud.</span>
+          {% endif %}
+        </span>{% if not forloop.last %} ·{% endif %}
+      {% endfor %}
+    </span>
+  </div>
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
+          style="filter:opacity(.4); flex-shrink:0;"></button>
+</div>
+{% endif %}
+
+
 <!-- ══ CABECERA ══ -->
-<div class="d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center justify-content-between mb-3">
   <div>
     <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
                color:var(--text-main); letter-spacing:.03em; margin:0;">
@@ -62,10 +95,89 @@
   </div>
 </div>
 
+
+<!-- ══ TARJETAS KPI ══ -->
+<div class="row g-3 mb-3">
+
+  <!-- Total productos -->
+  <div class="col-6 col-md-3">
+    <div class="card h-100" style="padding:.9rem 1.1rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+        <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
+                     text-transform:uppercase; color:var(--text-muted);">Herramientas</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="var(--navy)" stroke-width="2" opacity=".5">
+          <path d="M22 12H16L14 15H10L8 12H2"/>
+          <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+        </svg>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--text-main); line-height:1;">{{ kpi_total_productos }}</div>
+      <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
+                  margin-top:.3rem;">registro{{ kpi_total_productos|pluralize }}</div>
+    </div>
+  </div>
+
+  <!-- Stock total -->
+  <div class="col-6 col-md-3">
+    <div class="card h-100" style="padding:.9rem 1.1rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+        <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
+                     text-transform:uppercase; color:var(--text-muted);">Stock total</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="var(--navy)" stroke-width="2" opacity=".5">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--text-main); line-height:1;">{{ kpi_total_stock }}</div>
+      <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
+                  margin-top:.3rem;">unidades en stock</div>
+    </div>
+  </div>
+
+  <!-- Sin stock / stock bajo -->
+  <div class="col-6 col-md-3">
+    <div class="card h-100" style="padding:.9rem 1.1rem;
+         {% if kpi_sin_stock > 0 %}border-color:rgba(192,57,43,.35);{% endif %}">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+        <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
+                     text-transform:uppercase; color:var(--text-muted);">Sin stock</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="{% if kpi_sin_stock > 0 %}#c0392b{% else %}var(--navy){% endif %}"
+             stroke-width="2" opacity=".6">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; line-height:1;
+                  color:{% if kpi_sin_stock > 0 %}#c0392b{% else %}var(--text-main){% endif %};">
+        {{ kpi_sin_stock }}
+      </div>
+      <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
+                  margin-top:.3rem;">
+        producto{{ kpi_sin_stock|pluralize }} agotado{{ kpi_sin_stock|pluralize }}
+        {% if kpi_stock_bajo > 0 %}
+          · <span style="color:#b46414;">{{ kpi_stock_bajo }} con stock bajo</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
 <!-- ══ FILTROS ══ -->
-<div class="card">
+<div class="card mb-3">
   <div class="card-body" style="padding:.9rem 1.2rem;">
     <form method="get" class="d-flex gap-3 align-items-end flex-wrap">
+      <!-- Conservar orden al filtrar -->
+      <input type="hidden" name="orden" value="{{ orden_activo }}">
+      <input type="hidden" name="dir"   value="{{ dir_activo }}">
       <div style="flex:2; min-width:180px;">
         <label class="form-label">Buscar</label>
         {{ form_filtro.busqueda }}
@@ -93,6 +205,7 @@
   </div>
 </div>
 
+
 <!-- ══ TABLA INVENTARIO ══ -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
@@ -106,9 +219,9 @@
       Herramientas registradas
     </span>
     <span style="font-family:var(--font-mono); font-size:.72rem;
-                 background:rgba(152, 71, 62, 0.7); color:var(--rust);
+                 background:rgba(152,71,62,0.7); color:var(--rust);
                  padding:.18rem .6rem; border-radius:20px;
-                 border:1px solid rgba(152, 71, 62, 0.88);">
+                 border:1px solid rgba(152,71,62,0.88);">
       {{ total }} registro{{ total|pluralize }}
     </span>
   </div>
@@ -117,11 +230,56 @@
     <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
       <thead>
         <tr>
-          <th>SKU</th>
-          <th>Nombre</th>
+          <!-- Encabezados ordenables -->
+          <th>
+            <a href="{% url 'inventario:inventario' %}?orden=codigo_sku&dir={% if orden_activo == 'codigo_sku' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
+               class="sort-link {% if orden_activo == 'codigo_sku' %}sort-active{% endif %}">
+              SKU
+              {% if orden_activo == 'codigo_sku' %}
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  {% if dir_activo == 'asc' %}<polyline points="18 15 12 9 6 15"/>
+                  {% else %}<polyline points="6 9 12 15 18 9"/>{% endif %}
+                </svg>
+              {% endif %}
+            </a>
+          </th>
+          <th>
+            <a href="{% url 'inventario:inventario' %}?orden=nombre&dir={% if orden_activo == 'nombre' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
+               class="sort-link {% if orden_activo == 'nombre' %}sort-active{% endif %}">
+              Nombre
+              {% if orden_activo == 'nombre' %}
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  {% if dir_activo == 'asc' %}<polyline points="18 15 12 9 6 15"/>
+                  {% else %}<polyline points="6 9 12 15 18 9"/>{% endif %}
+                </svg>
+              {% endif %}
+            </a>
+          </th>
           <th>Descripción</th>
-          <th>Categoría</th>
-          <th>Stock</th>
+          <th>
+            <a href="{% url 'inventario:inventario' %}?orden=categoria__nombre&dir={% if orden_activo == 'categoria__nombre' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
+               class="sort-link {% if orden_activo == 'categoria__nombre' %}sort-active{% endif %}">
+              Categoría
+              {% if orden_activo == 'categoria__nombre' %}
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  {% if dir_activo == 'asc' %}<polyline points="18 15 12 9 6 15"/>
+                  {% else %}<polyline points="6 9 12 15 18 9"/>{% endif %}
+                </svg>
+              {% endif %}
+            </a>
+          </th>
+          <th>
+            <a href="{% url 'inventario:inventario' %}?orden=stock&dir={% if orden_activo == 'stock' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
+               class="sort-link {% if orden_activo == 'stock' %}sort-active{% endif %}">
+              Stock
+              {% if orden_activo == 'stock' %}
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  {% if dir_activo == 'asc' %}<polyline points="18 15 12 9 6 15"/>
+                  {% else %}<polyline points="6 9 12 15 18 9"/>{% endif %}
+                </svg>
+              {% endif %}
+            </a>
+          </th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -133,9 +291,9 @@
                          color:var(--text-muted);">{{ producto.codigo_sku }}</span>
           </td>
           <td style="font-weight:600;">{{ producto.nombre }}</td>
-          <td style="color:var(--text-muted); max-width:220px;">
+          <td style="color:var(--text-muted); max-width:200px;">
             <span style="display:block; overflow:hidden; text-overflow:ellipsis;
-                         white-space:nowrap; max-width:210px;">
+                         white-space:nowrap; max-width:190px;">
               {{ producto.descripcion|default:"—" }}
             </span>
           </td>
@@ -158,14 +316,7 @@
           <td>
             <button type="button" class="btn-ghost" title="Editar"
                     style="margin-right:.3rem;"
-                    onclick="abrirEditar(
-                      '{{ producto.pk }}',
-                      '{{ producto.codigo_sku|escapejs }}',
-                      '{{ producto.nombre|escapejs }}',
-                      '{{ producto.descripcion|default:''|escapejs }}',
-                      '{{ producto.stock }}',
-                      '{{ producto.categoria.pk|default:'' }}'
-                    )">
+                    onclick="abrirEditar('{{ producto.pk }}','{{ producto.codigo_sku|escapejs }}','{{ producto.nombre|escapejs }}','{{ producto.descripcion|default:''|escapejs }}','{{ producto.stock }}','{{ producto.categoria.pk|default:'' }}')"|onclick="abrirEditar('{{ producto.pk }}','{{ producto.codigo_sku|escapejs }}','{{ producto.nombre|escapejs }}','{{ producto.descripcion|default:''|escapejs }}','{{ producto.stock }}','{{ producto.categoria.pk|default:'' }}')">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2.2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -237,10 +388,11 @@
 
           {% if form_modal_errors %}
           <div class="d-flex align-items-center gap-2 mb-3"
-               style="background:rgba(0, 0, 0, 0.08); border:1px solid rgba(192,57,43,.3);
+               style="background:rgba(0,0,0,0.08); border:1px solid rgba(192,57,43,.3);
                       border-radius:var(--radius-md); padding:.65rem 1rem;
                       font-family:var(--font-ui); font-size:.85rem; color:#c0392b;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2" style="flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b"
+                 stroke-width="2.2" style="flex-shrink:0;">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
@@ -268,19 +420,23 @@
             </div>
             <div class="col-12">
               <label class="form-label">Descripción</label>
-              <textarea name="descripcion" class="form-control" rows="2" placeholder="Descripción opcional...">{{ post_descripcion }}</textarea>
+              <textarea name="descripcion" class="form-control" rows="2"
+                        placeholder="Descripción opcional...">{{ post_descripcion }}</textarea>
             </div>
             <div class="col-md-4">
               <label class="form-label">Stock *</label>
               <input type="number" name="stock" class="form-control"
                      value="{{ post_stock|default:'0' }}" min="0" required>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-4">
               <label class="form-label">Categoría</label>
               <select name="categoria" class="form-select">
                 <option value="">— Sin categoría —</option>
                 {% for cat in categorias %}
-                  <option value="{{ cat.pk }}" {% if cat.pk|stringformat:"s" == post_categoria %}selected{% endif %}>{{ cat.nombre }}</option>
+                  <option value="{{ cat.pk }}"
+                    {% if cat.pk|stringformat:"s" == post_categoria %}selected{% endif %}>
+                    {{ cat.nombre }}
+                  </option>
                 {% endfor %}
               </select>
             </div>
@@ -335,21 +491,25 @@
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label">Código / SKU *</label>
-              <input type="text" name="codigo_sku" id="edit_codigo_sku" class="form-control" required>
+              <input type="text" name="codigo_sku" id="edit_codigo_sku"
+                     class="form-control" required>
             </div>
             <div class="col-md-8">
               <label class="form-label">Nombre *</label>
-              <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+              <input type="text" name="nombre" id="edit_nombre"
+                     class="form-control" required>
             </div>
             <div class="col-12">
               <label class="form-label">Descripción</label>
-              <textarea name="descripcion" id="edit_descripcion" class="form-control" rows="2"></textarea>
+              <textarea name="descripcion" id="edit_descripcion"
+                        class="form-control" rows="2"></textarea>
             </div>
             <div class="col-md-4">
               <label class="form-label">Stock *</label>
-              <input type="number" name="stock" id="edit_stock" class="form-control" min="0" required>
+              <input type="number" name="stock" id="edit_stock"
+                     class="form-control" min="0" required>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-4">
               <label class="form-label">Categoría</label>
               <select name="categoria" id="edit_categoria" class="form-select">
                 <option value="">— Sin categoría —</option>
@@ -464,7 +624,8 @@
                style="background:rgba(192,57,43,.08); border:1px solid rgba(192,57,43,.3);
                       border-radius:var(--radius-md); padding:.65rem 1rem;
                       font-family:var(--font-ui); font-size:.85rem; color:#c0392b;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2" style="flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b"
+                 stroke-width="2.2" style="flex-shrink:0;">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
               <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
@@ -581,11 +742,13 @@
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label">Nombre *</label>
-              <input type="text" name="cat_nombre" id="editcat_nombre" class="form-control" required>
+              <input type="text" name="cat_nombre" id="editcat_nombre"
+                     class="form-control" required>
             </div>
             <div class="col-12">
               <label class="form-label">Descripción</label>
-              <input type="text" name="cat_descripcion" id="editcat_descripcion" class="form-control">
+              <input type="text" name="cat_descripcion" id="editcat_descripcion"
+                     class="form-control">
             </div>
           </div>
         </div>
@@ -664,23 +827,26 @@
 
 {% block js %}
 <script>
+  /* ── Editar producto ── */
   function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId) {
-    document.getElementById('edit_producto_id').value  = pk;
-    document.getElementById('edit_codigo_sku').value   = sku;
-    document.getElementById('edit_nombre').value       = nombre;
-    document.getElementById('edit_descripcion').value  = descripcion;
-    document.getElementById('edit_stock').value        = stock;
+    document.getElementById('edit_producto_id').value    = pk;
+    document.getElementById('edit_codigo_sku').value     = sku;
+    document.getElementById('edit_nombre').value         = nombre;
+    document.getElementById('edit_descripcion').value    = descripcion;
+    document.getElementById('edit_stock').value          = stock;
     const sel = document.getElementById('edit_categoria');
     for (let opt of sel.options) { opt.selected = opt.value == categoriaId; }
     new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
   }
 
+  /* ── Eliminar producto ── */
   function abrirEliminar(pk, nombre) {
-    document.getElementById('eliminar_producto_id').value          = pk;
+    document.getElementById('eliminar_producto_id').value           = pk;
     document.getElementById('eliminar_nombre_producto').textContent = '"' + nombre + '"';
     new bootstrap.Modal(document.getElementById('modalEliminar')).show();
   }
 
+  /* ── Editar categoría ── */
   function abrirEditarCategoria(pk, nombre, descripcion) {
     document.getElementById('editcat_id').value          = pk;
     document.getElementById('editcat_nombre').value      = nombre;
@@ -688,12 +854,14 @@
     new bootstrap.Modal(document.getElementById('modalEditarCategoria')).show();
   }
 
+  /* ── Eliminar categoría ── */
   function abrirEliminarCategoria(pk, nombre) {
-    document.getElementById('eliminarcat_id').value          = pk;
+    document.getElementById('eliminarcat_id').value           = pk;
     document.getElementById('eliminarcat_nombre').textContent = '"' + nombre + '"';
     new bootstrap.Modal(document.getElementById('modalEliminarCategoria')).show();
   }
 
+  /* ── Reabrir modales tras error de validación ── */
   {% if form_modal_errors %}
   document.addEventListener("DOMContentLoaded", function () {
     new bootstrap.Modal(document.getElementById('modalNuevaHerramienta')).show();
@@ -706,4 +874,24 @@
   });
   {% endif %}
 </script>
+
+<style>
+  /* Estilos para encabezados ordenables */
+  .sort-link {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    white-space: nowrap;
+  }
+  .sort-link:hover {
+    color: var(--navy, #094d92);
+    text-decoration: none;
+  }
+  .sort-link.sort-active {
+    color: var(--navy, #094d92);
+    font-weight: 700;
+  }
+</style>
 {% endblock js %}
