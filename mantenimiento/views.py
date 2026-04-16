@@ -311,3 +311,52 @@ def api_buscar_producto(request):
             })
 
     return JsonResponse({'resultados': resultados})
+
+@login_requerido
+def registrar_desde_inventario(request):
+    """
+    Recibe el POST del modal de mantenimiento lanzado desde inventario.
+    - Si el form es válido  → crea el registro y redirige a inventario con mensaje.
+    - Si el form es inválido → guarda datos en sesión y redirige de vuelta
+      para que inventario reabra el modal con los errores.
+    """
+    if request.method != 'POST':
+        return redirect('inventario:inventario')
+
+    producto_id = request.POST.get('producto_id')
+    producto    = get_object_or_404(Producto, pk=producto_id)
+
+    # MantenimientoForm espera 'producto' como HiddenInput.
+    # Lo inyectamos en el POST mutable para que el form lo valide.
+    post_data            = request.POST.copy()
+    post_data['producto'] = producto_id
+
+    form = MantenimientoForm(post_data)
+
+    if form.is_valid():
+        mantenimiento = form.save(commit=False)
+
+        # Auditoría: asignar creado_por desde la sesión propia
+        doc = request.session.get('usuario_documento')
+        if doc:
+            try:
+                mantenimiento.creado_por = User.objects.get(username=doc)
+            except User.DoesNotExist:
+                pass
+
+        mantenimiento.save()
+        messages.success(
+            request,
+            f'Mantenimiento registrado para '
+            f'[{producto.codigo_sku}] {producto.nombre}.'
+        )
+        return redirect('inventario:inventario')
+
+    # Form inválido: guardamos en sesión para que inventario reabra el modal
+    request.session['mant_form_data']        = post_data.dict()
+    request.session['mant_producto_id_error'] = producto_id
+    request.session['mant_sku_error']         = producto.codigo_sku
+    request.session['mant_nombre_error']      = producto.nombre
+
+    messages.error(request, 'Revisa los errores del formulario de mantenimiento.')
+    return redirect('inventario:inventario')
