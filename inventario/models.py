@@ -30,7 +30,6 @@ class Producto(models.Model):
         verbose_name="Categoría"
     )
     
-    # --- Aquí corregimos la indentación para que estén DENTRO de la clase ---
     numero_serie = models.CharField(
         max_length=100, 
         blank=True, 
