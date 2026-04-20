@@ -23,7 +23,7 @@ class CategoriaForm(forms.ModelForm):
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ["codigo_sku", "nombre", "descripcion","stock","categoria"]
+        fields = ["codigo_sku", "nombre", "descripcion", "stock", "categoria"]
         widgets = {
             "codigo_sku": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Ej: SKU-001"}
