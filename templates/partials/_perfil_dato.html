@@ -1,0 +1,15 @@
+{# templates/partials/_perfil_dato.html #}
+{# Uso: {% include "partials/_perfil_dato.html" with icono="envelope" label="Correo" valor=usuario.correo %} #}
+<div style="display:flex;align-items:flex-start;gap:.65rem;margin-bottom:.65rem;">
+  <div style="width:28px;height:28px;border-radius:6px;
+              background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.12);
+              display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.05rem;">
+    <i class="bi bi-{{ icono }}" style="font-size:.78rem;color:var(--navy);"></i>
+  </div>
+  <div style="min-width:0;">
+    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;
+                color:var(--text-muted);font-weight:600;line-height:1;">{{ label }}</div>
+    <div style="font-family:var(--font-ui);font-size:.88rem;color:var(--text-main);
+                margin-top:.15rem;word-break:break-word;">{{ valor }}</div>
+  </div>
+</div>

@@ -3,7 +3,6 @@
 
 {% block content %}
 
-<!-- ══ ALERTAS ══ -->
 {% if messages %}
   {% for message in messages %}
     <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
@@ -27,79 +26,98 @@
       Préstamos
     </h5>
     <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
-      Gestión de préstamos de productos
+      Gestión de préstamos de herramientas
     </p>
   </div>
-  <button class="btn-primary-mine"
-          data-bs-toggle="modal" data-bs-target="#modalCrearPrestamo">
+  <button class="btn-primary-mine" data-bs-toggle="modal" data-bs-target="#modalCrearPrestamo">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="16"/>
-      <line x1="8" y1="12" x2="16" y2="12"/>
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
     </svg>
     Nuevo Préstamo
   </button>
 </div>
 
-<!-- ══ STATS ══ -->
+<!-- ══ KPI CARDS ══ -->
 <div class="row g-3 mb-4">
-
-  <!-- Total -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #0dcaf0;">
-      <div class="mb-1">
-        <i class="bi bi-clipboard2-data" style="font-size:1.5rem; color:#0dcaf0;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #0dcaf0; line-height: 1;">
-        {{ total_prestamos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Total</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #0dcaf0;">
+      <div class="mb-1"><i class="bi bi-clipboard2-data" style="font-size:1.4rem;color:#0dcaf0;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#0dcaf0;line-height:1;">{{ total_prestamos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Total</small>
     </div>
   </div>
-
-  <!-- Activos -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #9f86c0;">
-      <div class="mb-1">
-        <i class="bi bi-box-seam" style="font-size:1.5rem; color:#9f86c0;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #9f86c0; line-height: 1;">
-        {{ prestamos_activos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Activos</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #9f86c0;">
+      <div class="mb-1"><i class="bi bi-box-seam" style="font-size:1.4rem;color:#9f86c0;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#9f86c0;line-height:1;">{{ prestamos_activos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Activos</small>
     </div>
   </div>
-
-  <!-- Devueltos -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #2dd4bf;">
-      <div class="mb-1">
-        <i class="bi bi-arrow-return-left" style="font-size:1.5rem; color:#2dd4bf;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #2dd4bf; line-height: 1;">
-        {{ prestamos_devueltos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Devueltos</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #2dd4bf;">
+      <div class="mb-1"><i class="bi bi-arrow-return-left" style="font-size:1.4rem;color:#2dd4bf;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#2dd4bf;line-height:1;">{{ prestamos_devueltos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Devueltos</small>
     </div>
   </div>
-
-  <!-- Vencidos -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #931f1d;">
-      <div class="mb-1">
-        <i class="bi bi-exclamation-circle" style="font-size:1.5rem; color:#931f1d;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #931f1d; line-height: 1;">
-        {{ prestamos_vencidos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Vencidos</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #931f1d;">
+      <div class="mb-1"><i class="bi bi-exclamation-circle" style="font-size:1.4rem;color:#931f1d;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#931f1d;line-height:1;">{{ prestamos_vencidos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Vencidos</small>
     </div>
   </div>
+</div>
 
+<!-- ══ ALERTA PRÓXIMOS A VENCER ══ -->
+{% if proximos_vencer %}
+<div class="alert d-flex align-items-center gap-2 mb-3"
+     style="background:rgba(245,158,11,.1);border:1px solid rgba(217,119,6,.3);
+            border-radius:var(--radius-md);color:#d97706;font-family:var(--font-ui);font-size:.85rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <strong>{{ proximos_vencer }} préstamo{{ proximos_vencer|pluralize }}</strong>&nbsp;vence{{ proximos_vencer|pluralize:"n," }} en los próximos 3 días.
+  <a href="?vencidos=1" class="ms-auto"
+     style="font-size:.78rem;font-weight:700;color:#d97706;text-decoration:none;border:1px solid rgba(217,119,6,.4);padding:.2rem .6rem;border-radius:4px;">
+    Ver →
+  </a>
+</div>
+{% endif %}
+
+<!-- ══ BUSCADOR Y FILTROS ══ -->
+<div class="card mb-3">
+  <div class="card-body" style="padding:.85rem 1.2rem;">
+    <form method="get" class="d-flex gap-2 align-items-end flex-wrap">
+      <div style="flex:2;min-width:180px;">
+        <label class="form-label">Buscar</label>
+        <input type="text" name="q" class="form-control" value="{{ filtro_q }}"
+               placeholder="Usuario, nombre o herramienta…">
+      </div>
+      <div style="flex:1;min-width:130px;">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-control form-select">
+          <option value="">Todos</option>
+          <option value="activo"   {% if filtro_estado == 'activo' %}selected{% endif %}>Activo</option>
+          <option value="devuelto" {% if filtro_estado == 'devuelto' %}selected{% endif %}>Devuelto</option>
+          <option value="parcial"  {% if filtro_estado == 'parcial' %}selected{% endif %}>Parcial</option>
+          <option value="vencido"  {% if filtro_estado == 'vencido' %}selected{% endif %}>Vencido</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:flex-end;">
+        <button type="submit" class="btn-primary-mine">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Filtrar
+        </button>
+        {% if filtro_q or filtro_estado or filtro_vencidos %}
+        <a href="{% url 'prestamo' %}" class="btn-outline-mine">Limpiar</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- ══ TABLA ══ -->
@@ -111,54 +129,38 @@
       </svg>
       Préstamos registrados
     </span>
-
-    <!-- Badge dinámico según cantidad -->
     {% with total=prestamos|length %}
-      {% if total == 0 %}
-        <span style="font-family:var(--font-mono); font-size:.72rem;
-                     background:rgba(0,0,0,.06); color:#999;
-                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(0,0,0,.1);">
-          0 registros
-        </span>
-      {% elif total < 10 %}
-        <span style="font-family:var(--font-mono); font-size:.72rem;
-                     background:rgba(13,202,240,.12); color:#0dcaf0;
-                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(13,202,240,.25);">
-          {{ total }} registro{{ total|pluralize:",s" }}
-        </span>
-      {% else %}
-        <span style="font-family:var(--font-mono); font-size:.72rem;
-                     background:rgba(159,134,192,.12); color:#9f86c0;
-                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(159,134,192,.25);">
-          {{ total }} registros
-        </span>
-      {% endif %}
+    <span style="font-family:var(--font-mono);font-size:.72rem;
+                 background:rgba(9,77,146,.08);color:var(--navy);
+                 padding:.18rem .6rem;border-radius:20px;border:1px solid rgba(9,77,146,.18);">
+      {{ total }} registro{{ total|pluralize:",s" }}
+    </span>
     {% endwith %}
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+    <table class="table-app" style="width:100%;border-collapse:collapse;font-size:.9rem;">
       <thead>
         <tr>
-          <th style="width:46px;"></th>
+          <th style="width:40px;"></th>
           <th>#</th>
           <th>Usuario</th>
           <th>Ítems</th>
           <th>Estado</th>
+          <th>Vencimiento</th>
           <th>Fecha</th>
           <th style="text-align:center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
-
         {% for p in prestamos %}
         <tr>
           <td style="text-align:center;">
             <button type="button"
-                    style="width:24px; height:24px; border-radius:50%;
-                           background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.14);
-                           color:var(--navy); cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0;"
+                    style="width:24px;height:24px;border-radius:50%;
+                           background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.14);
+                           color:var(--navy);cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;"
                     data-bs-toggle="collapse"
                     data-bs-target="#detail-p-{{ p.pk }}"
                     aria-expanded="false">
@@ -169,13 +171,18 @@
               </svg>
             </button>
           </td>
-          <td><span style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">#{{ p.pk }}</span></td>
-          <td style="font-weight:600;">{{ p.usuario }}</td>
+          <td><span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">#{{ p.pk }}</span></td>
+          <td>
+            <div style="font-weight:600;line-height:1.2;">{{ p.usuario }}</div>
+            {% if p.nombre_usuario %}
+            <div style="font-size:.75rem;color:var(--text-muted);">{{ p.nombre_usuario }}</div>
+            {% endif %}
+          </td>
           <td>
             {% for item in p.items.all %}
               <span style="font-size:.82rem;">{{ item.producto.nombre }} ×{{ item.cantidad }}</span>{% if not forloop.last %}, {% endif %}
             {% empty %}
-              <span style="color:var(--text-muted); font-size:.8rem;">—</span>
+              <span style="color:var(--text-muted);font-size:.8rem;">—</span>
             {% endfor %}
           </td>
           <td>
@@ -189,58 +196,84 @@
               <span class="badge-state badge-rechazada">Vencido</span>
             {% endif %}
           </td>
-          <td style="font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted);">
+          <!-- ── Columna Vencimiento con badge visual ── -->
+          <td>
+            {% if p.fecha_vencimiento %}
+              {% if p.urgencia == 'vencido' %}
+                <span style="display:inline-flex;align-items:center;gap:.3rem;
+                             background:rgba(147,31,29,.1);color:#931f1d;
+                             font-size:.72rem;font-weight:700;font-family:var(--font-mono);
+                             padding:.18rem .55rem;border-radius:20px;border:1px solid rgba(147,31,29,.25);">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  Venció {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </span>
+              {% elif p.urgencia == 'proximo' %}
+                <span style="display:inline-flex;align-items:center;gap:.3rem;
+                             background:rgba(245,158,11,.1);color:#d97706;
+                             font-size:.72rem;font-weight:700;font-family:var(--font-mono);
+                             padding:.18rem .55rem;border-radius:20px;border:1px solid rgba(217,119,6,.25);">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                  </svg>
+                  {{ p.dias_restantes }}d — {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </span>
+              {% else %}
+                <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">
+                  {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </span>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--text-muted);font-size:.8rem;">Sin fecha</span>
+            {% endif %}
+          </td>
+          <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);">
             {{ p.fecha_prestamo|date:"d/m/Y" }}
           </td>
-          <td style="text-align:center; white-space:nowrap;">
-            <!-- Editar (MINE-123 / MINE-124) -->
-            <button type="button"
-                    title="Editar préstamo"
-                    style="width:28px; height:28px; border-radius:6px;
-                           background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.18);
-                           color:var(--navy); cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalEditarPrestamo"
+          <td style="text-align:center;white-space:nowrap;">
+            <!-- Editar -->
+            <button type="button" title="Editar préstamo"
+                    style="width:28px;height:28px;border-radius:6px;
+                           background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.18);
+                           color:var(--navy);cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;margin:0 2px;"
+                    data-bs-toggle="modal" data-bs-target="#modalEditarPrestamo"
                     data-pk="{{ p.pk }}"
                     data-usuario="{{ p.usuario }}"
+                    data-nombre-usuario="{{ p.nombre_usuario|default:'' }}"
                     data-estado="{{ p.estado }}"
-                    data-observaciones="{{ p.observaciones|default:'' }}">
+                    data-observaciones="{{ p.observaciones|default:'' }}"
+                    data-fecha-vencimiento="{{ p.fecha_vencimiento|date:'Y-m-d'|default:'' }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
-            <!-- Cancelar préstamo (MINE-125 / MINE-126) -->
+            <!-- Cancelar (solo activo/parcial) -->
             {% if p.estado == 'activo' or p.estado == 'parcial' %}
-            <button type="button"
-                    title="Cancelar préstamo"
-                    style="width:28px; height:28px; border-radius:6px;
-                           background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25);
-                           color:#d97706; cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalCancelarPrestamo"
-                    data-pk="{{ p.pk }}"
-                    data-usuario="{{ p.usuario }}">
+            <button type="button" title="Cancelar préstamo"
+                    style="width:28px;height:28px;border-radius:6px;
+                           background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+                           color:#d97706;cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;margin:0 2px;"
+                    data-bs-toggle="modal" data-bs-target="#modalCancelarPrestamo"
+                    data-pk="{{ p.pk }}" data-usuario="{{ p.usuario }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+                <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
             </button>
             {% endif %}
-            <!-- Eliminar (MINE-127) -->
-            <button type="button"
-                    title="Eliminar préstamo"
-                    style="width:28px; height:28px; border-radius:6px;
-                           background:rgba(147,31,29,.07); border:1px solid rgba(147,31,29,.2);
-                           color:#931f1d; cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalEliminarPrestamo"
-                    data-pk="{{ p.pk }}"
-                    data-usuario="{{ p.usuario }}">
+            <!-- Eliminar -->
+            <button type="button" title="Eliminar préstamo"
+                    style="width:28px;height:28px;border-radius:6px;
+                           background:rgba(147,31,29,.07);border:1px solid rgba(147,31,29,.2);
+                           color:#931f1d;cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;margin:0 2px;"
+                    data-bs-toggle="modal" data-bs-target="#modalEliminarPrestamo"
+                    data-pk="{{ p.pk }}" data-usuario="{{ p.usuario }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -251,132 +284,103 @@
           </td>
         </tr>
 
-        <!-- Detalle desplegable (MINE-136/139/140) -->
+        <!-- Detalle desplegable -->
         <tr style="background:rgba(9,77,146,.02);">
-          <td colspan="7" style="padding:0; border:none;">
+          <td colspan="8" style="padding:0;border:none;">
             <div class="collapse" id="detail-p-{{ p.pk }}">
-              <div style="padding:1rem 1.4rem; border-bottom:1px solid var(--border-color);">
-                <p style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em;
-                           text-transform:uppercase; color:var(--text-muted); margin-bottom:.75rem;">
+              <div style="padding:1rem 1.4rem;border-bottom:1px solid var(--border-color);">
+                <p style="font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;
+                           text-transform:uppercase;color:var(--text-muted);margin-bottom:.75rem;">
                   Detalle completo
                 </p>
                 <div class="row g-3" style="font-family:var(--font-ui);">
-
-                  <!-- Usuario -->
-                  <div class="col-6 col-md-3">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Usuario</div>
-                    <div style="font-weight:600; color:var(--text-main);">{{ p.usuario }}</div>
-                  </div>
-
-                  <!-- Estado -->
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Estado</div>
-                    <div style="font-weight:600; color:var(--text-main);">{{ p.get_estado_display }}</div>
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Usuario</div>
+                    <div style="font-weight:600;">{{ p.usuario }}</div>
+                    {% if p.nombre_usuario %}<div style="font-size:.8rem;color:var(--text-muted);">{{ p.nombre_usuario }}</div>{% endif %}
                   </div>
-
-                  <!-- Fecha -->
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Fecha</div>
-                    <div style="font-family:var(--font-mono); font-size:.83rem; color:var(--text-main);">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Estado</div>
+                    <div>{{ p.get_estado_display }}</div>
                   </div>
-
-                  <!-- MINE-139/140: Herramientas prestadas con cantidad y formulario devolución -->
-                  <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em;
-                                color:var(--text-muted); font-weight:600; margin-bottom:.6rem;">
-                      Herramientas prestadas
+                  <div class="col-6 col-md-2">
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Fecha préstamo</div>
+                    <div style="font-family:var(--font-mono);font-size:.83rem;">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
+                  </div>
+                  <div class="col-6 col-md-2">
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Vencimiento</div>
+                    <div style="font-family:var(--font-mono);font-size:.83rem;">
+                      {% if p.fecha_vencimiento %}{{ p.fecha_vencimiento|date:"d/m/Y" }}{% else %}—{% endif %}
                     </div>
-
+                  </div>
+                  <div class="col-12">
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.6rem;">Herramientas prestadas</div>
                     {% for item in p.items.all %}
-                    <!-- MINE-136: Modelo detalle por ítem -->
-                    <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:.5rem;
-                                padding:.55rem .75rem; border-radius:var(--radius-md);
-                                background:rgba(9,77,146,.04); border:1px solid rgba(9,77,146,.08);">
-
-                      <!-- MINE-139: Nombre herramienta -->
-                      <span style="font-weight:600; color:var(--text-main); flex:1; min-width:0;
-                                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;
+                                padding:.55rem .75rem;border-radius:var(--radius-md);
+                                background:rgba(9,77,146,.04);border:1px solid rgba(9,77,146,.08);">
+                      <span style="font-weight:600;color:var(--text-main);flex:1;min-width:0;
+                                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         {{ item.producto.nombre }}
                       </span>
-
-                      <!-- MINE-140: Cantidad -->
-                      <span style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);
-                                   white-space:nowrap;">
+                      <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted);">
                         ×{{ item.cantidad }}
                       </span>
-
-                      <!-- Stock disponible del producto -->
-                      <span style="font-family:var(--font-mono); font-size:.72rem; white-space:nowrap;
-                                   {% if item.producto.stock > 0 %}
-                                     color:#2dd4bf;
-                                   {% else %}
-                                     color:#931f1d;
-                                   {% endif %}">
+                      <span style="font-family:var(--font-mono);font-size:.72rem;
+                                   {% if item.producto.stock > 0 %}color:#2dd4bf;{% else %}color:#931f1d;{% endif %}">
                         Stock: {{ item.producto.stock }}
                       </span>
-
-                      <!-- Estado del ítem -->
                       {% if item.devuelto %}
-                        <span class="badge-state badge-aprobada" style="font-size:.65rem; white-space:nowrap;">Devuelto</span>
+                        <span class="badge-state badge-aprobada" style="font-size:.65rem;">Devuelto</span>
                       {% else %}
-                        <span class="badge-state badge-pendiente" style="font-size:.65rem; white-space:nowrap;">Pendiente</span>
+                        <span class="badge-state badge-pendiente" style="font-size:.65rem;">Pendiente</span>
                       {% endif %}
-
-                      <!-- MINE-137/138/145/146: Formulario de devolución por ítem con validación de cantidad -->
                       {% if not item.devuelto and p.estado != 'devuelto' %}
-                      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:.2rem;">
+                      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;">
                         <form class="devolver-form" method="post"
-                              style="margin:0; display:inline-flex; align-items:center; gap:.35rem;"
+                              style="margin:0;display:inline-flex;align-items:center;gap:.35rem;"
                               data-max="{{ item.cantidad }}">
                           {% csrf_token %}
                           <input type="hidden" name="accion" value="devolver_item">
                           <input type="hidden" name="item_pk" value="{{ item.pk }}">
-                          <!-- MINE-145: Input cantidad a devolver -->
-                          <input type="number" name="cantidad_devuelta"
-                                 class="devolver-cantidad"
+                          <input type="number" name="cantidad_devuelta" class="devolver-cantidad"
                                  min="1" max="{{ item.cantidad }}" value="{{ item.cantidad }}"
-                                 style="width:52px; padding:.2rem .35rem; border-radius:5px;
-                                        border:1px solid rgba(9,77,146,.2); font-size:.78rem;
-                                        font-family:var(--font-mono); color:var(--text-main);
-                                        background:var(--bg-card); text-align:center;"
+                                 style="width:52px;padding:.2rem .35rem;border-radius:5px;
+                                        border:1px solid rgba(9,77,146,.2);font-size:.78rem;
+                                        font-family:var(--font-mono);color:var(--text-main);
+                                        background:var(--bg-card);text-align:center;"
                                  aria-label="Cantidad a devolver">
                           <button type="submit"
-                                  style="display:inline-flex; align-items:center; gap:.3rem;
-                                         padding:.25rem .6rem; border-radius:5px; white-space:nowrap;
-                                         background:rgba(45,212,191,.12); border:1px solid rgba(45,212,191,.3);
-                                         color:#0d9488; font-size:.75rem; font-weight:600;
-                                         font-family:var(--font-ui); cursor:pointer;">
+                                  style="display:inline-flex;align-items:center;gap:.3rem;
+                                         padding:.25rem .6rem;border-radius:5px;white-space:nowrap;
+                                         background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.3);
+                                         color:#0d9488;font-size:.75rem;font-weight:600;
+                                         font-family:var(--font-ui);cursor:pointer;">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                               <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
                             </svg>
                             Devolver
                           </button>
                         </form>
-                        <!-- MINE-146: Error si cantidad inválida -->
                         <div class="devolver-error"
-                             style="display:none; font-size:.72rem; color:#931f1d;
-                                    font-family:var(--font-ui); white-space:nowrap;
-                                    background:rgba(147,31,29,.08); border:1px solid rgba(147,31,29,.22);
-                                    border-radius:4px; padding:.2rem .5rem;">
+                             style="display:none;font-size:.72rem;color:#931f1d;
+                                    font-family:var(--font-ui);white-space:nowrap;
+                                    background:rgba(147,31,29,.08);border:1px solid rgba(147,31,29,.22);
+                                    border-radius:4px;padding:.2rem .5rem;">
                         </div>
                       </div>
                       {% endif %}
                     </div>
                     {% empty %}
-                      <div style="color:var(--text-muted); font-size:.85rem; padding:.5rem 0;">
-                        Sin ítems registrados.
-                      </div>
+                    <div style="color:var(--text-muted);font-size:.85rem;">Sin ítems registrados.</div>
                     {% endfor %}
                   </div>
-
-                  <!-- Observaciones -->
                   {% if p.observaciones %}
                   <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Observaciones</div>
-                    <div style="color:var(--text-main);">{{ p.observaciones }}</div>
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Observaciones</div>
+                    <div>{{ p.observaciones }}</div>
                   </div>
                   {% endif %}
-
                 </div>
               </div>
             </div>
@@ -385,20 +389,14 @@
 
         {% empty %}
         <tr>
-          <td colspan="7" style="text-align:center; padding:3.5rem 1rem;">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-                 stroke="var(--text-muted)" stroke-width="1.3"
-                 style="opacity:.35; display:block; margin:0 auto .75rem;">
-              <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
-            </svg>
-            <p style="font-family:var(--font-ui); color:var(--text-muted); font-size:.88rem; margin:0;">
-              No hay préstamos registrados aún.<br>
+          <td colspan="8" style="text-align:center;padding:3.5rem 1rem;">
+            <p style="font-family:var(--font-ui);color:var(--text-muted);font-size:.88rem;margin:0;">
+              No hay préstamos{% if filtro_q or filtro_estado %} con esos filtros{% endif %}.<br>
               <span style="font-size:.8rem;">Usa <strong>Nuevo Préstamo</strong> para agregar uno.</span>
             </p>
           </td>
         </tr>
         {% endfor %}
-
       </tbody>
     </table>
   </div>
@@ -410,87 +408,95 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
-          </svg>
-          Nuevo Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Nuevo Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="post" novalidate>
         {% csrf_token %}
         <div class="modal-body" style="padding:1.5rem;">
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
+          <div style="font-family:var(--font-mono);font-size:.65rem;letter-spacing:.13em;
+                      text-transform:uppercase;color:var(--navy);
                       border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1.1rem;">
+                      padding-bottom:.4rem;margin-bottom:1.1rem;">
             Datos del préstamo
           </div>
 
-          <!-- Errores generales del formulario (stock insuficiente, etc.) -->
           {% if form.non_field_errors %}
-            <div style="display:flex; align-items:flex-start; gap:.6rem; margin-bottom:1rem;
-                        padding:.75rem 1rem; border-radius:var(--radius-md);
-                        background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.28);
-                        color:#931f1d; font-family:var(--font-ui); font-size:.83rem;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.2" style="flex-shrink:0; margin-top:.1rem;">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <div>
-                {% for error in form.non_field_errors %}
-                  <div>{{ error }}</div>
-                {% endfor %}
-              </div>
-            </div>
+          <div style="display:flex;align-items:flex-start;gap:.6rem;margin-bottom:1rem;
+                      padding:.75rem 1rem;border-radius:var(--radius-md);
+                      background:rgba(147,31,29,.09);border:1px solid rgba(147,31,29,.28);
+                      color:#931f1d;font-family:var(--font-ui);font-size:.83rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:.1rem;">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>{% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}</div>
+          </div>
           {% endif %}
-          <div class="row g-3">
 
-            <!-- Usuario -->
+          <div class="row g-3">
+            <!-- Selector de usuario del sistema -->
             <div class="col-md-6">
-              <label class="form-label" for="{{ form.usuario.id_for_label }}">Usuario *</label>
+              <label class="form-label">Usuario (documento) *</label>
+              <select id="sel-usuario-sistema" class="form-control form-select"
+                      onchange="autocompletarUsuario(this)">
+                <option value="">— Seleccionar del sistema —</option>
+                {% for u in usuarios_sistema %}
+                <option value="{{ u.numero_documento }}"
+                        data-nombre="{{ u.nombre_completo }}">
+                  {{ u.nombre_completo }} ({{ u.numero_documento }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">O ingresa manualmente</label>
               {{ form.usuario }}
               {% for e in form.usuario.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
+            <div class="col-12">
+              <label class="form-label">Nombre del responsable</label>
+              {{ form.nombre_usuario }}
+            </div>
 
-            <!-- ── Herramientas: lista dinámica multi-ítem ── -->
+            <!-- Fecha de vencimiento -->
+            <div class="col-md-6">
+              <label class="form-label">Fecha de vencimiento</label>
+              {{ form.fecha_vencimiento }}
+              {% for e in form.fecha_vencimiento.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem;">
+                Dejar vacío si no tiene plazo definido.
+              </div>
+            </div>
+
+            <!-- Herramientas -->
             <div class="col-12">
               <label class="form-label">Herramientas / Productos *</label>
-
-              <!-- Contenedor de filas de ítems -->
-              <div id="items-container" style="display:flex; flex-direction:column; gap:.55rem;">
-                <!-- Fila 1 (siempre visible) -->
-                <div class="item-row" style="display:grid; grid-template-columns:1fr 90px 32px; gap:.5rem; align-items:start;">
+              <div id="items-container" style="display:flex;flex-direction:column;gap:.55rem;">
+                <div class="item-row" style="display:grid;grid-template-columns:1fr 90px 32px;gap:.5rem;align-items:start;">
                   <div>
                     <select name="producto[]" class="form-control form-select item-producto">
                       <option value="">— Selecciona una herramienta —</option>
                       {% for prod in productos %}
-                        <option value="{{ prod.pk }}" data-stock="{{ prod.stock }}">
-                          {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
-                        </option>
-                      {% empty %}
-                        <option disabled>No hay herramientas en inventario aún</option>
+                      <option value="{{ prod.pk }}" data-stock="{{ prod.stock }}">
+                        {{ prod.nombre }} — SKU: {{ prod.codigo_sku }} (Stock: {{ prod.stock }})
+                      </option>
                       {% endfor %}
                     </select>
-                    <div class="item-stock-info" style="display:none; margin-top:.35rem; padding:.35rem .65rem;
-                         border-radius:var(--radius-md); font-family:var(--font-ui); font-size:.76rem;
-                         align-items:center; gap:.4rem;"></div>
+                    <div class="item-stock-info" style="display:none;margin-top:.35rem;padding:.35rem .65rem;
+                         border-radius:var(--radius-md);font-family:var(--font-ui);font-size:.76rem;
+                         align-items:center;gap:.4rem;"></div>
                   </div>
                   <div>
                     <input type="number" name="cantidad[]" class="form-control item-cantidad"
                            min="1" value="1" placeholder="Cant.">
                   </div>
                   <div style="padding-top:.15rem;">
-                    <button type="button" class="btn-remove-item"
-                            title="Quitar herramienta"
-                            style="width:32px; height:36px; border-radius:6px; border:1px solid rgba(147,31,29,.25);
-                                   background:rgba(147,31,29,.07); color:#931f1d; cursor:pointer;
-                                   display:inline-flex; align-items:center; justify-content:center;
-                                   opacity:.4; pointer-events:none;">
+                    <button type="button" class="btn-remove-item" title="Quitar"
+                            style="width:32px;height:36px;border-radius:6px;border:1px solid rgba(147,31,29,.25);
+                                   background:rgba(147,31,29,.07);color:#931f1d;cursor:pointer;
+                                   display:inline-flex;align-items:center;justify-content:center;
+                                   opacity:.4;pointer-events:none;">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
@@ -498,13 +504,11 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Botón agregar ítem -->
               <button type="button" id="btn-add-item"
-                      style="margin-top:.65rem; display:inline-flex; align-items:center; gap:.4rem;
-                             padding:.3rem .75rem; border-radius:6px; border:1px dashed rgba(9,77,146,.35);
-                             background:rgba(9,77,146,.05); color:var(--navy); font-family:var(--font-ui);
-                             font-size:.78rem; cursor:pointer; font-weight:600; transition:background .15s;">
+                      style="margin-top:.65rem;display:inline-flex;align-items:center;gap:.4rem;
+                             padding:.3rem .75rem;border-radius:6px;border:1px dashed rgba(9,77,146,.35);
+                             background:rgba(9,77,146,.05);color:var(--navy);font-family:var(--font-ui);
+                             font-size:.78rem;cursor:pointer;font-weight:600;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
                 </svg>
@@ -512,13 +516,10 @@
               </button>
             </div>
 
-            <!-- Observaciones -->
             <div class="col-12">
-              <label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
+              <label class="form-label">Observaciones</label>
               {{ form.observaciones }}
-              {% for e in form.observaciones.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
             </div>
-
           </div>
         </div>
         <div class="modal-footer">
@@ -526,8 +527,7 @@
           <button type="submit" class="btn-primary-mine">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
+              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
             </svg>
             Guardar préstamo
           </button>
@@ -537,41 +537,32 @@
   </div>
 </div>
 
-<!-- ══ MODAL EDITAR PRÉSTAMO (MINE-123 / MINE-124) ══ -->
+
+<!-- ══ MODAL EDITAR PRÉSTAMO ══ -->
 <div class="modal fade" id="modalEditarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          Editar Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Editar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="post" id="formEditarPrestamo" novalidate>
         {% csrf_token %}
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="prestamo_pk" id="edit_pk">
         <div class="modal-body" style="padding:1.5rem;">
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
-                      border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1.1rem;">
-            Modificar datos del préstamo
-          </div>
           <div class="row g-3">
-            <!-- Usuario (MINE-141) -->
             <div class="col-md-6">
-              <label class="form-label">Usuario *</label>
-              <input type="text" name="usuario" id="edit_usuario"
-                     class="form-control" placeholder="Nombre del usuario"
-                     maxlength="150" required>
+              <label class="form-label">Documento / ID *</label>
+              <input type="text" name="usuario" id="edit_usuario" class="form-control"
+                     placeholder="Documento del usuario" maxlength="150" required>
               <div id="edit_usuario_error" class="form-error" style="display:none;"></div>
             </div>
-            <!-- Estado -->
+            <div class="col-md-6">
+              <label class="form-label">Nombre</label>
+              <input type="text" name="nombre_usuario" id="edit_nombre_usuario" class="form-control"
+                     placeholder="Nombre completo">
+            </div>
             <div class="col-md-6">
               <label class="form-label">Estado *</label>
               <select name="estado" id="edit_estado" class="form-control form-select">
@@ -581,54 +572,42 @@
                 <option value="vencido">Vencido</option>
               </select>
             </div>
-            <!-- Observaciones -->
+            <div class="col-md-6">
+              <label class="form-label">Fecha de vencimiento</label>
+              <input type="date" name="fecha_vencimiento" id="edit_fecha_vencimiento"
+                     class="form-control">
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem;">
+                Dejar vacío para quitar la fecha.
+              </div>
+            </div>
             <div class="col-12">
               <label class="form-label">Observaciones</label>
               <textarea name="observaciones" id="edit_observaciones"
-                        class="form-control" rows="3"
-                        placeholder="Notas u observaciones del préstamo..."></textarea>
+                        class="form-control" rows="3"></textarea>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-primary-mine">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
-            </svg>
-            Guardar cambios
-          </button>
+          <button type="submit" class="btn-primary-mine">Guardar cambios</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL CANCELAR PRÉSTAMO (MINE-125 / MINE-126) ══ -->
+
+<!-- ══ MODAL CANCELAR ══ -->
 <div class="modal fade" id="modalCancelarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="margin-right:.4rem;">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          Cancelar Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Cancelar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" style="padding:1.5rem; font-family:var(--font-ui);">
-        <p style="color:var(--text-main); margin-bottom:.4rem;">
-          ¿Confirmas que deseas <strong>cancelar</strong> el préstamo de
-          <strong id="cancelar_usuario_label"></strong>?
-        </p>
-        <p style="color:var(--text-muted); font-size:.85rem; margin:0;">
-          Esta acción marcará el préstamo como cancelado y devolverá el stock al inventario.
-        </p>
+      <div class="modal-body" style="padding:1.5rem;font-family:var(--font-ui);">
+        <p>¿Confirmas que deseas <strong>cancelar</strong> el préstamo de <strong id="cancelar_usuario_label"></strong>?</p>
+        <p style="color:var(--text-muted);font-size:.85rem;margin:0;">El stock será repuesto al inventario.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">No, mantener</button>
@@ -637,17 +616,12 @@
           <input type="hidden" name="accion" value="cancelar">
           <input type="hidden" name="prestamo_pk" id="cancelar_pk">
           <button type="submit"
-                  style="display:inline-flex; align-items:center; gap:.4rem;
-                         padding:.45rem 1rem; border-radius:var(--radius-md);
-                         background:rgba(245,158,11,.12); border:1px solid rgba(217,119,6,.3);
-                         color:#d97706; font-family:var(--font-ui); font-size:.82rem;
-                         font-weight:600; cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-            Sí, cancelar préstamo
+                  style="display:inline-flex;align-items:center;gap:.4rem;
+                         padding:.45rem 1rem;border-radius:var(--radius-md);
+                         background:rgba(245,158,11,.12);border:1px solid rgba(217,119,6,.3);
+                         color:#d97706;font-family:var(--font-ui);font-size:.82rem;
+                         font-weight:600;cursor:pointer;">
+            Sí, cancelar
           </button>
         </form>
       </div>
@@ -655,29 +629,18 @@
   </div>
 </div>
 
-<!-- ══ MODAL ELIMINAR PRÉSTAMO (MINE-127) ══ -->
+
+<!-- ══ MODAL ELIMINAR ══ -->
 <div class="modal fade" id="modalEliminarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#931f1d" stroke-width="2" style="margin-right:.4rem;">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-          </svg>
-          Eliminar Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Eliminar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" style="padding:1.5rem; font-family:var(--font-ui);">
-        <p style="color:var(--text-main); margin-bottom:.4rem;">
-          ¿Estás seguro de que deseas <strong>eliminar</strong> el préstamo de
-          <strong id="eliminar_usuario_label"></strong>?
-        </p>
-        <p style="color:var(--text-muted); font-size:.85rem; margin:0;">
-          Esta acción es <strong>permanente</strong> y no se puede deshacer.
-        </p>
+      <div class="modal-body" style="padding:1.5rem;font-family:var(--font-ui);">
+        <p>¿Estás seguro de <strong>eliminar</strong> el préstamo de <strong id="eliminar_usuario_label"></strong>?</p>
+        <p style="color:var(--text-muted);font-size:.85rem;margin:0;">Esta acción es <strong>permanente</strong>.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
@@ -686,16 +649,12 @@
           <input type="hidden" name="accion" value="eliminar">
           <input type="hidden" name="prestamo_pk" id="eliminar_pk">
           <button type="submit"
-                  style="display:inline-flex; align-items:center; gap:.4rem;
-                         padding:.45rem 1rem; border-radius:var(--radius-md);
-                         background:rgba(147,31,29,.1); border:1px solid rgba(147,31,29,.25);
-                         color:#931f1d; font-family:var(--font-ui); font-size:.82rem;
-                         font-weight:600; cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            </svg>
-            Sí, eliminar registro
+                  style="display:inline-flex;align-items:center;gap:.4rem;
+                         padding:.45rem 1rem;border-radius:var(--radius-md);
+                         background:rgba(147,31,29,.1);border:1px solid rgba(147,31,29,.25);
+                         color:#931f1d;font-family:var(--font-ui);font-size:.82rem;
+                         font-weight:600;cursor:pointer;">
+            Sí, eliminar
           </button>
         </form>
       </div>
@@ -706,276 +665,223 @@
 {% endblock %}
 
 {% block js %}
-<!-- URL global para prestamos.js (no puede usar Django tags desde un .js estático) -->
 <script>window.PRESTAMO_URL = "{% url 'prestamo' %}";</script>
 <script src="{% static 'js/prestamos.js' %}"></script>
 <script>
-  // ── Reabrir modal si hubo errores de validación del backend ──
-  {% if form.errors or form.non_field_errors %}
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrearPrestamo')).show();
-  {% endif %}
+{% if form.errors or form.non_field_errors %}
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrearPrestamo')).show();
+{% endif %}
 
-  // ══════════════════════════════════════════════════════════════
-  // MINE-141 / MINE-142 — Modal Editar: poblar datos + guardar
-  // ══════════════════════════════════════════════════════════════
-  document.getElementById('modalEditarPrestamo')
-    .addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      if (!btn) return;
+// ── Autocompletar usuario desde el select del sistema ──
+function autocompletarUsuario(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  const campoDoc    = document.getElementById('id_usuario');
+  const campoNombre = document.querySelector('[name="nombre_usuario"]');
+  if (campoDoc)    campoDoc.value    = opt.value;
+  if (campoNombre) campoNombre.value = opt.dataset.nombre || '';
+}
 
-      // Poblar campos con los data-* del botón disparador
-      document.getElementById('edit_pk').value            = btn.dataset.pk          || '';
-      document.getElementById('edit_usuario').value       = btn.dataset.usuario      || '';
-      document.getElementById('edit_observaciones').value = btn.dataset.observaciones || '';
-
-      // Seleccionar el estado correcto en el <select>
-      const estadoSel = document.getElementById('edit_estado');
-      const estadoVal = btn.dataset.estado || 'activo';
-      for (const opt of estadoSel.options) {
-        opt.selected = (opt.value === estadoVal);
-      }
-    });
-
-  // MINE-142: Validación mínima antes de enviar el formulario de edición
-  document.getElementById('formEditarPrestamo')
-    .addEventListener('submit', function (e) {
-      const usuarioInput = document.getElementById('edit_usuario');
-      const errorDiv     = document.getElementById('edit_usuario_error');
-      const val          = usuarioInput.value.trim();
-
-      if (!val) {
-        e.preventDefault();
-        errorDiv.textContent = 'El nombre de usuario no puede estar vacío.';
-        errorDiv.style.display = 'block';
-        usuarioInput.style.borderColor = '#931f1d';
-        usuarioInput.focus();
-      } else {
-        errorDiv.style.display = 'none';
-        usuarioInput.style.borderColor = '';
-      }
-    });
-
-  // Limpiar error al escribir en el campo usuario del modal editar
-  document.getElementById('edit_usuario').addEventListener('input', function () {
-    const errorDiv = document.getElementById('edit_usuario_error');
-    errorDiv.style.display = 'none';
-    this.style.borderColor = '';
+// ── Modal Editar: poblar campos incluyendo fecha_vencimiento y nombre ──
+document.getElementById('modalEditarPrestamo')
+  .addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    if (!btn) return;
+    document.getElementById('edit_pk').value                = btn.dataset.pk          || '';
+    document.getElementById('edit_usuario').value           = btn.dataset.usuario      || '';
+    document.getElementById('edit_nombre_usuario').value    = btn.dataset.nombreUsuario|| '';
+    document.getElementById('edit_observaciones').value     = btn.dataset.observaciones|| '';
+    document.getElementById('edit_fecha_vencimiento').value = btn.dataset.fechaVencimiento || '';
+    const selEstado = document.getElementById('edit_estado');
+    const estado    = btn.dataset.estado || 'activo';
+    for (const opt of selEstado.options) opt.selected = (opt.value === estado);
   });
 
-
-  // ══════════════════════════════════════════════════════════════
-  // MINE-143 / MINE-144 — Modal Eliminar: poblar datos + confirmar
-  // ══════════════════════════════════════════════════════════════
-  document.getElementById('modalEliminarPrestamo')
-    .addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      if (!btn) return;
-      document.getElementById('eliminar_pk').value          = btn.dataset.pk      || '';
-      document.getElementById('eliminar_usuario_label').textContent = btn.dataset.usuario || '';
-    });
-
-
-  // ══════════════════════════════════════════════════════════════
-  // MINE-125 / MINE-126 — Modal Cancelar: poblar datos
-  // ══════════════════════════════════════════════════════════════
-  document.getElementById('modalCancelarPrestamo')
-    .addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      if (!btn) return;
-      document.getElementById('cancelar_pk').value                   = btn.dataset.pk      || '';
-      document.getElementById('cancelar_usuario_label').textContent  = btn.dataset.usuario || '';
-    });
-
-
-  // ══════════════════════════════════════════════════════════════
-  // MINE-145 / MINE-146 — Validar cantidad en formularios devolver
-  // ══════════════════════════════════════════════════════════════
-  document.querySelectorAll('.devolver-form').forEach(function (form) {
-    const maxQty    = parseInt(form.dataset.max, 10);
-    const input     = form.querySelector('.devolver-cantidad');
-    const errorDiv  = form.closest('div').querySelector('.devolver-error');
-
-    function showError(msg) {
-      errorDiv.textContent = msg;
-      errorDiv.style.display = 'block';
+// ── Validación editar ──
+document.getElementById('formEditarPrestamo')
+  .addEventListener('submit', function(e) {
+    const input    = document.getElementById('edit_usuario');
+    const errorDiv = document.getElementById('edit_usuario_error');
+    if (!input.value.trim()) {
+      e.preventDefault();
+      errorDiv.textContent    = 'El documento no puede estar vacío.';
+      errorDiv.style.display  = 'block';
       input.style.borderColor = '#931f1d';
-    }
-    function clearError() {
-      errorDiv.style.display = 'none';
+      input.focus();
+    } else {
+      errorDiv.style.display  = 'none';
       input.style.borderColor = '';
     }
-
-    // MINE-145: Validar en tiempo real mientras el usuario escribe
-    input.addEventListener('input', function () {
-      const val = parseInt(this.value, 10);
-      if (isNaN(val) || val < 1) {
-        showError('La cantidad debe ser al menos 1.');
-      } else if (val > maxQty) {
-        showError('Máximo ' + maxQty + ' unidad(es) a devolver.');
-      } else {
-        clearError();
-      }
-    });
-
-    // MINE-146: Bloquear envío si la cantidad es inválida
-    form.addEventListener('submit', function (e) {
-      const val = parseInt(input.value, 10);
-      if (isNaN(val) || val < 1) {
-        e.preventDefault();
-        showError('La cantidad debe ser al menos 1.');
-        input.focus();
-      } else if (val > maxQty) {
-        e.preventDefault();
-        showError('No puedes devolver más de ' + maxQty + ' unidad(es).');
-        input.focus();
-      } else {
-        clearError();
-      }
-    });
   });
 
+document.getElementById('edit_usuario').addEventListener('input', function() {
+  document.getElementById('edit_usuario_error').style.display = 'none';
+  this.style.borderColor = '';
+});
 
-  // ══════════════════════════════════════════════════════════════
-  // Multi-ítem: agregar / quitar herramientas en el modal Nuevo Préstamo
-  // ══════════════════════════════════════════════════════════════
+// ── Modal Cancelar ──
+document.getElementById('modalCancelarPrestamo')
+  .addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    if (!btn) return;
+    document.getElementById('cancelar_pk').value                  = btn.dataset.pk      || '';
+    document.getElementById('cancelar_usuario_label').textContent = btn.dataset.usuario || '';
+  });
 
-  // Plantilla HTML de una fila de ítem (se clona al agregar)
-  function buildItemRow() {
-    // Tomar las opciones del primer select como base
-    const firstSel = document.querySelector('#items-container .item-producto');
-    const opts     = firstSel ? firstSel.innerHTML : '<option value="">— Selecciona —</option>';
+// ── Modal Eliminar ──
+document.getElementById('modalEliminarPrestamo')
+  .addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    if (!btn) return;
+    document.getElementById('eliminar_pk').value                  = btn.dataset.pk      || '';
+    document.getElementById('eliminar_usuario_label').textContent = btn.dataset.usuario || '';
+  });
 
-    const div = document.createElement('div');
-    div.className = 'item-row';
-    div.style.cssText = 'display:grid; grid-template-columns:1fr 90px 32px; gap:.5rem; align-items:start;';
-    div.innerHTML = `
-      <div>
-        <select name="producto[]" class="form-control form-select item-producto">${opts}</select>
-        <div class="item-stock-info" style="display:none; margin-top:.35rem; padding:.35rem .65rem;
-             border-radius:var(--radius-md); font-family:var(--font-ui); font-size:.76rem;
-             align-items:center; gap:.4rem;"></div>
-      </div>
-      <div>
-        <input type="number" name="cantidad[]" class="form-control item-cantidad" min="1" value="1" placeholder="Cant.">
-      </div>
-      <div style="padding-top:.15rem;">
-        <button type="button" class="btn-remove-item" title="Quitar herramienta"
-                style="width:32px; height:36px; border-radius:6px; border:1px solid rgba(147,31,29,.25);
-                       background:rgba(147,31,29,.07); color:#931f1d; cursor:pointer;
-                       display:inline-flex; align-items:center; justify-content:center;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>`;
-    return div;
+// ── Validación devolver ítems ──
+document.querySelectorAll('.devolver-form').forEach(function(form) {
+  const maxQty   = parseInt(form.dataset.max, 10);
+  const input    = form.querySelector('.devolver-cantidad');
+  const errorDiv = form.closest('div').querySelector('.devolver-error');
+
+  function showError(msg) {
+    errorDiv.textContent    = msg;
+    errorDiv.style.display  = 'block';
+    input.style.borderColor = '#931f1d';
   }
-
-  // Actualiza el estado del botón eliminar (deshabilita si solo hay 1 fila)
-  function refreshRemoveButtons() {
-    const rows = document.querySelectorAll('#items-container .item-row');
-    rows.forEach(function (row) {
-      const btn = row.querySelector('.btn-remove-item');
-      if (!btn) return;
-      if (rows.length === 1) {
-        btn.style.opacity        = '.4';
-        btn.style.pointerEvents  = 'none';
-      } else {
-        btn.style.opacity        = '1';
-        btn.style.pointerEvents  = '';
-      }
-    });
+  function clearError() {
+    errorDiv.style.display  = 'none';
+    input.style.borderColor = '';
   }
+  input.addEventListener('input', function() {
+    const val = parseInt(this.value, 10);
+    if (isNaN(val) || val < 1)   showError('Mínimo 1.');
+    else if (val > maxQty)        showError('Máximo ' + maxQty + '.');
+    else                          clearError();
+  });
+  form.addEventListener('submit', function(e) {
+    const val = parseInt(input.value, 10);
+    if (isNaN(val) || val < 1) {
+      e.preventDefault(); showError('Mínimo 1.'); input.focus();
+    } else if (val > maxQty) {
+      e.preventDefault(); showError('Máximo ' + maxQty + '.'); input.focus();
+    } else { clearError(); }
+  });
+});
 
-  // Muestra el stock disponible debajo del select de cada fila
-  function updateItemStock(selectEl) {
-    const row      = selectEl.closest('.item-row');
-    const infoDiv  = row.querySelector('.item-stock-info');
-    const selected = selectEl.options[selectEl.selectedIndex];
-    const stock    = selected ? parseInt(selected.dataset.stock, 10) : NaN;
+// ── Multi-ítem ──
+function buildItemRow() {
+  const firstSel = document.querySelector('#items-container .item-producto');
+  const opts     = firstSel ? firstSel.innerHTML : '<option value="">— Selecciona —</option>';
+  const div      = document.createElement('div');
+  div.className  = 'item-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 90px 32px;gap:.5rem;align-items:start;';
+  div.innerHTML = `
+    <div>
+      <select name="producto[]" class="form-control form-select item-producto">${opts}</select>
+      <div class="item-stock-info" style="display:none;margin-top:.35rem;padding:.35rem .65rem;
+           border-radius:var(--radius-md);font-family:var(--font-ui);font-size:.76rem;
+           align-items:center;gap:.4rem;"></div>
+    </div>
+    <div><input type="number" name="cantidad[]" class="form-control item-cantidad" min="1" value="1" placeholder="Cant."></div>
+    <div style="padding-top:.15rem;">
+      <button type="button" class="btn-remove-item" title="Quitar"
+              style="width:32px;height:36px;border-radius:6px;border:1px solid rgba(147,31,29,.25);
+                     background:rgba(147,31,29,.07);color:#931f1d;cursor:pointer;
+                     display:inline-flex;align-items:center;justify-content:center;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>`;
+  return div;
+}
 
-    infoDiv.style.display = 'none';
-    if (!selected || !selected.value) return;
+function refreshRemoveButtons() {
+  const rows = document.querySelectorAll('#items-container .item-row');
+  rows.forEach(function(row) {
+    const btn = row.querySelector('.btn-remove-item');
+    if (!btn) return;
+    btn.style.opacity       = rows.length === 1 ? '.4' : '1';
+    btn.style.pointerEvents = rows.length === 1 ? 'none' : '';
+  });
+}
 
-    infoDiv.style.display = 'flex';
-    if (isNaN(stock) || stock <= 0) {
-      infoDiv.style.background = 'rgba(147,31,29,.09)';
-      infoDiv.style.border     = '1px solid rgba(147,31,29,.25)';
-      infoDiv.style.color      = '#931f1d';
-      infoDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Sin stock disponible';
-    } else {
-      infoDiv.style.background = 'rgba(45,212,191,.09)';
-      infoDiv.style.border     = '1px solid rgba(45,212,191,.25)';
-      infoDiv.style.color      = '#0d9488';
-      infoDiv.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Disponible: ' + stock + ' unidad(es)';
+function updateItemStock(selectEl) {
+  const row     = selectEl.closest('.item-row');
+  const infoDiv = row.querySelector('.item-stock-info');
+  const selected = selectEl.options[selectEl.selectedIndex];
+  const stock    = selected ? parseInt(selected.dataset.stock, 10) : NaN;
+  infoDiv.style.display = 'none';
+  if (!selected || !selected.value) return;
+  infoDiv.style.display = 'flex';
+  if (isNaN(stock) || stock <= 0) {
+    infoDiv.style.background = 'rgba(147,31,29,.09)';
+    infoDiv.style.border     = '1px solid rgba(147,31,29,.25)';
+    infoDiv.style.color      = '#931f1d';
+    infoDiv.textContent      = 'Sin stock disponible';
+  } else {
+    infoDiv.style.background = 'rgba(45,212,191,.09)';
+    infoDiv.style.border     = '1px solid rgba(45,212,191,.25)';
+    infoDiv.style.color      = '#0d9488';
+    infoDiv.textContent      = 'Disponible: ' + stock + ' unidad(es)';
+  }
+}
+
+const itemsContainer = document.getElementById('items-container');
+if (itemsContainer) {
+  itemsContainer.addEventListener('change', function(e) {
+    if (e.target.classList.contains('item-producto')) updateItemStock(e.target);
+  });
+  itemsContainer.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-remove-item');
+    if (!btn) return;
+    const row = btn.closest('.item-row');
+    if (row && document.querySelectorAll('#items-container .item-row').length > 1) {
+      row.remove();
+      refreshRemoveButtons();
     }
-  }
-
-  // Delegación de eventos en el contenedor (funciona para filas existentes y clonadas)
-  const itemsContainer = document.getElementById('items-container');
-  if (itemsContainer) {
-    itemsContainer.addEventListener('change', function (e) {
-      if (e.target.classList.contains('item-producto')) {
-        updateItemStock(e.target);
-      }
-    });
-
-    itemsContainer.addEventListener('click', function (e) {
-      const btn = e.target.closest('.btn-remove-item');
-      if (!btn) return;
-      const row = btn.closest('.item-row');
-      if (row && document.querySelectorAll('#items-container .item-row').length > 1) {
-        row.remove();
-        refreshRemoveButtons();
-      }
-    });
-  }
-
-  // Botón "Agregar otra herramienta"
-  const btnAddItem = document.getElementById('btn-add-item');
-  if (btnAddItem) {
-    btnAddItem.addEventListener('click', function () {
-      const newRow = buildItemRow();
-      itemsContainer.appendChild(newRow);
-      refreshRemoveButtons();
-    });
-  }
-
-  // Limpiar filas extra al cerrar el modal (deja solo la primera)
-  const modalCrear = document.getElementById('modalCrearPrestamo');
-  if (modalCrear) {
-    modalCrear.addEventListener('hidden.bs.modal', function () {
-      const rows = document.querySelectorAll('#items-container .item-row');
-      rows.forEach(function (row, i) {
-        if (i > 0) row.remove();
-      });
-      // Resetear el primer select y su info de stock
-      const firstSel  = document.querySelector('#items-container .item-producto');
-      const firstInfo = document.querySelector('#items-container .item-stock-info');
-      const firstQty  = document.querySelector('#items-container .item-cantidad');
-      if (firstSel)  { firstSel.selectedIndex = 0; }
-      if (firstInfo) { firstInfo.style.display = 'none'; }
-      if (firstQty)  { firstQty.value = 1; }
-      refreshRemoveButtons();
-    });
-  }
-
-  refreshRemoveButtons();
-
-
-  // ══════════════════════════════════════════════════════════════
-  // Chevron animado en filas desplegables
-  // ══════════════════════════════════════════════════════════════
-  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (btn) {
-    const targetId = btn.dataset.bsTarget;
-    if (!targetId) return;
-    const collapseEl = document.querySelector(targetId);
-    if (!collapseEl) return;
-    const chevron = btn.querySelector('.row-chevron');
-    if (!chevron) return;
-
-    collapseEl.addEventListener('show.bs.collapse',  function () { chevron.style.transform = 'rotate(90deg)'; });
-    collapseEl.addEventListener('hide.bs.collapse',  function () { chevron.style.transform = 'rotate(0deg)'; });
   });
+}
+
+const btnAddItem = document.getElementById('btn-add-item');
+if (btnAddItem) {
+  btnAddItem.addEventListener('click', function() {
+    itemsContainer.appendChild(buildItemRow());
+    refreshRemoveButtons();
+  });
+}
+
+const modalCrear = document.getElementById('modalCrearPrestamo');
+if (modalCrear) {
+  modalCrear.addEventListener('hidden.bs.modal', function() {
+    document.querySelectorAll('#items-container .item-row').forEach(function(row, i) {
+      if (i > 0) row.remove();
+    });
+    const firstSel  = document.querySelector('#items-container .item-producto');
+    const firstInfo = document.querySelector('#items-container .item-stock-info');
+    const firstQty  = document.querySelector('#items-container .item-cantidad');
+    if (firstSel)  firstSel.selectedIndex = 0;
+    if (firstInfo) firstInfo.style.display = 'none';
+    if (firstQty)  firstQty.value = 1;
+    // Limpiar selector de usuario
+    const selUsuario = document.getElementById('sel-usuario-sistema');
+    if (selUsuario) selUsuario.selectedIndex = 0;
+    refreshRemoveButtons();
+  });
+}
+
+// ── Chevron animado ──
+document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(btn) {
+  const targetId = btn.dataset.bsTarget;
+  if (!targetId) return;
+  const collapseEl = document.querySelector(targetId);
+  if (!collapseEl) return;
+  const chevron = btn.querySelector('.row-chevron');
+  if (!chevron) return;
+  collapseEl.addEventListener('show.bs.collapse',  function() { chevron.style.transform = 'rotate(90deg)'; });
+  collapseEl.addEventListener('hide.bs.collapse',  function() { chevron.style.transform = 'rotate(0deg)'; });
+});
+
+refreshRemoveButtons();
 </script>
 {% endblock js %}

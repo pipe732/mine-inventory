@@ -341,3 +341,116 @@ def exportar_usuarios_csv(request):
             u.id_rol.nombre,
         ])
     return response
+
+# usuario/views.py  — solo la función perfil_view
+# Añade esto al final del archivo views.py existente.
+# Asegúrate de tener estos imports al inicio del archivo (ya existen la mayoría):
+#   from django.contrib.auth.hashers import make_password, check_password
+#   from django.contrib import messages
+
+def perfil_view(request):
+    doc = request.session.get('usuario_documento')
+    if not doc:
+        return redirect('login')
+
+    usuario = get_object_or_404(Usuario, numero_documento=doc)
+    errores = {}
+    accion_activa = ''
+
+    if request.method == 'POST':
+        accion_activa = request.POST.get('accion', '')
+
+        # ── Editar datos personales ──────────────────────────────────
+        if accion_activa == 'editar_perfil':
+            nombre   = request.POST.get('nombre_completo', '').strip()
+            correo   = request.POST.get('correo', '').strip().lower()
+            telefono = request.POST.get('telefono', '').strip()
+
+            if not nombre:
+                errores['nombre_completo'] = 'El nombre no puede estar vacío.'
+            if not correo or '@' not in correo:
+                errores['correo'] = 'Ingresa un correo válido.'
+            if telefono and not telefono.isdigit():
+                errores['telefono'] = 'El teléfono solo debe contener dígitos.'
+            if not errores.get('correo'):
+                if Usuario.objects.filter(correo=correo).exclude(numero_documento=doc).exists():
+                    errores['correo'] = 'Este correo ya está en uso por otro usuario.'
+
+            if not errores:
+                usuario.nombre_completo = nombre
+                usuario.correo          = correo
+                usuario.telefono        = telefono
+                usuario.save(update_fields=['nombre_completo', 'correo', 'telefono'])
+                request.session['usuario_nombre'] = nombre
+                messages.success(request, 'Perfil actualizado correctamente.')
+                return redirect('perfil')
+
+        # ── Cambiar contraseña ───────────────────────────────────────
+        elif accion_activa == 'cambiar_password':
+            actual   = request.POST.get('password_actual', '')
+            nueva    = request.POST.get('password_nueva', '')
+            confirma = request.POST.get('password_confirma', '')
+
+            if not check_password(actual, usuario.password):
+                errores['password_actual'] = 'La contraseña actual es incorrecta.'
+            if len(nueva) < 8:
+                errores['password_nueva'] = 'La nueva contraseña debe tener al menos 8 caracteres.'
+            if nueva != confirma:
+                errores['password_confirma'] = 'Las contraseñas no coinciden.'
+
+            if not errores:
+                usuario.password = make_password(nueva)
+                usuario.save(update_fields=['password'])
+                messages.success(request, 'Contraseña actualizada correctamente.')
+                return redirect('perfil')
+
+        # ── Guardar configuración de notificaciones ──────────────────
+        elif accion_activa == 'guardar_config':
+            request.session['cfg_notif_prestamos']    = 'notif_prestamos'    in request.POST
+            request.session['cfg_notif_vencimientos'] = 'notif_vencimientos' in request.POST
+            request.session['cfg_notif_devoluciones'] = 'notif_devoluciones' in request.POST
+            messages.success(request, 'Configuración guardada.')
+            return redirect('perfil')
+
+    # Valores actuales de notificaciones (default True la primera vez)
+    cfg_notif_prestamos    = request.session.get('cfg_notif_prestamos',    True)
+    cfg_notif_vencimientos = request.session.get('cfg_notif_vencimientos', True)
+    cfg_notif_devoluciones = request.session.get('cfg_notif_devoluciones', True)
+
+    return render(request, 'perfil.html', {
+        'usuario':        usuario,
+        'errores':        errores,
+        'accion_activa':  accion_activa,
+        # Lista de pestañas para el modal (id, label, icono)
+        'tab_list': [
+            ('tab-datos',    'Datos personales', ''),
+            ('tab-password', 'Contraseña',        ''),
+            ('tab-config',   'Notificaciones',    ''),
+        ],
+        # Lista de notificaciones para la pestaña 3
+        # (name, label, descripción, valor_actual)
+        'notificaciones_lista': [
+            (
+                'notif_prestamos',
+                'Nuevos préstamos asignados',
+                'Recibir alerta cuando se te asigne un préstamo.',
+                cfg_notif_prestamos,
+            ),
+            (
+                'notif_vencimientos',
+                'Próximos a vencer',
+                'Alerta 3 días antes de que venza un préstamo activo.',
+                cfg_notif_vencimientos,
+            ),
+            (
+                'notif_devoluciones',
+                'Devoluciones pendientes',
+                'Recordatorio de devoluciones en estado pendiente.',
+                cfg_notif_devoluciones,
+            ),
+        ],
+        # Valores sueltos para la tarjeta de la página
+        'cfg_notif_prestamos':    cfg_notif_prestamos,
+        'cfg_notif_vencimientos': cfg_notif_vencimientos,
+        'cfg_notif_devoluciones': cfg_notif_devoluciones,
+    })
