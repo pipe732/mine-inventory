@@ -424,9 +424,13 @@
                         placeholder="Descripción opcional...">{{ post_descripcion }}</textarea>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Stock *</label>
+              <label class="form-label">Stock</label>
               <input type="number" name="stock" class="form-control"
-                     value="{{ post_stock|default:'0' }}" min="0" required>
+                     value="1" min="1" max="1" readonly
+                     style="background:rgba(9,77,146,.04); cursor:not-allowed; color:var(--text-muted);">
+              <div style="font-size:.72rem; color:var(--text-muted); margin-top:.2rem;">
+                Se registra 1 unidad por herramienta.
+              </div>
             </div>
             <div class="col-md-4">
               <label class="form-label">Categoría</label>

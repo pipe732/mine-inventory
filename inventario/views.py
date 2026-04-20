@@ -41,7 +41,9 @@ def inventario(request):
                     form_modal_errors = True
                 else:
                     try:
-                        p = form.save()
+                        p = form.save(commit=False)
+                        p.stock = 1
+                        p.save()
                         messages.success(request, f'Herramienta "{p.nombre}" creada correctamente.')
                         return redirect("inventario:inventario")
                     except IntegrityError:
