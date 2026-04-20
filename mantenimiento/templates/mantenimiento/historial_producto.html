@@ -13,103 +13,9 @@ Historial —
   label_accion=label_accion
 %}
 
-#filtro
-<div class="card mb-4">
-  <div class="card-body" style="padding: 1.25rem">
-    <form method="get" class="row g-3 align-items-end">
-      <div class="col-md-3">
-        <label class="form-label">Buscar</label>
-        <input
-          type="text"
-          name="q"
-          class="form-control"
-          placeholder="Buscar en descripción..."
-          value="{{ q }}"
-        />
-      </div>
+{% include "mantenimiento/partials/_filtros.html" with modo='historial' %}
 
-      <div class="col-md-2">
-        <label class="form-label">Tipo</label>
-        <select name="tipo" class="form-control form-select">
-          <option value="">Todos los tipos</option>
-          {% for value, label in tipo_choices %}
-          <option
-            value="{{ value }}"
-            {%
-            if
-            tipo_filtro=""
-            ="value"
-            %}selected{%
-            endif
-            %}
-          >
-            {{ label }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="col-md-2">
-        <label class="form-label">Estado registro</label>
-        <select name="estado_registro" class="form-control form-select">
-          <option value="">Todos</option>
-          {% for value, label in estado_choices %}
-          <option
-            value="{{ value }}"
-            {%
-            if
-            estado_filtro=""
-            ="value"
-            %}selected{%
-            endif
-            %}
-          >
-            {{ label }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="col-md-2">
-        <label class="form-label">Desde</label>
-        <input
-          type="date"
-          name="fecha_desde"
-          class="form-control"
-          value="{{ fecha_desde }}"
-        />
-      </div>
-
-      <div class="col-md-2">
-        <label class="form-label">Hasta</label>
-        <input
-          type="date"
-          name="fecha_hasta"
-          class="form-control"
-          value="{{ fecha_hasta }}"
-        />
-      </div>
-
-      <div class="col-md-1 d-flex gap-2">
-        <button type="submit" class="btn-primary-mine flex-grow-1">
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-#tabla
+<!-- Tabla -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
@@ -132,19 +38,7 @@ Historial —
       </svg>
       Registros de mantenimiento
     </span>
-    <span
-      style="
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        background: rgba(9, 77, 146, 0.08);
-        color: var(--navy);
-        padding: 0.18rem 0.6rem;
-        border-radius: 20px;
-        border: 1px solid rgba(9, 77, 146, 0.18);
-      "
-    >
-      {{ total_registros }} registro{{ total_registros|pluralize:",s" }}
-    </span>
+    {% include "mantenimiento/partials/_count_badge.html" with total=total_registros singular="registro" plural_suffix=",s" %}
   </div>
 
   <div class="table-responsive">
@@ -207,19 +101,7 @@ Historial —
             {{ m.responsable.get_full_name|default:m.responsable.username }}
           </td>
           <td>
-            {% if m.estado_registro == 'cerrado' %}
-            <span class="badge-state badge-aprobada"
-              >{{ m.get_estado_registro_display }}</span
-            >
-            {% elif m.estado_registro == 'cancelado' %}
-            <span class="badge-state badge-rechazada"
-              >{{ m.get_estado_registro_display }}</span
-            >
-            {% else %}
-            <span class="badge-state badge-pendiente"
-              >{{ m.get_estado_registro_display }}</span
-            >
-            {% endif %}
+            {% include "mantenimiento/partials/_badge_estado_registro.html" with estado=m.estado_registro etiqueta=m.get_estado_registro_display %}
           </td>
           <td>
             {% if m.costo_real %}
@@ -230,70 +112,9 @@ Historial —
             <span style="color: var(--text-muted)">—</span>
             {% endif %}
           </td>
+          {% url 'mantenimiento:mantenimiento_detalle' m.pk as detalle_url %}
           <td style="text-align: center">
-            <a
-              href="{% url 'mantenimiento:mantenimiento_detalle' m.pk %}"
-              style="
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                background: rgba(9, 77, 146, 0.07);
-                border: 1px solid rgba(9, 77, 146, 0.18);
-                color: var(--navy);
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-              "
-              title="Ver detalle"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </a>
-            <a
-              href="{% url 'mantenimiento:mantenimiento_editar' m.pk %}"
-              style="
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                background: rgba(9, 77, 146, 0.07);
-                border: 1px solid rgba(9, 77, 146, 0.18);
-                color: var(--navy);
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-                margin-left: 4px;
-              "
-              title="Editar"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-              >
-                <path
-                  d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14
-                         a2 2 0 0 0 2-2v-7"
-                />
-                <path
-                  d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1
-                         1-4 9.5-9.5z"
-                />
-              </svg>
-            </a>
+            {% include "mantenimiento/partials/_action_icon_button.html" with href=detalle_url title="Ver detalle" icon="view" %}
           </td>
         </tr>
         {% empty %} {% include "mantenimiento/partials/_tabla_empty.html" with
@@ -305,7 +126,7 @@ Historial —
     </table>
   </div>
 </div>
-#boton volver
+<!-- Boton volver -->
 <div class="mt-3">
   <a
     href="{% url 'mantenimiento:mantenimiento_lista' %}"

@@ -5,50 +5,10 @@
 
 {% block content %}
 
-<div class="d-flex align-items-center justify-content-between mb-4">
-  <div>
-    <h5
-      style="
-        font-family: var(--font-ui);
-        font-weight: 700;
-        font-size: 1rem;
-        color: var(--text-main);
-        letter-spacing: 0.03em;
-        margin: 0;
-      "
-    >
-      Estado Actual de Herramientas
-    </h5>
-    <p
-      style="
-        font-family: var(--font-ui);
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        margin: 0;
-      "
-    >
-      Disponibilidad y último estado registrado de cada ítem
-    </p>
-  </div>
-
-  {% if url_accion %}
-  <a href="{{ url_accion }}" class="btn-primary-mine">
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="16" />
-      <line x1="8" y1="12" x2="16" y2="12" />
-    </svg>
-    Nuevo Mantenimiento
-  </a>
-  {% endif %}
-</div>
+{% include "mantenimiento/partials/_cabecera.html" with
+  titulo="Estado Actual de Herramientas"
+  subtitulo="Disponibilidad y ultimo estado registrado de cada item"
+%}
 
 <!-- Totales -->
 <div class="d-flex gap-3 mb-4">
@@ -70,60 +30,7 @@
   >
 </div>
 
-<!-- Filtros -->
-<div class="card mb-4">
-  <div class="card-body" style="padding: 1.25rem">
-    <form method="get" class="row g-3 align-items-end">
-      <div class="col-md-6">
-        <label class="form-label">Buscar ítem</label>
-        <input
-          type="text"
-          name="q"
-          class="form-control"
-          placeholder="Código, nombre, serie o ubicación..."
-          value="{{ q }}"
-        />
-      </div>
-
-      <div class="col-md-3">
-        <label class="form-label">Disponibilidad</label>
-        <select name="disponible" class="form-control form-select">
-          <option value="">Todos</option>
-          <option value="si" {% if disponible_filtro == "si" %}selected{% endif %}>
-            Solo disponibles
-          </option>
-          <option value="no" {% if disponible_filtro == "no" %}selected{% endif %}>
-            Solo no disponibles
-          </option>
-        </select>
-      </div>
-
-      <div class="col-md-3 d-flex gap-2">
-        <button type="submit" class="btn-primary-mine flex-grow-1">
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          Filtrar
-        </button>
-        <a
-          href="{% url 'mantenimiento:estado_actual_lista' %}"
-          class="btn-outline-mine flex-grow-1"
-          style="text-align: center"
-        >
-          Limpiar
-        </a>
-      </div>
-    </form>
-  </div>
-</div>
+{% include "mantenimiento/partials/_filtros.html" with modo='estado_actual' %}
 
 <!-- Tabla -->
 <div class="card table-card">
@@ -143,19 +50,7 @@
       </svg>
       Ítems registrados
     </span>
-    <span
-      style="
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        background: rgba(9, 77, 146, 0.08);
-        color: var(--navy);
-        padding: 0.18rem 0.6rem;
-        border-radius: 20px;
-        border: 1px solid rgba(9, 77, 146, 0.18);
-      "
-    >
-      {{ productos|length }} ítem{{ productos|length|pluralize:",s" }}
-    </span>
+    {% include "mantenimiento/partials/_count_badge.html" with total=productos|length singular="item" plural_suffix=",s" %}
   </div>
 
   <div class="table-responsive">
@@ -229,69 +124,9 @@
             {% endwith %}
           </td>
           <!-- ======================== -->
+          {% url 'mantenimiento:historial_producto' p.pk as historial_url %}
           <td style="text-align: center">
-            <a
-              href="{% url 'mantenimiento:mantenimiento_nuevo' %}?producto={{ p.pk }}"
-              style="
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                background: rgba(9, 77, 146, 0.07);
-                border: 1px solid rgba(9, 77, 146, 0.18);
-                color: var(--navy);
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-              "
-              title="Nuevo mantenimiento"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="16" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-              </svg>
-            </a>
-            <a
-              href="{% url 'mantenimiento:historial_producto' p.pk %}"
-              style="
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                background: rgba(9, 77, 146, 0.07);
-                border: 1px solid rgba(9, 77, 146, 0.18);
-                color: var(--navy);
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-                margin-left: 4px;
-              "
-              title="Ver historial"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12 a2 2 0 0 0 2-2V8z"
-                />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </a>
+            {% include "mantenimiento/partials/_action_icon_button.html" with href=historial_url title="Ver historial" icon="history" %}
           </td>
         </tr>
         {% empty %}

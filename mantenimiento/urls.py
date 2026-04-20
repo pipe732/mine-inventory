@@ -23,17 +23,9 @@ urlpatterns = [
          views.MantenimientoListView.as_view(),
          name='mantenimiento_lista'),
     
-    path('nuevo/',
-         views.MantenimientoCreateView.as_view(),
-         name='mantenimiento_nuevo'),
-    
     path('<int:pk>/',
          views.MantenimientoDetailView.as_view(),
          name='mantenimiento_detalle'),
-    
-    path('<int:pk>/editar/',
-         views.MantenimientoUpdateView.as_view(),
-         name='mantenimiento_editar'),
 
     # HISTORIAL
     path('historial/<int:producto_id>/',
@@ -49,9 +41,4 @@ urlpatterns = [
     path('registrar-desde-inventario/',
          views.registrar_desde_inventario,
          name='registrar_desde_inventario'),
-
-    # API
-    path('api/productos/',
-         views.api_buscar_producto,
-         name='api_buscar_producto'),
 ]

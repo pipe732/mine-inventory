@@ -1,7 +1,6 @@
 # mantenimiento/views.py
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.contrib import messages
-from django.http import JsonResponse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -106,67 +105,6 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
         return ctx
 
 
-class MantenimientoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
-    model          = Mantenimiento
-    form_class     = MantenimientoForm
-    template_name  = 'mantenimiento/mantenimiento_form.html'
-    success_url    = reverse_lazy('mantenimiento:mantenimiento_lista')
-    titulo         = 'Nuevo Mantenimiento'
-    subtitulo      = 'Registra un mantenimiento correctivo o preventivo'
-    boton_texto    = 'Registrar Mantenimiento'
-    url_cancelar   = 'mantenimiento:mantenimiento_lista'
-
-    def get_initial(self):
-        initial = super().get_initial()
-        if producto_pk := self.request.GET.get('producto'):
-            initial['producto'] = producto_pk
-        return initial
-
-    def form_valid(self, form):
-        mantenimiento = form.save(commit=False)
-
-        # Auditoría: asignar creado_por desde la sesión propia
-        doc = self.request.session.get('usuario_documento')
-        if doc:
-            try:
-                mantenimiento.creado_por = User.objects.get(username=doc)
-            except User.DoesNotExist:
-                pass
-
-        mantenimiento.save()
-        messages.success(
-            self.request,
-            f'Mantenimiento registrado para '
-            f'[{mantenimiento.producto.codigo_sku}] {mantenimiento.producto.nombre}.'
-        )
-        return redirect(self.success_url)
-
-    def form_invalid(self, form):
-        messages.error(self.request, 'Revisa los errores del formulario.')
-        return super().form_invalid(form)
-
-
-class MantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
-    model          = Mantenimiento
-    form_class     = MantenimientoForm
-    template_name  = 'mantenimiento/mantenimiento_form.html'
-    success_url    = reverse_lazy('mantenimiento:mantenimiento_lista')
-    titulo         = 'Editar Mantenimiento'
-    subtitulo      = 'Modifica los datos del registro de mantenimiento'
-    boton_texto    = 'Guardar Cambios'
-    url_cancelar   = 'mantenimiento:mantenimiento_lista'
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        m = self.object
-        messages.success(
-            self.request,
-            f'Mantenimiento de [{m.producto.codigo_sku}] '
-            f'{m.producto.nombre} actualizado correctamente.'
-        )
-        return response
-
-
 class MantenimientoDetailView(SesionRequeridaMixin, DetailView):
     model               = Mantenimiento
     template_name       = 'mantenimiento/mantenimiento_detalle.html'
@@ -215,8 +153,6 @@ class EstadoActualListView(SesionRequeridaMixin, ListView):
         # Estos counts usan el queryset completo sin filtros, correcto para los totales globales
         ctx['total_disponibles']    = Producto.objects.filter(disponible=True).count()
         ctx['total_no_disponibles'] = Producto.objects.filter(disponible=False).count()
-        ctx['url_accion']           = reverse_lazy('mantenimiento:mantenimiento_nuevo')
-        ctx['label_accion']         = 'Nuevo Mantenimiento'
         return ctx
 
 #historial mantenimientos
@@ -270,11 +206,6 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         ctx['fecha_desde']    = self.request.GET.get('fecha_desde', '')
         ctx['fecha_hasta']    = self.request.GET.get('fecha_hasta', '')
         ctx['total_registros']= self._qs_filtrado.count()
-        ctx['url_accion']     = (
-            str(reverse_lazy('mantenimiento:mantenimiento_nuevo'))
-            + f'?producto={self.producto.pk}'
-        )
-        ctx['label_accion']   = 'Nuevo Mantenimiento'
         return ctx
 
 #api
@@ -286,31 +217,6 @@ def login_requerido(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
-
-@login_requerido
-def api_buscar_producto(request):
-    """Endpoint AJAX para autocompletado de productos en el formulario."""
-    q          = request.GET.get('q', '').strip()
-    resultados = []
-
-    if len(q) >= 2:
-        productos = Producto.objects.filter(
-            Q(nombre__icontains=q)      |
-            Q(codigo_sku__icontains=q)  |
-            Q(numero_serie__icontains=q)
-        )[:10]
-
-        for p in productos:
-            resultados.append({
-                'id'        : p.pk,
-                'texto'     : f"[{p.codigo_sku}] {p.nombre}",
-                'codigo_sku': p.codigo_sku,
-                'nombre'    : p.nombre,
-                'ubicacion' : p.ubicacion or '—',
-                'disponible': p.disponible,
-            })
-
-    return JsonResponse({'resultados': resultados})
 
 @login_requerido
 def registrar_desde_inventario(request):

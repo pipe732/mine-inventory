@@ -291,7 +291,7 @@
 
       <!-- Contenido del menú -->
       <div
-        class="collapse {% if request.resolver_match.url_name in 'estado_actual_lista,tipo_estado_nuevo,tipo_estado_lista,tipo_estado_editar,mantenimiento_lista,mantenimiento_nuevo,mantenimiento_editar,mantenimiento_detalle' %}show{% endif %}"
+        class="collapse {% if request.resolver_match.url_name in 'estado_actual_lista,tipo_estado_nuevo,tipo_estado_lista,tipo_estado_editar,mantenimiento_lista,mantenimiento_detalle' %}show{% endif %}"
         id="menuMantenimiento"
       >
         <ul class="list-unstyled ps-4 mb-0">
@@ -328,16 +328,6 @@
             </a>
           </li>
 
-          <li>
-            <a
-              href="{% url 'mantenimiento:mantenimiento_nuevo' %}"
-              class="d-flex align-items-center gap-2 px-3 py-2 rounded fw-medium {% if request.resolver_match.url_name == 'mantenimiento_nuevo' %}text-white bg-white bg-opacity-10{% else %}text-white-50{% endif %}"
-              style="font-size: 0.85rem"
-            >
-              <i class="bi bi-plus-circle"></i>
-              Nuevo Mantenimiento
-            </a>
-          </li>
         </ul>
       </div>
     </div>
