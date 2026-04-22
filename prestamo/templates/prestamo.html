@@ -785,6 +785,43 @@ function wzStep2(){
   const now=new Date(); const co=new Date(now.getTime()+(now.getTimezoneOffset()+(-5*60))*60000);
   const horaCoActual=String(co.getHours()).padStart(2,'0')+':'+String(co.getMinutes()).padStart(2,'0')+':'+String(co.getSeconds()).padStart(2,'0');
   return `<div class="wiz-sec-label">Fecha y observaciones</div><div class="row g-3 mb-3"><div class="col-md-6"><label class="wiz-flabel">Fecha de vencimiento</label><input class="wiz-finput" id="wiz-fecha" type="date" value="${wizState.fecha}" oninput="wizState.fecha=this.value"><div class="wiz-hint">Dejar vacío si no tiene plazo definido</div></div><div class="col-md-6"><label class="wiz-flabel">Hora máxima de entrega</label><input class="wiz-finput" id="wiz-hora" type="time" value="${wizState.hora||''}" oninput="wizState.hora=this.value"><div class="wiz-hint">🕐 Ahora en Colombia: <strong id="wiz-hora-co">${horaCoActual} COT</strong></div></div></div><div class="mb-3"><label class="wiz-flabel">Observaciones</label><textarea class="wiz-textarea" id="wiz-obs" rows="3" placeholder="Notas adicionales (opcional)…" oninput="wizState.obs=this.value">${wizState.obs}</textarea></div><div style="background:rgba(9,77,146,.04);border-radius:var(--radius-md);padding:10px 13px;border:1px solid rgba(9,77,146,.12);"><div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-ui)">Resumen hasta ahora</div><div style="font-size:.85rem;color:var(--text-main);font-family:var(--font-ui);display:flex;flex-direction:column;gap:3px"><span><span style="color:var(--text-muted)">Usuario:</span> ${wizState.nombre} (${wizState.doc})</span><span><span style="color:var(--text-muted)">Ítems:</span> ${validItems.map(i=>i.sku+' ×'+i.qty).join(' · ')||'—'}</span></div></div><div class="wiz-nav-row"><button class="wiz-btn-back" onclick="wzBack()">${wzArL()} Volver</button><button class="wiz-btn-next" onclick="wzAdvance()">Revisar ${wzArR()}</button></div>`;
+  const validItems = wizState.items.filter(i => i.pk);
+  const now = new Date();
+  const co  = new Date(now.getTime() + (now.getTimezoneOffset() + (-5*60)) * 60000);
+  const horaCoActual = String(co.getHours()).padStart(2,'0')+':'+String(co.getMinutes()).padStart(2,'0')+':'+String(co.getSeconds()).padStart(2,'0');
+  return `
+    <div class="wiz-sec-label">Fecha y observaciones</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="wiz-flabel">Fecha de vencimiento</label>
+        <input class="wiz-finput" id="wiz-fecha" type="date" value="${wizState.fecha}"
+          oninput="wizState.fecha=this.value">
+        <div class="wiz-hint">Dejar vacío si no tiene plazo definido</div>
+      </div>
+      <div class="col-md-6">
+        <label class="wiz-flabel">Hora máxima de entrega</label>
+        <input class="wiz-finput" id="wiz-hora" type="time" value="${wizState.hora||''}"
+          oninput="wizState.hora=this.value">
+        <div class="wiz-hint">🕐 Ahora en Colombia: <strong id="wiz-hora-co">${horaCoActual} COT</strong></div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="wiz-flabel">Observaciones</label>
+      <textarea class="wiz-textarea" id="wiz-obs" rows="3"
+        placeholder="Notas adicionales (opcional)…"
+        oninput="wizState.obs=this.value">${wizState.obs}</textarea>
+    </div>
+    <div style="background:rgba(9,77,146,.04);border-radius:var(--radius-md);padding:10px 13px;border:1px solid rgba(9,77,146,.12);">
+      <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-ui)">Resumen hasta ahora</div>
+      <div style="font-size:.85rem;color:var(--text-main);font-family:var(--font-ui);display:flex;flex-direction:column;gap:3px">
+        <span><span style="color:var(--text-muted)">Usuario:</span> ${wizState.nombre} (${wizState.doc})</span>
+        <span><span style="color:var(--text-muted)">Ítems:</span> ${validItems.map(i=>`${i.sku} ×${i.qty}`).join(' · ') || '—'}</span>
+      </div>
+    </div>
+    <div class="wiz-nav-row">
+      <button class="wiz-btn-back" onclick="wzBack()">${wzArL()} Volver</button>
+      <button class="wiz-btn-next" onclick="wzAdvance()">Revisar ${wzArR()}</button>
+    </div>`;
 }
 
 function wzStep3(){
@@ -796,6 +833,74 @@ function wzStep3(){
 }
 
 function wzShowSuccess(){ const validItems=wizState.items.filter(i=>i.pk); document.getElementById('wiz-progress-wrap').style.display='none'; document.getElementById('wiz-panel').innerHTML=`<div style="text-align:center;padding:32px 24px;"><div class="wiz-success-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div style="font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:6px;font-family:var(--font-ui)">¡Préstamo registrado!</div><div style="font-size:.85rem;color:var(--text-muted);margin-bottom:20px;font-family:var(--font-ui)">El préstamo fue creado y el stock fue descontado correctamente.</div><div style="background:rgba(9,77,146,.04);border-radius:var(--radius-md);border:1px solid rgba(9,77,146,.12);padding:12px 16px;text-align:left;margin-bottom:20px"><div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Usuario</span><span style="font-size:.88rem;font-weight:600">${wizState.nombre}</span></div><div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Herramientas</span><span style="font-size:.82rem">${validItems.map(i=>i.sku+' ×'+i.qty).join(', ')}</span></div><div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Estado</span><span style="background:rgba(9,77,146,.10);color:var(--navy);border:1px solid rgba(9,77,146,.2);border-radius:20px;font-size:.72rem;font-weight:600;padding:2px 8px;font-family:var(--font-mono)">Activo</span></div></div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onclick="wzResetAndNew()" style="padding:7px 20px;border:1px solid rgba(9,77,146,.4);border-radius:var(--radius-sm);background:rgba(9,77,146,.07);color:var(--navy);font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--font-ui)">Nuevo préstamo</button><button onclick="location.reload()" style="padding:7px 20px;border:none;border-radius:var(--radius-sm);background:var(--navy);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--font-ui)">Ver préstamos</button></div></div>`; }
+// ══ SUCCESS ═══════════════════════════════════════════════════
+function wzShowSuccess(){
+  const validItems = wizState.items.filter(i => i.pk);
+  document.getElementById('wiz-progress-wrap').style.display = 'none';
+  document.getElementById('wiz-panel').innerHTML = `
+    <div style="text-align:center;padding:32px 24px;">
+      <div class="wiz-success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:6px;font-family:var(--font-ui)">¡Préstamo registrado!</div>
+      <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:20px;font-family:var(--font-ui)">El préstamo fue creado y el stock fue descontado correctamente.</div>
+      <div style="background:rgba(9,77,146,.04);border-radius:var(--radius-md);border:1px solid rgba(9,77,146,.12);padding:12px 16px;text-align:left;margin-bottom:20px">
+        <div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Usuario</span><span style="font-size:.88rem;font-weight:600">${wizState.nombre}</span></div>
+        <div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Herramientas</span><span style="font-size:.82rem">${validItems.map(i=>i.sku+' ×'+i.qty).join(', ')}</span></div>
+        <div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Estado</span><span style="background:rgba(9,77,146,.10);color:var(--navy);border:1px solid rgba(9,77,146,.2);border-radius:20px;font-size:.72rem;font-weight:600;padding:2px 8px;font-family:var(--font-mono)">Activo</span></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="wzResetAndNew()" style="padding:7px 20px;border:1px solid rgba(9,77,146,.4);border-radius:var(--radius-sm);background:rgba(9,77,146,.07);color:var(--navy);font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--font-ui)">Nuevo préstamo</button>
+        <button onclick="location.reload()" style="padding:7px 20px;border:none;border-radius:var(--radius-sm);background:var(--navy);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--font-ui)">Ver préstamos</button>
+      </div>
+    </div>`;
+}
+
+// ── Navigation ────────────────────────────────────────────────
+function wzAdvance(){
+  if(wizCurrent === 0){
+    const docEl    = document.getElementById('wiz-doc');
+    const nombreEl = document.getElementById('wiz-nombre');
+    const tipoEl   = document.getElementById('wiz-tipo');
+    if(docEl)    wizState.doc    = docEl.value.trim();
+    if(nombreEl) wizState.nombre = nombreEl.value.trim();
+    if(tipoEl)   wizState.tipo   = tipoEl.value;
+  }
+  if(wizCurrent === 2){
+    const fechaEl = document.getElementById('wiz-fecha');
+    const horaEl  = document.getElementById('wiz-hora');
+    const obsEl   = document.getElementById('wiz-obs');
+    if(fechaEl) wizState.fecha = fechaEl.value;
+    if(horaEl)  wizState.hora  = horaEl.value;
+    if(obsEl)   wizState.obs   = obsEl.value;
+  }
+  if(wzCanAdvance()){ wizCurrent++; wzRender(); }
+}
+
+function wzBack(){
+  if(wizCurrent > 0){ wizCurrent--; wzRender(); }
+}
+
+function wzResetAndNew(){
+  wizCurrent = 0;
+  wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', hora:'', obs:'', items:[]};
+  const pw = document.getElementById('wiz-progress-wrap');
+  if(pw) pw.style.display = '';
+  wzRender();
+}
+
+// ── Submit real al servidor ───────────────────────────────────
+function wzSubmit(){
+  const validItems = wizState.items.filter(i => i.pk && i.qty >= 1);
+  if(!validItems.length) return;
+
+  const btn = document.querySelector('.wiz-btn-save');
+  if(btn){ btn.disabled=true; btn.textContent='Guardando…'; }
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = WIZ_URL;
+  form.style.display = 'none';
 
 function wzAdvance(){ if(wizCurrent===0){ const docEl=document.getElementById('wiz-doc'); const nombreEl=document.getElementById('wiz-nombre'); const tipoEl=document.getElementById('wiz-tipo'); if(docEl) wizState.doc=docEl.value.trim(); if(nombreEl) wizState.nombre=nombreEl.value.trim(); if(tipoEl) wizState.tipo=tipoEl.value; } if(wizCurrent===2){ const fechaEl=document.getElementById('wiz-fecha'); const horaEl=document.getElementById('wiz-hora'); const obsEl=document.getElementById('wiz-obs'); if(fechaEl) wizState.fecha=fechaEl.value; if(horaEl) wizState.hora=horaEl.value; if(obsEl) wizState.obs=obsEl.value; } if(wzCanAdvance()){ wizCurrent++; wzRender(); } }
 function wzBack(){ if(wizCurrent>0){ wizCurrent--; wzRender(); } }
@@ -805,6 +910,39 @@ function wzSubmit(){ const validItems=wizState.items.filter(i=>i.pk&&i.qty>=1); 
 
 const wizModal=document.getElementById('modalCrearPrestamo');
 if(wizModal){ wizModal.addEventListener('shown.bs.modal',function(){ wzRender(); }); wizModal.addEventListener('hidden.bs.modal',function(){ wizCurrent=0; wizState={doc:'',tipo:'CC',nombre:'',fecha:'',hora:'',obs:'',items:[]}; const pw=document.getElementById('wiz-progress-wrap'); if(pw) pw.style.display=''; const panel=document.getElementById('wiz-panel'); if(panel) panel.innerHTML=''; const bar=document.getElementById('wiz-progress-bar'); if(bar) bar.innerHTML=''; }); }
+  addField('csrfmiddlewaretoken', WIZ_CSRF);
+  addField('usuario',          wizState.doc);
+  addField('nombre_usuario',   wizState.nombre);
+  addField('fecha_vencimiento', wizState.fecha || '');
+  addField('hora_max_entrega',  wizState.hora  || '');
+  addField('observaciones',    wizState.obs || '');
+
+  validItems.forEach(it => {
+    addField('producto[]', it.pk);
+    addField('cantidad[]', it.qty);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+// ── Init modal ────────────────────────────────────────────────
+const wizModal = document.getElementById('modalCrearPrestamo');
+if(wizModal){
+  wizModal.addEventListener('shown.bs.modal', function(){
+    wzRender();
+  });
+  wizModal.addEventListener('hidden.bs.modal', function(){
+    wizCurrent = 0;
+    wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', hora:'', obs:'', items:[]};
+    const pw = document.getElementById('wiz-progress-wrap');
+    if(pw) pw.style.display = '';
+    const panel = document.getElementById('wiz-panel');
+    if(panel) panel.innerHTML = '';
+    const bar = document.getElementById('wiz-progress-bar');
+    if(bar) bar.innerHTML = '';
+  });
+}
 </script>
 
 <script>
@@ -853,6 +991,18 @@ function actualizarHoraColombia(){ const now=new Date(); const co=new Date(now.g
 actualizarHoraColombia();
 setInterval(actualizarHoraColombia,1000);
 
+// ── Hora Colombia (UTC-5) ──
+function actualizarHoraColombia(){
+  const now=new Date();
+  const co=new Date(now.getTime()+(now.getTimezoneOffset()+(-5*60))*60000);
+  const txt='🕐 '+String(co.getHours()).padStart(2,'0')+':'+String(co.getMinutes()).padStart(2,'0')+':'+String(co.getSeconds()).padStart(2,'0')+' COT';
+  document.querySelectorAll('[id^="col-hora-co-"]').forEach(el=>el.textContent=txt);
+  const wh=document.getElementById('wiz-hora-co');if(wh)wh.textContent=txt.replace('🕐 ','');
+}
+actualizarHoraColombia();
+setInterval(actualizarHoraColombia,1000);
+
+// ── Chevron animado ──
 document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(btn) {
   const targetId=btn.dataset.bsTarget; if(!targetId) return;
   const collapseEl=document.querySelector(targetId); if(!collapseEl) return;
