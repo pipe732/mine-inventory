@@ -302,12 +302,14 @@
                   <div class="col-6 col-md-2">
                     <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Fecha préstamo</div>
                     <div style="font-family:var(--font-mono);font-size:.83rem;">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
+                    <div style="font-size:.72rem;color:var(--text-muted);margin-top:.1rem;" id="col-hora-co-{{ p.pk }}">🕐 —</div>
                   </div>
                   <div class="col-6 col-md-2">
                     <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Vencimiento</div>
                     <div style="font-family:var(--font-mono);font-size:.83rem;">
                       {% if p.fecha_vencimiento %}{{ p.fecha_vencimiento|date:"d/m/Y" }}{% else %}—{% endif %}
                     </div>
+                    {% if p.hora_max_entrega %}<div style="font-size:.72rem;color:var(--text-muted);margin-top:.1rem;">⏰ Hasta las {{ p.hora_max_entrega|time:"H:i" }}</div>{% endif %}
                   </div>
                   <div class="col-12">
                     <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.6rem;">Herramientas prestadas</div>
@@ -647,7 +649,7 @@ const WIZ_STEPS = [
 ];
 
 let wizCurrent = 0;
-let wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', obs:'', items:[]};
+let wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', hora:'', obs:'', items:[]};
 
 // ── Helpers ────────────────────────────────────────────────────
 function wzSc(s){ return s===0?'wiz-snone':s<=3?'wiz-slow':'wiz-sok'; }
@@ -916,6 +918,9 @@ function wzInitSkuDropdown(){
 // ══ STEP 2: Detalles ══════════════════════════════════════════
 function wzStep2(){
   const validItems = wizState.items.filter(i => i.pk);
+  const now = new Date();
+  const co  = new Date(now.getTime() + (now.getTimezoneOffset() + (-5*60)) * 60000);
+  const horaCoActual = String(co.getHours()).padStart(2,'0')+':'+String(co.getMinutes()).padStart(2,'0')+':'+String(co.getSeconds()).padStart(2,'0');
   return `
     <div class="wiz-sec-label">Fecha y observaciones</div>
     <div class="row g-3 mb-3">
@@ -924,6 +929,12 @@ function wzStep2(){
         <input class="wiz-finput" id="wiz-fecha" type="date" value="${wizState.fecha}"
           oninput="wizState.fecha=this.value">
         <div class="wiz-hint">Dejar vacío si no tiene plazo definido</div>
+      </div>
+      <div class="col-md-6">
+        <label class="wiz-flabel">Hora máxima de entrega</label>
+        <input class="wiz-finput" id="wiz-hora" type="time" value="${wizState.hora||''}"
+          oninput="wizState.hora=this.value">
+        <div class="wiz-hint">🕐 Ahora en Colombia: <strong id="wiz-hora-co">${horaCoActual} COT</strong></div>
       </div>
     </div>
     <div class="mb-3">
@@ -1022,8 +1033,10 @@ function wzAdvance(){
   }
   if(wizCurrent === 2){
     const fechaEl = document.getElementById('wiz-fecha');
+    const horaEl  = document.getElementById('wiz-hora');
     const obsEl   = document.getElementById('wiz-obs');
     if(fechaEl) wizState.fecha = fechaEl.value;
+    if(horaEl)  wizState.hora  = horaEl.value;
     if(obsEl)   wizState.obs   = obsEl.value;
   }
   if(wzCanAdvance()){ wizCurrent++; wzRender(); }
@@ -1035,7 +1048,7 @@ function wzBack(){
 
 function wzResetAndNew(){
   wizCurrent = 0;
-  wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', obs:'', items:[]};
+  wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', hora:'', obs:'', items:[]};
   const pw = document.getElementById('wiz-progress-wrap');
   if(pw) pw.style.display = '';
   wzRender();
@@ -1064,6 +1077,7 @@ function wzSubmit(){
   addField('usuario',          wizState.doc);
   addField('nombre_usuario',   wizState.nombre);
   addField('fecha_vencimiento', wizState.fecha || '');
+  addField('hora_max_entrega',  wizState.hora  || '');
   addField('observaciones',    wizState.obs || '');
 
   validItems.forEach(it => {
@@ -1083,7 +1097,7 @@ if(wizModal){
   });
   wizModal.addEventListener('hidden.bs.modal', function(){
     wizCurrent = 0;
-    wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', obs:'', items:[]};
+    wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', hora:'', obs:'', items:[]};
     const pw = document.getElementById('wiz-progress-wrap');
     if(pw) pw.style.display = '';
     const panel = document.getElementById('wiz-panel');
@@ -1169,6 +1183,17 @@ document.querySelectorAll('.devolver-form').forEach(function(form) {
     else clearError();
   });
 });
+
+// ── Hora Colombia (UTC-5) ──
+function actualizarHoraColombia(){
+  const now=new Date();
+  const co=new Date(now.getTime()+(now.getTimezoneOffset()+(-5*60))*60000);
+  const txt='🕐 '+String(co.getHours()).padStart(2,'0')+':'+String(co.getMinutes()).padStart(2,'0')+':'+String(co.getSeconds()).padStart(2,'0')+' COT';
+  document.querySelectorAll('[id^="col-hora-co-"]').forEach(el=>el.textContent=txt);
+  const wh=document.getElementById('wiz-hora-co');if(wh)wh.textContent=txt.replace('🕐 ','');
+}
+actualizarHoraColombia();
+setInterval(actualizarHoraColombia,1000);
 
 // ── Chevron animado ──
 document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(btn) {
