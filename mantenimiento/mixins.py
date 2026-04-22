@@ -11,6 +11,9 @@ class SesionRequeridaMixin:
     Debe ir PRIMERO en la herencia de cada vista.
     """
     def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
+            return super().dispatch(request, *args, **kwargs)
+
         if not request.session.get('usuario_documento'):
             return redirect('login')
         return super().dispatch(request, *args, **kwargs)

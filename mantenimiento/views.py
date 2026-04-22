@@ -3,13 +3,68 @@ from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 
 from .mixins import SesionRequeridaMixin, ContextoMixin
-from .models import TipoEstado, Mantenimiento          # ← EstadoHerramienta eliminado
-from .forms import TipoEstadoForm, MantenimientoForm
+from .models import TipoEstado, Mantenimiento
+from .forms import TipoEstadoForm, MantenimientoForm, MantenimientoUpdateForm
 from inventario.models import Producto
+
+
+ROLES_ADMIN_EDICION = {'supervisor', 'administrador', 'admin'}
+ESTADOS_EDITABLES = {'abierto', 'en_proceso', 'pendiente', 'cerrado_parcial', 'cerrado'}
+
+
+def _get_usuario_sesion(request):
+    documento = request.session.get('usuario_documento')
+    if not documento:
+        return None
+    try:
+        return User.objects.get(username=documento)
+    except User.DoesNotExist:
+        return None
+
+
+def _get_rol_sesion(request):
+    if request.user.is_authenticated and request.user.is_superuser:
+        return 'admin'
+    return (request.session.get('usuario_rol') or '').strip().lower()
+
+
+def _es_rol_admin(rol):
+    return rol in ROLES_ADMIN_EDICION or 'admin' in rol or 'supervisor' in rol or 'administrador' in rol
+
+
+def _es_rol_tecnico(rol):
+    return 'tecnico' in rol
+
+
+def _puede_editar_mantenimiento(request, mantenimiento):
+    if request.user.is_authenticated and request.user.is_superuser:
+        return True
+
+    rol = _get_rol_sesion(request)
+    documento = request.session.get('usuario_documento')
+
+    if mantenimiento.estado_registro not in ESTADOS_EDITABLES and not _es_rol_admin(rol):
+        return False
+
+    if _es_rol_admin(rol):
+        return True
+
+    if _es_rol_tecnico(rol):
+        if not mantenimiento.responsable_id:
+            return False
+        return mantenimiento.responsable.username == documento
+
+    return False
+
+
+def _es_cambio_significativo(cambios):
+    campos_clave = {'estado_registro', 'costo_real', 'costo_estimado', 'responsable'}
+    return any(campo in cambios for campo in campos_clave)
 
 
 # ══════════════════════════════════════════════
@@ -97,6 +152,9 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx['editable_ids']  = {
+            m.pk for m in ctx['registros'] if _puede_editar_mantenimiento(self.request, m)
+        }
         ctx['tipo_choices']  = Mantenimiento.TIPO_CHOICES
         ctx['estado_choices']= Mantenimiento.ESTADO_REGISTRO_CHOICES
         ctx['q']             = self.request.GET.get('q', '')
@@ -112,12 +170,70 @@ class MantenimientoDetailView(SesionRequeridaMixin, DetailView):
 
     def get_queryset(self):
         return Mantenimiento.objects.select_related(
-            'producto', 'tipo_estado', 'responsable', 'creado_por'
-        )
+            'producto', 'tipo_estado', 'responsable', 'creado_por', 'actualizado_por'
+        ).prefetch_related('cambios_auditoria__editado_por')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['url_cancelar'] = reverse_lazy('mantenimiento:mantenimiento_lista')
+        ctx['puede_editar'] = _puede_editar_mantenimiento(self.request, self.object)
+        ctx['cambios_auditoria'] = self.object.cambios_auditoria.all()[:20]
+        return ctx
+
+
+class MantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
+    model = Mantenimiento
+    form_class = MantenimientoUpdateForm
+    template_name = 'mantenimiento/mantenimiento_form.html'
+    titulo = 'Editar Mantenimiento'
+    subtitulo = 'Actualiza la orden sin perder trazabilidad'
+    boton_texto = 'Guardar cambios'
+    url_cancelar = 'mantenimiento:mantenimiento_lista'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not _puede_editar_mantenimiento(request, self.object):
+            messages.error(
+                request,
+                'No tienes permisos para editar este registro o su estado no permite edición.'
+            )
+            return HttpResponseForbidden('Acceso denegado para editar este mantenimiento.')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['rol_usuario'] = _get_rol_sesion(self.request)
+        kwargs['usuario_documento'] = self.request.session.get('usuario_documento')
+        return kwargs
+
+    def form_valid(self, form):
+        cambios = form.get_changed_fields()
+        motivo = form.cleaned_data.get('motivo_edicion')
+        detalle = form.cleaned_data.get('detalle_motivo', '')
+
+        mantenimiento = form.save(commit=False)
+        mantenimiento.actualizado_por = _get_usuario_sesion(self.request)
+        mantenimiento.save()
+
+        mantenimiento.registrar_cambio(
+            editado_por=mantenimiento.actualizado_por,
+            motivo_edicion=motivo,
+            cambios=cambios,
+            detalle_motivo=detalle,
+        )
+
+        messages.success(self.request, 'La orden de mantenimiento se actualizó correctamente.')
+        if _es_cambio_significativo(cambios):
+            messages.info(
+                self.request,
+                'Se registró un cambio significativo; puedes notificar al supervisor desde el historial.'
+            )
+        return redirect('mantenimiento:mantenimiento_detalle', pk=mantenimiento.pk)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['mantenimiento'] = self.object
+        ctx['solo_campos_tecnico'] = _es_rol_tecnico(_get_rol_sesion(self.request))
         return ctx
 
 
@@ -197,6 +313,9 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx['editable_ids']   = {
+            m.pk for m in ctx['mantenimientos'] if _puede_editar_mantenimiento(self.request, m)
+        }
         ctx['producto']       = self.producto
         ctx['tipo_choices']   = Mantenimiento.TIPO_CHOICES
         ctx['estado_choices'] = Mantenimiento.ESTADO_REGISTRO_CHOICES
@@ -237,7 +356,7 @@ def registrar_desde_inventario(request):
     post_data            = request.POST.copy()
     post_data['producto'] = producto_id
 
-    form = MantenimientoForm(post_data)
+    form = MantenimientoForm(post_data, request.FILES)
 
     if form.is_valid():
         mantenimiento = form.save(commit=False)
@@ -246,7 +365,9 @@ def registrar_desde_inventario(request):
         doc = request.session.get('usuario_documento')
         if doc:
             try:
-                mantenimiento.creado_por = User.objects.get(username=doc)
+                usuario = User.objects.get(username=doc)
+                mantenimiento.creado_por = usuario
+                mantenimiento.actualizado_por = usuario
             except User.DoesNotExist:
                 pass
 

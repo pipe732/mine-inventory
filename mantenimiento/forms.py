@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
-from .models import TipoEstado, Mantenimiento
+from .models import TipoEstado, Mantenimiento, MantenimientoCambio
 
 #tipo estado formulario
 class TipoEstadoForm(forms.ModelForm):
@@ -61,14 +61,16 @@ class MantenimientoForm(forms.ModelForm):
         fields = [
             'producto', 'tipo_mantenimiento', 'tipo_estado',
             'fecha_reporte', 'fecha_inicio', 'fecha_fin_estimada', 'fecha_fin_real',
-            'descripcion_problema', 'acciones_realizadas',
-            'responsable', 'costo_estimado', 'costo_real', 'estado_registro',
+            'descripcion_problema', 'acciones_realizadas', 'materiales_usados',
+            'notas_adicionales', 'evidencia_adicional', 'tiempo_empleado_horas',
+            'prioridad', 'responsable', 'costo_estimado', 'costo_real', 'estado_registro',
         ]
         widgets = {
             'producto':           forms.HiddenInput(),
             'tipo_mantenimiento': forms.Select(attrs={'class': 'form-select'}),
             'tipo_estado':        forms.Select(attrs={'class': 'form-select'}),
             'estado_registro':    forms.Select(attrs={'class': 'form-select'}),
+            'prioridad':          forms.Select(attrs={'class': 'form-select'}),
             'responsable':        forms.Select(attrs={'class': 'form-select'}),
             'fecha_reporte':      forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'fecha_inicio':       forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
@@ -76,6 +78,10 @@ class MantenimientoForm(forms.ModelForm):
             'fecha_fin_real':     forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'descripcion_problema': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Describe el problema o falla detectada...'}),
             'acciones_realizadas':  forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Acciones realizadas o planificadas...'}),
+            'materiales_usados':    forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Materiales, repuestos y cantidades usadas...'}),
+            'notas_adicionales':    forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Comentarios adicionales...'}),
+            'evidencia_adicional':  forms.FileInput(attrs={'class': 'form-control'}),
+            'tiempo_empleado_horas': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.25', 'min': '0'}),
             'costo_estimado': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
             'costo_real':     forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
         }
@@ -88,6 +94,11 @@ class MantenimientoForm(forms.ModelForm):
             'fecha_fin_real':      'Fecha fin real',
             'descripcion_problema':'Descripción del problema / falla',
             'acciones_realizadas': 'Acciones realizadas / planificadas',
+            'materiales_usados':   'Materiales / repuestos usados',
+            'notas_adicionales':   'Notas adicionales / comentarios',
+            'evidencia_adicional': 'Evidencia adjunta',
+            'tiempo_empleado_horas': 'Tiempo empleado (horas hombre)',
+            'prioridad':           'Prioridad / urgencia',
             'responsable':         'Responsable / Técnico',
             'costo_estimado':      'Costo estimado',
             'costo_real':          'Costo real',
@@ -131,4 +142,118 @@ class MantenimientoForm(forms.ModelForm):
         if fecha_inicio and fecha_fin_real and fecha_fin_real < fecha_inicio:
             self.add_error('fecha_fin_real', "No puede ser anterior a la fecha de inicio.")
 
+        tiempo = cleaned.get('tiempo_empleado_horas')
+        if tiempo is not None and tiempo < 0:
+            self.add_error('tiempo_empleado_horas', "No puede ser negativo.")
+
+        costo_real = cleaned.get('costo_real')
+        costo_estimado = cleaned.get('costo_estimado')
+        if costo_real is not None and costo_real < 0:
+            self.add_error('costo_real', "No puede ser negativo.")
+        if costo_estimado is not None and costo_estimado < 0:
+            self.add_error('costo_estimado', "No puede ser negativo.")
+
         return cleaned
+
+
+class MantenimientoUpdateForm(MantenimientoForm):
+    MOTIVOS = MantenimientoCambio.MOTIVO_CHOICES
+
+    CAMPOS_TECNICO_EDITABLES = {
+        'acciones_realizadas',
+        'materiales_usados',
+        'notas_adicionales',
+        'tiempo_empleado_horas',
+        'evidencia_adicional',
+    }
+
+    motivo_edicion = forms.ChoiceField(
+        label='Motivo de edición',
+        choices=MOTIVOS,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    detalle_motivo = forms.CharField(
+        label='Detalle del motivo (opcional)',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Ej: ajuste de tiempos tras verificación en taller'}
+        ),
+    )
+    confirmar_cambios = forms.BooleanField(
+        label='Confirmo que revisé los cambios antes de guardar',
+        required=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.rol_usuario = (kwargs.pop('rol_usuario', '') or '').strip().lower()
+        self.usuario_documento = kwargs.pop('usuario_documento', '')
+        super().__init__(*args, **kwargs)
+        self._changed_fields_cache = None
+
+        if 'tecnico' in self.rol_usuario:
+            for field_name, field in self.fields.items():
+                if field_name in {'motivo_edicion', 'detalle_motivo', 'confirmar_cambios'}:
+                    continue
+                if field_name not in self.CAMPOS_TECNICO_EDITABLES:
+                    field.disabled = True
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('confirmar_cambios'):
+            self.add_error('confirmar_cambios', 'Debes confirmar los cambios antes de guardar.')
+
+        cambios = self.get_changed_fields()
+        if not cambios:
+            raise ValidationError('No se detectaron cambios para guardar.')
+
+        motivo = cleaned.get('motivo_edicion')
+        detalle = (cleaned.get('detalle_motivo') or '').strip()
+        if motivo == 'otro' and not detalle:
+            self.add_error('detalle_motivo', 'Debes detallar el motivo cuando seleccionas "Otro".')
+
+        return cleaned
+
+    def get_changed_fields(self):
+        if self._changed_fields_cache is not None:
+            return self._changed_fields_cache
+
+        if not self.instance.pk:
+            self._changed_fields_cache = {}
+            return self._changed_fields_cache
+
+        cambios = {}
+        for field_name in self.changed_data:
+            if field_name in {'motivo_edicion', 'detalle_motivo', 'confirmar_cambios', 'producto_busqueda'}:
+                continue
+
+            field = self.fields.get(field_name)
+            if field is not None and field.disabled:
+                continue
+
+            old_value = getattr(self.instance, field_name, None)
+            new_value = self.cleaned_data.get(field_name)
+
+            if hasattr(old_value, 'pk'):
+                old_value = old_value.pk
+            if hasattr(new_value, 'pk'):
+                new_value = new_value.pk
+
+            if hasattr(old_value, 'isoformat'):
+                old_value = old_value.isoformat()
+            if hasattr(new_value, 'isoformat'):
+                new_value = new_value.isoformat()
+
+            if hasattr(new_value, 'name'):
+                new_value = new_value.name
+            if hasattr(old_value, 'name'):
+                old_value = old_value.name
+
+            if old_value != new_value:
+                cambios[field_name] = {
+                    'anterior': '' if old_value is None else str(old_value),
+                    'nuevo': '' if new_value is None else str(new_value),
+                }
+
+        self._changed_fields_cache = cambios
+        return cambios

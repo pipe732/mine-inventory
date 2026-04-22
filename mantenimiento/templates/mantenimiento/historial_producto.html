@@ -113,7 +113,11 @@ Historial —
             {% endif %}
           </td>
           {% url 'mantenimiento:mantenimiento_detalle' m.pk as detalle_url %}
+          {% url 'mantenimiento:mantenimiento_editar' m.pk as editar_url %}
           <td style="text-align: center">
+            {% if m.pk in editable_ids %}
+              {% include "mantenimiento/partials/_action_icon_button.html" with href=editar_url title="Editar" icon="edit" %}
+            {% endif %}
             {% include "mantenimiento/partials/_action_icon_button.html" with href=detalle_url title="Ver detalle" icon="view" %}
           </td>
         </tr>

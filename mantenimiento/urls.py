@@ -27,6 +27,10 @@ urlpatterns = [
          views.MantenimientoDetailView.as_view(),
          name='mantenimiento_detalle'),
 
+    path('<int:pk>/editar/',
+         views.MantenimientoUpdateView.as_view(),
+         name='mantenimiento_editar'),
+
     # HISTORIAL
     path('historial/<int:producto_id>/',
          views.HistorialProductoView.as_view(),

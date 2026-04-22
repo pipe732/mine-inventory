@@ -687,7 +687,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <form method="post" action="{% url 'mantenimiento:registrar_desde_inventario' %}" novalidate>
+      <form method="post" action="{% url 'mantenimiento:registrar_desde_inventario' %}" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         <input type="hidden" name="producto_id" id="mant_producto_id">
 
@@ -730,6 +730,10 @@
             <div class="col-md-6">
               <label class="form-label">Estado del registro</label>
               {{ mant_form.estado_registro }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Prioridad / urgencia</label>
+              {{ mant_form.prioridad }}
             </div>
             <div class="col-md-6">
               <label class="form-label">Responsable / Técnico</label>
@@ -788,6 +792,14 @@
               <label class="form-label">Acciones realizadas / planificadas</label>
               {{ mant_form.acciones_realizadas }}
             </div>
+            <div class="col-12">
+              <label class="form-label">Materiales / repuestos usados</label>
+              {{ mant_form.materiales_usados }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notas adicionales</label>
+              {{ mant_form.notas_adicionales }}
+            </div>
           </div>
         
           <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
@@ -804,6 +816,14 @@
             <div class="col-md-6">
               <label class="form-label">Costo real</label>
               {{ mant_form.costo_real }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Tiempo empleado (horas hombre)</label>
+              {{ mant_form.tiempo_empleado_horas }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Evidencia adjunta</label>
+              {{ mant_form.evidencia_adicional }}
             </div>
           </div>
 
