@@ -12,7 +12,9 @@ from django.utils.encoding import force_bytes, force_str
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+
 from .models import Usuario, Rol, validar_numero_documento
+from .decorators import login_required, admin_required, usuario_required
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
@@ -33,6 +35,7 @@ DOC_HINTS = {
     'TI': 'La Tarjeta de Identidad debe tener 10 u 11 dígitos.',
 }
 TIPOS_VALIDOS = set(DOC_RULES.keys())
+
 
 def _validar_documento(tipo, numero):
     if tipo not in TIPOS_VALIDOS:
@@ -76,9 +79,10 @@ def login_view(request):
             messages.error(request, 'Documento o contraseña incorrectos.')
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
+        # Guardar rol en sesión para los decoradores
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.id_rol.nombre
+        request.session['usuario_rol']            = usuario.id_rol.nombre   # 'Admin' | 'Usuario'
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
         return redirect('home')
 
@@ -94,7 +98,7 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO
+#  REGISTRO  — siempre asigna rol "Usuario" (id=2)
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
     if request.method == 'POST':
@@ -105,7 +109,10 @@ def registro_view(request):
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
 
-        ctx = {'username': username, 'email': email, 'tipo_documento': tipo_documento, 'documento': documento}
+        ctx = {
+            'username': username, 'email': email,
+            'tipo_documento': tipo_documento, 'documento': documento,
+        }
 
         if not all([username, email, tipo_documento, documento, password1, password2]):
             messages.error(request, 'Completa todos los campos.')
@@ -132,7 +139,9 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        rol_default, _ = Rol.objects.get_or_create(id=1, defaults={'nombre': 'Usuario'})
+        # ── Rol fijo: "Usuario" (id=2). El rol Admin se asigna solo desde el admin de Django.
+        rol_usuario, _ = Rol.objects.get_or_create(id=2, defaults={'nombre': 'Usuario'})
+
         usuario = Usuario(
             numero_documento=documento,
             nombre_completo=username,
@@ -140,7 +149,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol_default,
+            id_rol=rol_usuario,
         )
 
         try:
@@ -152,11 +161,13 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol_default.nombre
+        request.session['usuario_rol']            = rol_usuario.nombre   # 'Usuario'
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
         return redirect('home')
 
-    return render(request, 'registro.html', {'username': '', 'email': '', 'tipo_documento': 'CC', 'documento': ''})
+    return render(request, 'registro.html', {
+        'username': '', 'email': '', 'tipo_documento': 'CC', 'documento': '',
+    })
 
 
 # ─────────────────────────────────────────────────────────────
@@ -173,7 +184,7 @@ def olvido_contrasena_view(request):
         try:
             usuario = Usuario.objects.get(correo=email)
         except Usuario.DoesNotExist:
-            messages.success(request, 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.')
+            messages.success(request, 'Si el correo está registrado, recibirás un enlace.')
             return render(request, 'olvido_contrasena.html')
 
         token = get_random_string(40)
@@ -234,7 +245,6 @@ def nueva_contrasena_view(request, uid, token):
 
         usuario.password = make_password(password1)
         usuario.save(update_fields=['password'])
-
         del request.session[f'reset_token_{documento}']
 
         messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
@@ -244,8 +254,20 @@ def nueva_contrasena_view(request, uid, token):
 
 
 # ─────────────────────────────────────────────────────────────
-#  LISTA DE USUARIOS
+#  HOME  — redirige según rol
 # ─────────────────────────────────────────────────────────────
+@login_required
+def home_view(request):
+    rol = request.session.get('usuario_rol', '').lower()
+    if rol == 'admin':
+        return render(request, 'home_admin.html')
+    return render(request, 'home_usuario.html')
+
+
+# ─────────────────────────────────────────────────────────────
+#  LISTA DE USUARIOS  — solo Admin
+# ─────────────────────────────────────────────────────────────
+@admin_required
 def lista_usuarios_view(request):
     """Lista y fichas de usuarios con búsqueda y filtros."""
     qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
@@ -278,15 +300,14 @@ def lista_usuarios_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  DETALLE USUARIO (JSON para modal)
+#  DETALLE USUARIO (JSON para modal)  — solo Admin
 # ─────────────────────────────────────────────────────────────
+@admin_required
 def detalle_usuario_json(request, numero_documento):
-    """Devuelve los datos de un usuario en JSON para el modal."""
     usuario = get_object_or_404(
         Usuario.objects.select_related('id_rol', 'destinado', 'solicitado'),
         numero_documento=numero_documento,
     )
-
     data = {
         'numero_documento':       usuario.numero_documento,
         'nombre_completo':        usuario.nombre_completo,
@@ -303,10 +324,10 @@ def detalle_usuario_json(request, numero_documento):
 
 
 # ─────────────────────────────────────────────────────────────
-#  EXPORTAR USUARIOS CSV
+#  EXPORTAR USUARIOS CSV  — solo Admin
 # ─────────────────────────────────────────────────────────────
+@admin_required
 def exportar_usuarios_csv(request):
-    """Exporta la lista filtrada de usuarios a CSV."""
     qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
 
     q        = request.GET.get('q', '').strip()
@@ -342,17 +363,13 @@ def exportar_usuarios_csv(request):
         ])
     return response
 
-# usuario/views.py  — solo la función perfil_view
-# Añade esto al final del archivo views.py existente.
-# Asegúrate de tener estos imports al inicio del archivo (ya existen la mayoría):
-#   from django.contrib.auth.hashers import make_password, check_password
-#   from django.contrib import messages
 
+# ─────────────────────────────────────────────────────────────
+#  PERFIL  — cualquier usuario autenticado
+# ─────────────────────────────────────────────────────────────
+@login_required
 def perfil_view(request):
-    doc = request.session.get('usuario_documento')
-    if not doc:
-        return redirect('login')
-
+    doc     = request.session.get('usuario_documento')
     usuario = get_object_or_404(Usuario, numero_documento=doc)
     errores = {}
     accion_activa = ''
@@ -412,44 +429,27 @@ def perfil_view(request):
             messages.success(request, 'Configuración guardada.')
             return redirect('perfil')
 
-    # Valores actuales de notificaciones (default True la primera vez)
     cfg_notif_prestamos    = request.session.get('cfg_notif_prestamos',    True)
     cfg_notif_vencimientos = request.session.get('cfg_notif_vencimientos', True)
     cfg_notif_devoluciones = request.session.get('cfg_notif_devoluciones', True)
 
     return render(request, 'perfil.html', {
-        'usuario':        usuario,
-        'errores':        errores,
-        'accion_activa':  accion_activa,
-        # Lista de pestañas para el modal (id, label, icono)
+        'usuario':       usuario,
+        'errores':       errores,
+        'accion_activa': accion_activa,
         'tab_list': [
             ('tab-datos',    'Datos personales', ''),
-            ('tab-password', 'Contraseña',        ''),
-            ('tab-config',   'Notificaciones',    ''),
+            ('tab-password', 'Contraseña',       ''),
+            ('tab-config',   'Notificaciones',   ''),
         ],
-        # Lista de notificaciones para la pestaña 3
-        # (name, label, descripción, valor_actual)
         'notificaciones_lista': [
-            (
-                'notif_prestamos',
-                'Nuevos préstamos asignados',
-                'Recibir alerta cuando se te asigne un préstamo.',
-                cfg_notif_prestamos,
-            ),
-            (
-                'notif_vencimientos',
-                'Próximos a vencer',
-                'Alerta 3 días antes de que venza un préstamo activo.',
-                cfg_notif_vencimientos,
-            ),
-            (
-                'notif_devoluciones',
-                'Devoluciones pendientes',
-                'Recordatorio de devoluciones en estado pendiente.',
-                cfg_notif_devoluciones,
-            ),
+            ('notif_prestamos',    'Nuevos préstamos asignados',
+             'Recibir alerta cuando se te asigne un préstamo.',    cfg_notif_prestamos),
+            ('notif_vencimientos', 'Próximos a vencer',
+             'Alerta 3 días antes de que venza un préstamo activo.', cfg_notif_vencimientos),
+            ('notif_devoluciones', 'Devoluciones pendientes',
+             'Recordatorio de devoluciones en estado pendiente.',  cfg_notif_devoluciones),
         ],
-        # Valores sueltos para la tarjeta de la página
         'cfg_notif_prestamos':    cfg_notif_prestamos,
         'cfg_notif_vencimientos': cfg_notif_vencimientos,
         'cfg_notif_devoluciones': cfg_notif_devoluciones,

@@ -1,6 +1,22 @@
 from django.contrib import admin
 from django.contrib.auth.hashers import make_password
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 from .models import Rol, Usuario
+
+
+# ─────────────────────────────────────────────────────────────
+#  Señal: crea los roles base al ejecutar migrate
+# ─────────────────────────────────────────────────────────────
+@receiver(post_migrate)
+def crear_roles_base(sender, **kwargs):
+    """
+    Se ejecuta automáticamente después de cada `manage.py migrate`.
+    Garantiza que los roles Admin (id=1) y Usuario (id=2) existan.
+    """
+    if sender.name == 'usuario':          # solo reacciona a la app 'usuario'
+        Rol.objects.get_or_create(id=1, defaults={'nombre': 'Admin'})
+        Rol.objects.get_or_create(id=2, defaults={'nombre': 'Usuario'})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -18,21 +34,21 @@ class RolAdmin(admin.ModelAdmin):
 # ─────────────────────────────────────────────────────────────
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
-    list_display   = ('numero_documento', 'nombre_completo', 'correo',
-                      'tipo_documento', 'id_rol', 'telefono')
-    list_filter    = ('id_rol', 'tipo_documento')
-    search_fields  = ('numero_documento', 'nombre_completo', 'correo')
-    ordering       = ('nombre_completo',)
+    list_display    = ('numero_documento', 'nombre_completo', 'correo',
+                       'tipo_documento', 'id_rol', 'telefono')
+    list_filter     = ('id_rol', 'tipo_documento')
+    search_fields   = ('numero_documento', 'nombre_completo', 'correo')
+    ordering        = ('nombre_completo',)
     readonly_fields = ('numero_documento',)
 
     fieldsets = (
         ('Información personal', {
             'fields': ('numero_documento', 'nombre_completo', 'tipo_documento',
-                       'correo', 'telefono')
+                       'correo', 'telefono'),
         }),
         ('Acceso', {
             'fields': ('id_rol', 'password'),
-            'description': 'La contraseña se guarda cifrada automáticamente al guardar.'
+            'description': 'La contraseña se guarda cifrada automáticamente al guardar.',
         }),
         ('Relaciones', {
             'fields': ('destinado', 'solicitado'),
@@ -40,12 +56,9 @@ class UsuarioAdmin(admin.ModelAdmin):
         }),
     )
 
-    # ── Hashear la contraseña automáticamente al crear o editar ──────────────
     def save_model(self, request, obj, form, change):
-        # Si el campo password fue modificado y no está ya hasheado
         if form.cleaned_data.get('password'):
             raw = form.cleaned_data['password']
-            # Solo hashea si no viene ya con el prefijo de Django
             if not raw.startswith(('pbkdf2_', 'bcrypt', 'argon2')):
                 obj.password = make_password(raw)
         super().save_model(request, obj, form, change)

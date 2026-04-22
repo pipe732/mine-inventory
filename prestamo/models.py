@@ -52,6 +52,12 @@ class Prestamo(models.Model):
         verbose_name='Fecha de vencimiento',
         help_text='Fecha límite para la devolución. Dejar vacío si no aplica.',
     )
+    hora_max_entrega  = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name='Hora máxima de entrega',
+        help_text='Hora límite del día en que debe devolverse el préstamo.',
+    )
 
     # ── Validaciones ────────────────────────────────────────────────────
     def clean(self):
@@ -180,7 +186,6 @@ class ItemPrestamo(models.Model):
         verbose_name        = 'Ítem de préstamo'
         verbose_name_plural = 'Ítems de préstamo'
         constraints = [
-            # Compatible con Django 4.x (check=) y 5.1+ (condition=)
             models.CheckConstraint(
                 **({'condition' if django.VERSION >= (5, 1) else 'check': models.Q(cantidad__gte=1)}),
                 name='itemprestamo_cantidad_gte_1',
