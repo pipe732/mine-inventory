@@ -5,10 +5,14 @@ from django.urls import reverse_lazy
 
 class SesionRequeridaMixin:
     """
-    Reemplaza @login_requerido para CBV.
-    Usa tu sistema de sesiones propio (usuario_documento)
-    en lugar del request.user de Django.
-    Debe ir PRIMERO en la herencia de cada vista.
+    clase para corregir error de seguridad. Se asegura de que exista una sesion iniciada
+    no se salta los filtros por si un usuario conoce la direccion exacta de una pagina protegida
+    no pueda acceder a esta. Siempre debe existir una sesion.
+    (protege vistas para que solo entren usuarios con sesión válida)
+    Si request.user está autenticado y además es superuser o staff, deja pasar directamente.
+    Si no cumple lo anterior, revisa la sesión personalizada: request.session["usuario_documento"].
+    Si usuario_documento no existe, redirige al login.
+    Si existe, deja pasar a la vista.
     """
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
@@ -21,8 +25,10 @@ class SesionRequeridaMixin:
 
 class ContextoMixin:
     """
-    Inyecta al contexto los atributos declarativos de cada vista.
-    Evita repetir el mismo get_context_data en cada clase.
+    Inyecta los datos en las vistas sin necesidad de escribir los mismos en todas
+    simplemente se importa la clase contextomixin y se integran los datos necesarios
+    para evitar duplicaciones en el codigo y hacerlo mas rapido.
+    agrega variables comunes al contexto de templates para no repetir código.
     """
     titulo       = ''
     subtitulo    = ''
