@@ -172,10 +172,6 @@ class Mantenimiento(models.Model):
     def __str__(self):
         return f"[{self.tipo_mantenimiento}] {self.producto} — {self.fecha_reporte}"
 
-    @property
-    def estado_permite_edicion(self):
-        return self.estado_registro not in {'cancelado', 'cerrado_definitivo'}
-
     def registrar_cambio(self, *, editado_por, motivo_edicion, cambios, detalle_motivo=''):
         if not cambios:
             return None
