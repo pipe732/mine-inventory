@@ -1,27 +1,23 @@
+# reportes/generators.py  — versión corregida
 """
-reportes/generators.py
 Genera archivos PDF y Excel para cada módulo del sistema.
 """
 import io
 from datetime import datetime
 
-# ── Excel ──────────────────────────────────────────────────────────────────
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# ── PDF ────────────────────────────────────────────────────────────────────
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle, Paragraph,
-    Spacer, HRFlowable,
+    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable,
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER
 
-# ── Paleta Mine Inventory ──────────────────────────────────────────────────
 DARK   = colors.HexColor('#1B2021')
 NAVY   = colors.HexColor('#094D92')
 RUST   = colors.HexColor('#98473E')
@@ -37,22 +33,16 @@ EXCEL_SAGE  = '71816D'
 EXCEL_LIGHT = 'F2F0EB'
 
 
-# ══════════════════════════════════════════════════════════════════
-#  EXCEL helpers
-# ══════════════════════════════════════════════════════════════════
-
 def _excel_border():
     thin = Side(style='thin', color='D0CCC4')
     return Border(left=thin, right=thin, top=thin, bottom=thin)
 
 
 def _excel_workbook(modulo_label, headers, rows):
-    """Crea un workbook Excel estilizado y devuelve un BytesIO."""
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = modulo_label[:31]
 
-    # ── Fila de título ──
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
     title_cell = ws.cell(row=1, column=1)
     title_cell.value = f'MINE INVENTORY — {modulo_label.upper()}'
@@ -61,7 +51,6 @@ def _excel_workbook(modulo_label, headers, rows):
     title_cell.alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 28
 
-    # ── Fila de fecha ──
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
     date_cell = ws.cell(row=2, column=1)
     date_cell.value = f'Generado el {datetime.now():%d/%m/%Y a las %H:%M}'
@@ -70,7 +59,6 @@ def _excel_workbook(modulo_label, headers, rows):
     date_cell.alignment = Alignment(horizontal='center')
     ws.row_dimensions[2].height = 18
 
-    # ── Encabezados ──
     for col_idx, header in enumerate(headers, start=1):
         cell = ws.cell(row=3, column=col_idx, value=header)
         cell.font      = Font(name='Calibri', bold=True, size=10, color=EXCEL_CREAM)
@@ -79,7 +67,6 @@ def _excel_workbook(modulo_label, headers, rows):
         cell.border    = _excel_border()
     ws.row_dimensions[3].height = 20
 
-    # ── Datos ──
     for r_idx, row in enumerate(rows, start=4):
         fill_color = EXCEL_LIGHT if r_idx % 2 == 0 else 'FFFFFF'
         for c_idx, value in enumerate(row, start=1):
@@ -90,7 +77,6 @@ def _excel_workbook(modulo_label, headers, rows):
             cell.border    = _excel_border()
         ws.row_dimensions[r_idx].height = 16
 
-    # ── Ajustar ancho de columnas ──
     for col_idx, header in enumerate(headers, start=1):
         col_values = [str(header)] + [str(r[col_idx - 1]) for r in rows]
         max_len = max(len(v) for v in col_values)
@@ -102,12 +88,7 @@ def _excel_workbook(modulo_label, headers, rows):
     return buf
 
 
-# ══════════════════════════════════════════════════════════════════
-#  PDF helpers
-# ══════════════════════════════════════════════════════════════════
-
 def _pdf_doc(modulo_label, headers, rows):
-    """Crea un PDF estilizado y devuelve un BytesIO."""
     buf = io.BytesIO()
     page = landscape(A4) if len(headers) > 6 else A4
     doc = SimpleDocTemplate(
@@ -118,40 +99,24 @@ def _pdf_doc(modulo_label, headers, rows):
 
     styles = getSampleStyleSheet()
     style_title = ParagraphStyle(
-        'MineTitle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=16,
-        textColor=CREAM,
-        backColor=DARK,
-        alignment=TA_CENTER,
-        spaceAfter=0,
-        spaceBefore=0,
-        leading=24,
-        leftIndent=-12,
-        rightIndent=-12,
+        'MineTitle', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=16,
+        textColor=CREAM, backColor=DARK,
+        alignment=TA_CENTER, spaceAfter=0, spaceBefore=0,
+        leading=24, leftIndent=-12, rightIndent=-12,
         borderPadding=(8, 12, 8, 12),
     )
     style_sub = ParagraphStyle(
-        'MineSub',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=9,
-        textColor=SAGE,
-        alignment=TA_CENTER,
-        spaceAfter=10,
+        'MineSub', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=9,
+        textColor=SAGE, alignment=TA_CENTER, spaceAfter=10,
     )
     style_cell = ParagraphStyle(
-        'MineCell',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=8,
-        leading=10,
+        'MineCell', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=8, leading=10,
     )
 
     elements = []
-
-    # Título
     elements.append(Paragraph(f'MINE INVENTORY — {modulo_label.upper()}', style_title))
     elements.append(Spacer(1, 4))
     elements.append(Paragraph(
@@ -160,7 +125,6 @@ def _pdf_doc(modulo_label, headers, rows):
     ))
     elements.append(HRFlowable(width='100%', thickness=2, color=RUST, spaceAfter=10))
 
-    # Tabla
     avail_w = page[0] - 3*cm
     col_w   = avail_w / len(headers)
 
@@ -177,25 +141,22 @@ def _pdf_doc(modulo_label, headers, rows):
 
     t = Table(table_data, colWidths=[col_w] * len(headers), repeatRows=1)
     t.setStyle(TableStyle([
-        # Encabezado
-        ('BACKGROUND',  (0, 0), (-1, 0), NAVY),
-        ('TEXTCOLOR',   (0, 0), (-1, 0), colors.white),
-        ('ALIGN',       (0, 0), (-1, 0), 'CENTER'),
-        ('VALIGN',      (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME',    (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE',    (0, 0), (-1, 0), 8),
-        ('TOPPADDING',  (0, 0), (-1, 0), 6),
+        ('BACKGROUND',    (0, 0), (-1, 0), NAVY),
+        ('TEXTCOLOR',     (0, 0), (-1, 0), colors.white),
+        ('ALIGN',         (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, 0), 8),
+        ('TOPPADDING',    (0, 0), (-1, 0), 6),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-        # Filas alternadas
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, BGBODY]),
-        ('FONTSIZE',    (0, 1), (-1, -1), 8),
-        ('TOPPADDING',  (0, 1), (-1, -1), 4),
+        ('ROWBACKGROUNDS',(0, 1), (-1, -1), [colors.white, BGBODY]),
+        ('FONTSIZE',      (0, 1), (-1, -1), 8),
+        ('TOPPADDING',    (0, 1), (-1, -1), 4),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-        # Bordes
-        ('GRID',        (0, 0), (-1, -1), 0.4, colors.HexColor('#D0CCC4')),
-        ('LINEBELOW',   (0, 0), (-1, 0), 1.5, RUST),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 6),
+        ('GRID',          (0, 0), (-1, -1), 0.4, colors.HexColor('#D0CCC4')),
+        ('LINEBELOW',     (0, 0), (-1, 0), 1.5, RUST),
     ]))
 
     elements.append(t)
@@ -205,7 +166,7 @@ def _pdf_doc(modulo_label, headers, rows):
 
 
 # ══════════════════════════════════════════════════════════════════
-#  MÓDULOS — definición de headers y extracción de filas
+#  MÓDULOS — CORREGIDOS
 # ══════════════════════════════════════════════════════════════════
 
 def _data_inventario():
@@ -227,39 +188,59 @@ def _data_inventario():
 
 
 def _data_prestamos():
+    """
+    CORREGIDO: Prestamo no tiene .producto ni .cantidad directamente.
+    Los ítems están en p.items (ItemPrestamo).
+    """
     from prestamo.models import Prestamo
-    qs = Prestamo.objects.all()
-    headers = ['#', 'Usuario', 'Producto', 'Cantidad', 'Estado', 'Fecha préstamo']
-    rows = [
-        (
+    qs = Prestamo.objects.prefetch_related('items__producto').all()
+    headers = [
+        '#', 'Usuario', 'Nombre usuario', 'Herramientas',
+        'Estado', 'Fecha préstamo', 'Vencimiento'
+    ]
+    rows = []
+    for p in qs:
+        herramientas = ', '.join(
+            f"{item.producto.nombre} ×{item.cantidad}"
+            for item in p.items.all()
+        ) or '—'
+        rows.append((
             p.pk,
             p.usuario,
-            p.producto,
-            p.cantidad,
+            getattr(p, 'nombre_usuario', '') or '—',
+            herramientas,
             p.get_estado_display(),
             p.fecha_prestamo.strftime('%d/%m/%Y %H:%M'),
-        )
-        for p in qs
-    ]
+            p.fecha_vencimiento.strftime('%d/%m/%Y') if getattr(p, 'fecha_vencimiento', None) else '—',
+        ))
     return headers, rows, 'Préstamos'
 
 
 def _data_devoluciones():
+    """
+    CORREGIDO: Devolucion no tiene .numero_orden, .producto, ni .cantidad.
+    Los ítems están en d.items (ItemPrestamo) via M2M.
+    """
     from devoluciones.models import Devolucion
-    qs = Devolucion.objects.all()
-    headers = ['#', 'N° Orden', 'Producto', 'Cantidad', 'Motivo', 'Estado', 'Fecha']
-    rows = [
-        (
+    qs = Devolucion.objects.select_related('prestamo').prefetch_related('items__producto').all()
+    headers = ['#', 'Préstamo', 'Usuario', 'Tipo', 'Ítems devueltos', 'Motivo', 'Estado', 'Fecha']
+    rows = []
+    for d in qs:
+        items_str = ', '.join(
+            f"{item.producto.nombre} ×{item.cantidad}"
+            for item in d.items.all()
+        ) or '—'
+        motivo = (d.motivo[:60] + '…') if len(d.motivo) > 60 else d.motivo
+        rows.append((
             d.pk,
-            d.numero_orden,
-            d.producto,
-            d.cantidad,
-            d.motivo[:60] + ('…' if len(d.motivo) > 60 else ''),
+            f'#{d.prestamo_id}',
+            d.prestamo.usuario,
+            'Total' if d.devolucion_total else 'Parcial',
+            items_str,
+            motivo,
             d.get_estado_display(),
             d.fecha_creacion.strftime('%d/%m/%Y'),
-        )
-        for d in qs
-    ]
+        ))
     return headers, rows, 'Devoluciones'
 
 
@@ -268,20 +249,15 @@ def _data_mantenimiento():
     qs = EstadoHerramienta.objects.all()
     headers = ['Código', 'Herramienta', 'Descripción', 'Categoría', 'Estado']
     rows = [
-        (
-            h.codigo,
-            h.nombre_herramienta,
-            h.descripcion,
-            h.get_categoria_display(),
-            h.get_estado_display(),
-        )
+        (h.codigo, h.nombre_herramienta, h.descripcion,
+         h.get_categoria_display(), h.get_estado_display())
         for h in qs
     ]
     return headers, rows, 'Mantenimiento'
 
 
 def _data_almacenamiento():
-    from almacenamiento.models import Almacen, Estante
+    from almacenamiento.models import Almacen
     almacenes = Almacen.objects.prefetch_related('estante_set').all()
     headers = ['Almacén', 'Capacidad almacén', 'Código estante', 'Capacidad estante', 'Detalles estante']
     rows = []
@@ -313,10 +289,6 @@ def _data_usuarios():
     return headers, rows, 'Usuarios'
 
 
-# ══════════════════════════════════════════════════════════════════
-#  DISPATCHER
-# ══════════════════════════════════════════════════════════════════
-
 MODULO_MAP = {
     'inventario':     _data_inventario,
     'prestamos':      _data_prestamos,
@@ -328,9 +300,6 @@ MODULO_MAP = {
 
 
 def generar_reporte(modulo, formato):
-    """
-    Genera el reporte y devuelve (buffer_bytes, content_type, filename, total_registros).
-    """
     fn = MODULO_MAP.get(modulo)
     if not fn:
         raise ValueError(f'Módulo desconocido: {modulo}')

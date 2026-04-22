@@ -3,7 +3,6 @@
 
 {% block content %}
 
-<!-- ══ ALERTAS ══ -->
 {% if messages %}
   {% for message in messages %}
     <div class="alert alert-dismissible fade show d-flex align-items-center gap-2"
@@ -27,79 +26,98 @@
       Préstamos
     </h5>
     <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
-      Gestión de préstamos de productos
+      Gestión de préstamos de herramientas
     </p>
   </div>
-  <button class="btn-primary-mine"
-          data-bs-toggle="modal" data-bs-target="#modalCrearPrestamo">
+  <button class="btn-primary-mine" data-bs-toggle="modal" data-bs-target="#modalCrearPrestamo">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="16"/>
-      <line x1="8" y1="12" x2="16" y2="12"/>
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
     </svg>
     Nuevo Préstamo
   </button>
 </div>
 
-<!-- ══ STATS ══ -->
+<!-- ══ KPI CARDS ══ -->
 <div class="row g-3 mb-4">
-
-  <!-- Total -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #0dcaf0;">
-      <div class="mb-1">
-        <i class="bi bi-clipboard2-data" style="font-size:1.5rem; color:#0dcaf0;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #0dcaf0; line-height: 1;">
-        {{ total_prestamos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Total</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #0dcaf0;">
+      <div class="mb-1"><i class="bi bi-clipboard2-data" style="font-size:1.4rem;color:#0dcaf0;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#0dcaf0;line-height:1;">{{ total_prestamos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Total</small>
     </div>
   </div>
-
-  <!-- Activos -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #9f86c0;">
-      <div class="mb-1">
-        <i class="bi bi-box-seam" style="font-size:1.5rem; color:#9f86c0;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #9f86c0; line-height: 1;">
-        {{ prestamos_activos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Activos</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #9f86c0;">
+      <div class="mb-1"><i class="bi bi-box-seam" style="font-size:1.4rem;color:#9f86c0;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#9f86c0;line-height:1;">{{ prestamos_activos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Activos</small>
     </div>
   </div>
-
-  <!-- Devueltos -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #2dd4bf;">
-      <div class="mb-1">
-        <i class="bi bi-arrow-return-left" style="font-size:1.5rem; color:#2dd4bf;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #2dd4bf; line-height: 1;">
-        {{ prestamos_devueltos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Devueltos</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #2dd4bf;">
+      <div class="mb-1"><i class="bi bi-arrow-return-left" style="font-size:1.4rem;color:#2dd4bf;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#2dd4bf;line-height:1;">{{ prestamos_devueltos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Devueltos</small>
     </div>
   </div>
-
-  <!-- Vencidos -->
   <div class="col-6 col-md-3">
-    <div class="card text-center px-3 py-3 h-100 stat-top" style="border-top: 4px solid #931f1d;">
-      <div class="mb-1">
-        <i class="bi bi-exclamation-circle" style="font-size:1.5rem; color:#931f1d;"></i>
-      </div>
-      <div style="font-size: 3rem; font-weight: 800; color: #931f1d; line-height: 1;">
-        {{ prestamos_vencidos|default:"0" }}
-      </div>
-      <small class="text-secondary text-uppercase mt-1 d-block"
-             style="font-size:.7rem; letter-spacing:.1em; font-weight:600;">Vencidos</small>
+    <div class="card text-center px-3 py-3 h-100" style="border-top:4px solid #931f1d;">
+      <div class="mb-1"><i class="bi bi-exclamation-circle" style="font-size:1.4rem;color:#931f1d;"></i></div>
+      <div style="font-size:2.5rem;font-weight:800;color:#931f1d;line-height:1;">{{ prestamos_vencidos|default:"0" }}</div>
+      <small class="text-secondary text-uppercase mt-1 d-block" style="font-size:.68rem;letter-spacing:.1em;font-weight:600;">Vencidos</small>
     </div>
   </div>
+</div>
 
+<!-- ══ ALERTA PRÓXIMOS A VENCER ══ -->
+{% if proximos_vencer %}
+<div class="alert d-flex align-items-center gap-2 mb-3"
+     style="background:rgba(245,158,11,.1);border:1px solid rgba(217,119,6,.3);
+            border-radius:var(--radius-md);color:#d97706;font-family:var(--font-ui);font-size:.85rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <strong>{{ proximos_vencer }} préstamo{{ proximos_vencer|pluralize }}</strong>&nbsp;vence{{ proximos_vencer|pluralize:"n," }} en los próximos 3 días.
+  <a href="?vencidos=1" class="ms-auto"
+     style="font-size:.78rem;font-weight:700;color:#d97706;text-decoration:none;border:1px solid rgba(217,119,6,.4);padding:.2rem .6rem;border-radius:4px;">
+    Ver →
+  </a>
+</div>
+{% endif %}
+
+<!-- ══ BUSCADOR Y FILTROS ══ -->
+<div class="card mb-3">
+  <div class="card-body" style="padding:.85rem 1.2rem;">
+    <form method="get" class="d-flex gap-2 align-items-end flex-wrap">
+      <div style="flex:2;min-width:180px;">
+        <label class="form-label">Buscar</label>
+        <input type="text" name="q" class="form-control" value="{{ filtro_q }}"
+               placeholder="Usuario, nombre o herramienta…">
+      </div>
+      <div style="flex:1;min-width:130px;">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-control form-select">
+          <option value="">Todos</option>
+          <option value="activo"   {% if filtro_estado == 'activo' %}selected{% endif %}>Activo</option>
+          <option value="devuelto" {% if filtro_estado == 'devuelto' %}selected{% endif %}>Devuelto</option>
+          <option value="parcial"  {% if filtro_estado == 'parcial' %}selected{% endif %}>Parcial</option>
+          <option value="vencido"  {% if filtro_estado == 'vencido' %}selected{% endif %}>Vencido</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:flex-end;">
+        <button type="submit" class="btn-primary-mine">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Filtrar
+        </button>
+        {% if filtro_q or filtro_estado or filtro_vencidos %}
+        <a href="{% url 'prestamo' %}" class="btn-outline-mine">Limpiar</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- ══ TABLA ══ -->
@@ -111,54 +129,38 @@
       </svg>
       Préstamos registrados
     </span>
-
-    <!-- Badge dinámico según cantidad -->
     {% with total=prestamos|length %}
-      {% if total == 0 %}
-        <span style="font-family:var(--font-mono); font-size:.72rem;
-                     background:rgba(0,0,0,.06); color:#999;
-                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(0,0,0,.1);">
-          0 registros
-        </span>
-      {% elif total < 10 %}
-        <span style="font-family:var(--font-mono); font-size:.72rem;
-                     background:rgba(13,202,240,.12); color:#0dcaf0;
-                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(13,202,240,.25);">
-          {{ total }} registro{{ total|pluralize:",s" }}
-        </span>
-      {% else %}
-        <span style="font-family:var(--font-mono); font-size:.72rem;
-                     background:rgba(159,134,192,.12); color:#9f86c0;
-                     padding:.18rem .6rem; border-radius:20px; border:1px solid rgba(159,134,192,.25);">
-          {{ total }} registros
-        </span>
-      {% endif %}
+    <span style="font-family:var(--font-mono);font-size:.72rem;
+                 background:rgba(9,77,146,.08);color:var(--navy);
+                 padding:.18rem .6rem;border-radius:20px;border:1px solid rgba(9,77,146,.18);">
+      {{ total }} registro{{ total|pluralize:",s" }}
+    </span>
     {% endwith %}
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+    <table class="table-app" style="width:100%;border-collapse:collapse;font-size:.9rem;">
       <thead>
         <tr>
-          <th style="width:46px;"></th>
+          <th style="width:40px;"></th>
           <th>#</th>
           <th>Usuario</th>
           <th>Ítems</th>
           <th>Estado</th>
+          <th>Vencimiento</th>
           <th>Fecha</th>
           <th style="text-align:center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
-
         {% for p in prestamos %}
         <tr>
           <td style="text-align:center;">
             <button type="button"
-                    style="width:24px; height:24px; border-radius:50%;
-                           background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.14);
-                           color:var(--navy); cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0;"
+                    style="width:24px;height:24px;border-radius:50%;
+                           background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.14);
+                           color:var(--navy);cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;"
                     data-bs-toggle="collapse"
                     data-bs-target="#detail-p-{{ p.pk }}"
                     aria-expanded="false">
@@ -169,13 +171,18 @@
               </svg>
             </button>
           </td>
-          <td><span style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">#{{ p.pk }}</span></td>
-          <td style="font-weight:600;">{{ p.usuario }}</td>
+          <td><span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">#{{ p.pk }}</span></td>
+          <td>
+            <div style="font-weight:600;line-height:1.2;">{{ p.usuario }}</div>
+            {% if p.nombre_usuario %}
+            <div style="font-size:.75rem;color:var(--text-muted);">{{ p.nombre_usuario }}</div>
+            {% endif %}
+          </td>
           <td>
             {% for item in p.items.all %}
               <span style="font-size:.82rem;">{{ item.producto.nombre }} ×{{ item.cantidad }}</span>{% if not forloop.last %}, {% endif %}
             {% empty %}
-              <span style="color:var(--text-muted); font-size:.8rem;">—</span>
+              <span style="color:var(--text-muted);font-size:.8rem;">—</span>
             {% endfor %}
           </td>
           <td>
@@ -189,58 +196,80 @@
               <span class="badge-state badge-rechazada">Vencido</span>
             {% endif %}
           </td>
-          <td style="font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted);">
+          <td>
+            {% if p.fecha_vencimiento %}
+              {% if p.urgencia == 'vencido' %}
+                <span style="display:inline-flex;align-items:center;gap:.3rem;
+                             background:rgba(147,31,29,.1);color:#931f1d;
+                             font-size:.72rem;font-weight:700;font-family:var(--font-mono);
+                             padding:.18rem .55rem;border-radius:20px;border:1px solid rgba(147,31,29,.25);">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  Venció {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </span>
+              {% elif p.urgencia == 'proximo' %}
+                <span style="display:inline-flex;align-items:center;gap:.3rem;
+                             background:rgba(245,158,11,.1);color:#d97706;
+                             font-size:.72rem;font-weight:700;font-family:var(--font-mono);
+                             padding:.18rem .55rem;border-radius:20px;border:1px solid rgba(217,119,6,.25);">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                  </svg>
+                  {{ p.dias_restantes }}d — {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </span>
+              {% else %}
+                <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">
+                  {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </span>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--text-muted);font-size:.8rem;">Sin fecha</span>
+            {% endif %}
+          </td>
+          <td style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);">
             {{ p.fecha_prestamo|date:"d/m/Y" }}
           </td>
-          <td style="text-align:center; white-space:nowrap;">
-            <!-- Editar (MINE-123 / MINE-124) -->
-            <button type="button"
-                    title="Editar préstamo"
-                    style="width:28px; height:28px; border-radius:6px;
-                           background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.18);
-                           color:var(--navy); cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalEditarPrestamo"
+          <td style="text-align:center;white-space:nowrap;">
+            <button type="button" title="Editar préstamo"
+                    style="width:28px;height:28px;border-radius:6px;
+                           background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.18);
+                           color:var(--navy);cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;margin:0 2px;"
+                    data-bs-toggle="modal" data-bs-target="#modalEditarPrestamo"
                     data-pk="{{ p.pk }}"
                     data-usuario="{{ p.usuario }}"
+                    data-nombre-usuario="{{ p.nombre_usuario|default:'' }}"
                     data-estado="{{ p.estado }}"
-                    data-observaciones="{{ p.observaciones|default:'' }}">
+                    data-observaciones="{{ p.observaciones|default:'' }}"
+                    data-fecha-vencimiento="{{ p.fecha_vencimiento|date:'Y-m-d'|default:'' }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
-            <!-- Cancelar préstamo (MINE-125 / MINE-126) -->
             {% if p.estado == 'activo' or p.estado == 'parcial' %}
-            <button type="button"
-                    title="Cancelar préstamo"
-                    style="width:28px; height:28px; border-radius:6px;
-                           background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25);
-                           color:#d97706; cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalCancelarPrestamo"
-                    data-pk="{{ p.pk }}"
-                    data-usuario="{{ p.usuario }}">
+            <button type="button" title="Cancelar préstamo"
+                    style="width:28px;height:28px;border-radius:6px;
+                           background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+                           color:#d97706;cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;margin:0 2px;"
+                    data-bs-toggle="modal" data-bs-target="#modalCancelarPrestamo"
+                    data-pk="{{ p.pk }}" data-usuario="{{ p.usuario }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+                <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
             </button>
             {% endif %}
-            <!-- Eliminar (MINE-127) -->
-            <button type="button"
-                    title="Eliminar préstamo"
-                    style="width:28px; height:28px; border-radius:6px;
-                           background:rgba(147,31,29,.07); border:1px solid rgba(147,31,29,.2);
-                           color:#931f1d; cursor:pointer; display:inline-flex;
-                           align-items:center; justify-content:center; padding:0; margin:0 2px;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalEliminarPrestamo"
-                    data-pk="{{ p.pk }}"
-                    data-usuario="{{ p.usuario }}">
+            <button type="button" title="Eliminar préstamo"
+                    style="width:28px;height:28px;border-radius:6px;
+                           background:rgba(147,31,29,.07);border:1px solid rgba(147,31,29,.2);
+                           color:#931f1d;cursor:pointer;display:inline-flex;
+                           align-items:center;justify-content:center;padding:0;margin:0 2px;"
+                    data-bs-toggle="modal" data-bs-target="#modalEliminarPrestamo"
+                    data-pk="{{ p.pk }}" data-usuario="{{ p.usuario }}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -251,132 +280,100 @@
           </td>
         </tr>
 
-        <!-- Detalle desplegable (MINE-136/139/140) -->
+        <!-- Detalle desplegable -->
         <tr style="background:rgba(9,77,146,.02);">
-          <td colspan="7" style="padding:0; border:none;">
+          <td colspan="8" style="padding:0;border:none;">
             <div class="collapse" id="detail-p-{{ p.pk }}">
-              <div style="padding:1rem 1.4rem; border-bottom:1px solid var(--border-color);">
-                <p style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em;
-                           text-transform:uppercase; color:var(--text-muted); margin-bottom:.75rem;">
+              <div style="padding:1rem 1.4rem;border-bottom:1px solid var(--border-color);">
+                <p style="font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;
+                           text-transform:uppercase;color:var(--text-muted);margin-bottom:.75rem;">
                   Detalle completo
                 </p>
                 <div class="row g-3" style="font-family:var(--font-ui);">
-
-                  <!-- Usuario -->
-                  <div class="col-6 col-md-3">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Usuario</div>
-                    <div style="font-weight:600; color:var(--text-main);">{{ p.usuario }}</div>
-                  </div>
-
-                  <!-- Estado -->
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Estado</div>
-                    <div style="font-weight:600; color:var(--text-main);">{{ p.get_estado_display }}</div>
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Usuario</div>
+                    <div style="font-weight:600;">{{ p.usuario }}</div>
+                    {% if p.nombre_usuario %}<div style="font-size:.8rem;color:var(--text-muted);">{{ p.nombre_usuario }}</div>{% endif %}
                   </div>
-
-                  <!-- Fecha -->
                   <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Fecha</div>
-                    <div style="font-family:var(--font-mono); font-size:.83rem; color:var(--text-main);">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Estado</div>
+                    <div>{{ p.get_estado_display }}</div>
                   </div>
-
-                  <!-- MINE-139/140: Herramientas prestadas con cantidad y formulario devolución -->
-                  <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em;
-                                color:var(--text-muted); font-weight:600; margin-bottom:.6rem;">
-                      Herramientas prestadas
+                  <div class="col-6 col-md-2">
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Fecha préstamo</div>
+                    <div style="font-family:var(--font-mono);font-size:.83rem;">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
+                  </div>
+                  <div class="col-6 col-md-2">
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Vencimiento</div>
+                    <div style="font-family:var(--font-mono);font-size:.83rem;">
+                      {% if p.fecha_vencimiento %}{{ p.fecha_vencimiento|date:"d/m/Y" }}{% else %}—{% endif %}
                     </div>
-
+                  </div>
+                  <div class="col-12">
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.6rem;">Herramientas prestadas</div>
                     {% for item in p.items.all %}
-                    <!-- MINE-136: Modelo detalle por ítem -->
-                    <div style="display:flex; align-items:center; gap:.75rem; margin-bottom:.5rem;
-                                padding:.55rem .75rem; border-radius:var(--radius-md);
-                                background:rgba(9,77,146,.04); border:1px solid rgba(9,77,146,.08);">
-
-                      <!-- MINE-139: Nombre herramienta -->
-                      <span style="font-weight:600; color:var(--text-main); flex:1; min-width:0;
-                                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;
+                                padding:.55rem .75rem;border-radius:var(--radius-md);
+                                background:rgba(9,77,146,.04);border:1px solid rgba(9,77,146,.08);">
+                      <span style="font-weight:600;color:var(--text-main);flex:1;min-width:0;
+                                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         {{ item.producto.nombre }}
                       </span>
-
-                      <!-- MINE-140: Cantidad -->
-                      <span style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);
-                                   white-space:nowrap;">
-                        ×{{ item.cantidad }}
-                      </span>
-
-                      <!-- Stock disponible del producto -->
-                      <span style="font-family:var(--font-mono); font-size:.72rem; white-space:nowrap;
-                                   {% if item.producto.stock > 0 %}
-                                     color:#2dd4bf;
-                                   {% else %}
-                                     color:#931f1d;
-                                   {% endif %}">
+                      <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted);">×{{ item.cantidad }}</span>
+                      <span style="font-family:var(--font-mono);font-size:.72rem;
+                                   {% if item.producto.stock > 0 %}color:#2dd4bf;{% else %}color:#931f1d;{% endif %}">
                         Stock: {{ item.producto.stock }}
                       </span>
-
-                      <!-- Estado del ítem -->
                       {% if item.devuelto %}
-                        <span class="badge-state badge-aprobada" style="font-size:.65rem; white-space:nowrap;">Devuelto</span>
+                        <span class="badge-state badge-aprobada" style="font-size:.65rem;">Devuelto</span>
                       {% else %}
-                        <span class="badge-state badge-pendiente" style="font-size:.65rem; white-space:nowrap;">Pendiente</span>
+                        <span class="badge-state badge-pendiente" style="font-size:.65rem;">Pendiente</span>
                       {% endif %}
-
-                      <!-- MINE-137/138/145/146: Formulario de devolución por ítem con validación de cantidad -->
                       {% if not item.devuelto and p.estado != 'devuelto' %}
-                      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:.2rem;">
+                      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;">
                         <form class="devolver-form" method="post"
-                              style="margin:0; display:inline-flex; align-items:center; gap:.35rem;"
+                              style="margin:0;display:inline-flex;align-items:center;gap:.35rem;"
                               data-max="{{ item.cantidad }}">
                           {% csrf_token %}
                           <input type="hidden" name="accion" value="devolver_item">
                           <input type="hidden" name="item_pk" value="{{ item.pk }}">
-                          <!-- MINE-145: Input cantidad a devolver -->
-                          <input type="number" name="cantidad_devuelta"
-                                 class="devolver-cantidad"
+                          <input type="number" name="cantidad_devuelta" class="devolver-cantidad"
                                  min="1" max="{{ item.cantidad }}" value="{{ item.cantidad }}"
-                                 style="width:52px; padding:.2rem .35rem; border-radius:5px;
-                                        border:1px solid rgba(9,77,146,.2); font-size:.78rem;
-                                        font-family:var(--font-mono); color:var(--text-main);
-                                        background:var(--bg-card); text-align:center;"
+                                 style="width:52px;padding:.2rem .35rem;border-radius:5px;
+                                        border:1px solid rgba(9,77,146,.2);font-size:.78rem;
+                                        font-family:var(--font-mono);color:var(--text-main);
+                                        background:var(--bg-card);text-align:center;"
                                  aria-label="Cantidad a devolver">
                           <button type="submit"
-                                  style="display:inline-flex; align-items:center; gap:.3rem;
-                                         padding:.25rem .6rem; border-radius:5px; white-space:nowrap;
-                                         background:rgba(45,212,191,.12); border:1px solid rgba(45,212,191,.3);
-                                         color:#0d9488; font-size:.75rem; font-weight:600;
-                                         font-family:var(--font-ui); cursor:pointer;">
+                                  style="display:inline-flex;align-items:center;gap:.3rem;
+                                         padding:.25rem .6rem;border-radius:5px;white-space:nowrap;
+                                         background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.3);
+                                         color:#0d9488;font-size:.75rem;font-weight:600;
+                                         font-family:var(--font-ui);cursor:pointer;">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                               <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
                             </svg>
                             Devolver
                           </button>
                         </form>
-                        <!-- MINE-146: Error si cantidad inválida -->
                         <div class="devolver-error"
-                             style="display:none; font-size:.72rem; color:#931f1d;
-                                    font-family:var(--font-ui); white-space:nowrap;
-                                    background:rgba(147,31,29,.08); border:1px solid rgba(147,31,29,.22);
-                                    border-radius:4px; padding:.2rem .5rem;">
-                        </div>
+                             style="display:none;font-size:.72rem;color:#931f1d;
+                                    font-family:var(--font-ui);white-space:nowrap;
+                                    background:rgba(147,31,29,.08);border:1px solid rgba(147,31,29,.22);
+                                    border-radius:4px;padding:.2rem .5rem;"></div>
                       </div>
                       {% endif %}
                     </div>
                     {% empty %}
-                      <div style="color:var(--text-muted); font-size:.85rem; padding:.5rem 0;">
-                        Sin ítems registrados.
-                      </div>
+                    <div style="color:var(--text-muted);font-size:.85rem;">Sin ítems registrados.</div>
                     {% endfor %}
                   </div>
-
-                  <!-- Observaciones -->
                   {% if p.observaciones %}
                   <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Observaciones</div>
-                    <div style="color:var(--text-main);">{{ p.observaciones }}</div>
+                    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.18rem;">Observaciones</div>
+                    <div>{{ p.observaciones }}</div>
                   </div>
                   {% endif %}
-
                 </div>
               </div>
             </div>
@@ -385,189 +382,88 @@
 
         {% empty %}
         <tr>
-          <td colspan="7" style="text-align:center; padding:3.5rem 1rem;">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-                 stroke="var(--text-muted)" stroke-width="1.3"
-                 style="opacity:.35; display:block; margin:0 auto .75rem;">
-              <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
-            </svg>
-            <p style="font-family:var(--font-ui); color:var(--text-muted); font-size:.88rem; margin:0;">
-              No hay préstamos registrados aún.<br>
+          <td colspan="8" style="text-align:center;padding:3.5rem 1rem;">
+            <p style="font-family:var(--font-ui);color:var(--text-muted);font-size:.88rem;margin:0;">
+              No hay préstamos{% if filtro_q or filtro_estado %} con esos filtros{% endif %}.<br>
               <span style="font-size:.8rem;">Usa <strong>Nuevo Préstamo</strong> para agregar uno.</span>
             </p>
           </td>
         </tr>
         {% endfor %}
-
       </tbody>
     </table>
   </div>
 </div>
 
 
-<!-- ══ MODAL CREAR PRÉSTAMO ══ -->
+<!-- ══════════════════════════════════════════════════
+     MODAL CREAR PRÉSTAMO — WIZARD PASO A PASO
+══════════════════════════════════════════════════ -->
 <div class="modal fade" id="modalCrearPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
+    <div class="modal-content" style="border:none;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 20px 60px rgba(27,32,33,.18);">
+
+      <!-- Header fijo del modal -->
+      <div class="modal-header" style="padding:.9rem 1.35rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="2.2" opacity=".7">
+            <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
           </svg>
-          Nuevo Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <h5 class="modal-title">Nuevo Préstamo</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" id="wiz-close-btn"></button>
       </div>
-      <form method="post" novalidate>
-        {% csrf_token %}
-        <div class="modal-body" style="padding:1.5rem;">
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
-                      border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1.1rem;">
-            Datos del préstamo
-          </div>
 
-          <!-- Errores generales del formulario (stock insuficiente, etc.) -->
-          {% if form.non_field_errors %}
-            <div style="display:flex; align-items:flex-start; gap:.6rem; margin-bottom:1rem;
-                        padding:.75rem 1rem; border-radius:var(--radius-md);
-                        background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.28);
-                        color:#931f1d; font-family:var(--font-ui); font-size:.83rem;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.2" style="flex-shrink:0; margin-top:.1rem;">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <div>
-                {% for error in form.non_field_errors %}
-                  <div>{{ error }}</div>
-                {% endfor %}
-              </div>
-            </div>
-          {% endif %}
-          <div class="row g-3">
-
-            <!-- Usuario -->
-            <div class="col-md-6">
-              <label class="form-label" for="{{ form.usuario.id_for_label }}">Usuario *</label>
-              {{ form.usuario }}
-              {% for e in form.usuario.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
-            </div>
-
-            <!-- Producto — select con consulta de stock (MINE-128/129/130) -->
-            <div class="col-md-6">
-              <label class="form-label" for="id_producto">Herramienta / Producto *</label>
-              <select name="producto" id="id_producto" class="form-control form-select"
-                      data-stocks='{ {% for prod in productos %}"{{ prod.pk }}": {{ prod.stock }}{% if not forloop.last %},{% endif %}{% endfor %} }'>
-                <option value="">— Selecciona una herramienta —</option>
-                {% for prod in productos %}
-                  <option value="{{ prod.pk }}"
-                          data-stock="{{ prod.stock }}"
-                    {% if form.producto.value == prod.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ prod.nombre }} — SKU: {{ prod.codigo_sku }}
-                  </option>
-                {% empty %}
-                  <option disabled>No hay herramientas en inventario aún</option>
-                {% endfor %}
-              </select>
-              {% for e in form.producto.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
-
-              <!-- MINE-129: Panel de disponibilidad -->
-              <div id="stock-info" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
-                                          border-radius:var(--radius-md); font-family:var(--font-ui);
-                                          font-size:.8rem; align-items:center; gap:.5rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="stock-icon">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <span id="stock-label"></span>
-              </div>
-
-              <!-- MINE-130: Alerta si no hay stock -->
-              <div id="stock-alert" style="display:none; margin-top:.5rem; padding:.5rem .75rem;
-                                           border-radius:var(--radius-md); font-size:.8rem;
-                                           background:rgba(147,31,29,.09); border:1px solid rgba(147,31,29,.25);
-                                           color:#931f1d; font-family:var(--font-ui); display:none;
-                                           align-items:center; gap:.5rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                Sin stock disponible — no es posible registrar el préstamo
-              </div>
-            </div>
-
-            <!-- Cantidad -->
-            <div class="col-md-4">
-              <label class="form-label" for="{{ form.cantidad.id_for_label }}">Cantidad *</label>
-              {{ form.cantidad }}
-              {% for e in form.cantidad.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
-            </div>
-
-            <!-- Observaciones -->
-            <div class="col-md-8">
-              <label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
-              {{ form.observaciones }}
-              {% for e in form.observaciones.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
-            </div>
-
-          </div>
+      <!-- Cuerpo del wizard -->
+      <div class="modal-body" style="padding:0;">
+        <!-- Barra de progreso -->
+        <div style="padding:16px 24px 0;" id="wiz-progress-wrap">
+          <div id="wiz-progress-bar" style="display:flex;align-items:center;gap:0;margin-bottom:20px;"></div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-primary-mine">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
-            </svg>
-            Guardar préstamo
-          </button>
-        </div>
-      </form>
+        <!-- Panel dinámico -->
+        <div id="wiz-panel" style="padding:0 24px 24px;"></div>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL EDITAR PRÉSTAMO (MINE-123 / MINE-124) ══ -->
+<!-- Datos de Django para el wizard (JSON inyectado) -->
+<script id="wiz-usuarios-data" type="application/json">
+[{% for u in usuarios_sistema %}{"doc":"{{ u.numero_documento }}","nombre":"{{ u.nombre_completo|escapejs }}","tipo":"{{ u.tipo_documento }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
+<script id="wiz-productos-data" type="application/json">
+[{% for prod in productos %}{"pk":{{ prod.pk }},"sku":"{{ prod.codigo_sku|escapejs }}","nombre":"{{ prod.nombre|escapejs }}","stock":{{ prod.stock }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
+<script id="wiz-csrf-token" type="application/json">"{{ csrf_token }}"</script>
+<script id="wiz-action-url" type="application/json">"{% url 'prestamo' %}"</script>
+
+
+<!-- ══ MODAL EDITAR PRÉSTAMO ══ -->
 <div class="modal fade" id="modalEditarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          Editar Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Editar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="post" id="formEditarPrestamo" novalidate>
         {% csrf_token %}
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="prestamo_pk" id="edit_pk">
         <div class="modal-body" style="padding:1.5rem;">
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
-                      border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1.1rem;">
-            Modificar datos del préstamo
-          </div>
           <div class="row g-3">
-            <!-- Usuario (MINE-141) -->
             <div class="col-md-6">
-              <label class="form-label">Usuario *</label>
-              <input type="text" name="usuario" id="edit_usuario"
-                     class="form-control" placeholder="Nombre del usuario"
-                     maxlength="150" required>
+              <label class="form-label">Documento / ID *</label>
+              <input type="text" name="usuario" id="edit_usuario" class="form-control"
+                     placeholder="Documento del usuario" maxlength="150" required>
               <div id="edit_usuario_error" class="form-error" style="display:none;"></div>
             </div>
-            <!-- Estado -->
+            <div class="col-md-6">
+              <label class="form-label">Nombre</label>
+              <input type="text" name="nombre_usuario" id="edit_nombre_usuario" class="form-control"
+                     placeholder="Nombre completo">
+            </div>
             <div class="col-md-6">
               <label class="form-label">Estado *</label>
               <select name="estado" id="edit_estado" class="form-control form-select">
@@ -577,54 +473,37 @@
                 <option value="vencido">Vencido</option>
               </select>
             </div>
-            <!-- Observaciones -->
+            <div class="col-md-6">
+              <label class="form-label">Fecha de vencimiento</label>
+              <input type="date" name="fecha_vencimiento" id="edit_fecha_vencimiento" class="form-control">
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem;">Dejar vacío para quitar la fecha.</div>
+            </div>
             <div class="col-12">
               <label class="form-label">Observaciones</label>
-              <textarea name="observaciones" id="edit_observaciones"
-                        class="form-control" rows="3"
-                        placeholder="Notas u observaciones del préstamo..."></textarea>
+              <textarea name="observaciones" id="edit_observaciones" class="form-control" rows="3"></textarea>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-primary-mine">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
-            </svg>
-            Guardar cambios
-          </button>
+          <button type="submit" class="btn-primary-mine">Guardar cambios</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL CANCELAR PRÉSTAMO (MINE-125 / MINE-126) ══ -->
+<!-- ══ MODAL CANCELAR ══ -->
 <div class="modal fade" id="modalCancelarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="margin-right:.4rem;">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          Cancelar Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Cancelar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" style="padding:1.5rem; font-family:var(--font-ui);">
-        <p style="color:var(--text-main); margin-bottom:.4rem;">
-          ¿Confirmas que deseas <strong>cancelar</strong> el préstamo de
-          <strong id="cancelar_usuario_label"></strong>?
-        </p>
-        <p style="color:var(--text-muted); font-size:.85rem; margin:0;">
-          Esta acción marcará el préstamo como cancelado y devolverá el stock al inventario.
-        </p>
+      <div class="modal-body" style="padding:1.5rem;font-family:var(--font-ui);">
+        <p>¿Confirmas que deseas <strong>cancelar</strong> el préstamo de <strong id="cancelar_usuario_label"></strong>?</p>
+        <p style="color:var(--text-muted);font-size:.85rem;margin:0;">El stock será repuesto al inventario.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">No, mantener</button>
@@ -632,18 +511,8 @@
           {% csrf_token %}
           <input type="hidden" name="accion" value="cancelar">
           <input type="hidden" name="prestamo_pk" id="cancelar_pk">
-          <button type="submit"
-                  style="display:inline-flex; align-items:center; gap:.4rem;
-                         padding:.45rem 1rem; border-radius:var(--radius-md);
-                         background:rgba(245,158,11,.12); border:1px solid rgba(217,119,6,.3);
-                         color:#d97706; font-family:var(--font-ui); font-size:.82rem;
-                         font-weight:600; cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-            Sí, cancelar préstamo
+          <button type="submit" style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;border-radius:var(--radius-md);background:rgba(245,158,11,.12);border:1px solid rgba(217,119,6,.3);color:#d97706;font-family:var(--font-ui);font-size:.82rem;font-weight:600;cursor:pointer;">
+            Sí, cancelar
           </button>
         </form>
       </div>
@@ -651,29 +520,17 @@
   </div>
 </div>
 
-<!-- ══ MODAL ELIMINAR PRÉSTAMO (MINE-127) ══ -->
+<!-- ══ MODAL ELIMINAR ══ -->
 <div class="modal fade" id="modalEliminarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#931f1d" stroke-width="2" style="margin-right:.4rem;">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-          </svg>
-          Eliminar Préstamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <h5 class="modal-title">Eliminar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" style="padding:1.5rem; font-family:var(--font-ui);">
-        <p style="color:var(--text-main); margin-bottom:.4rem;">
-          ¿Estás seguro de que deseas <strong>eliminar</strong> el préstamo de
-          <strong id="eliminar_usuario_label"></strong>?
-        </p>
-        <p style="color:var(--text-muted); font-size:.85rem; margin:0;">
-          Esta acción es <strong>permanente</strong> y no se puede deshacer.
-        </p>
+      <div class="modal-body" style="padding:1.5rem;font-family:var(--font-ui);">
+        <p>¿Estás seguro de <strong>eliminar</strong> el préstamo de <strong id="eliminar_usuario_label"></strong>?</p>
+        <p style="color:var(--text-muted);font-size:.85rem;margin:0;">Esta acción es <strong>permanente</strong>.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
@@ -681,17 +538,8 @@
           {% csrf_token %}
           <input type="hidden" name="accion" value="eliminar">
           <input type="hidden" name="prestamo_pk" id="eliminar_pk">
-          <button type="submit"
-                  style="display:inline-flex; align-items:center; gap:.4rem;
-                         padding:.45rem 1rem; border-radius:var(--radius-md);
-                         background:rgba(147,31,29,.1); border:1px solid rgba(147,31,29,.25);
-                         color:#931f1d; font-family:var(--font-ui); font-size:.82rem;
-                         font-weight:600; cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            </svg>
-            Sí, eliminar registro
+          <button type="submit" style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;border-radius:var(--radius-md);background:rgba(147,31,29,.1);border:1px solid rgba(147,31,29,.25);color:#931f1d;font-family:var(--font-ui);font-size:.82rem;font-weight:600;cursor:pointer;">
+            Sí, eliminar
           </button>
         </form>
       </div>
@@ -702,181 +550,636 @@
 {% endblock %}
 
 {% block js %}
-<!-- URL global para prestamos.js (no puede usar Django tags desde un .js estático) -->
 <script>window.PRESTAMO_URL = "{% url 'prestamo' %}";</script>
 <script src="{% static 'js/prestamos.js' %}"></script>
+
+<style>
+/* ── Wizard styles ── */
+.wiz-step-dot { display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;cursor:pointer;position:relative; }
+.wiz-step-dot:not(:last-child)::after { content:'';position:absolute;top:13px;left:calc(50% + 15px);right:calc(-50% + 15px);height:1.5px;background:var(--border-color); }
+.wiz-step-dot.wiz-done:not(:last-child)::after { background:var(--navy); }
+.wiz-dot-circle { width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border-color);background:var(--bg-surface);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text-muted);transition:all .2s;z-index:1;position:relative;font-family:var(--font-mono); }
+.wiz-step-dot.wiz-active .wiz-dot-circle { border-color:var(--navy);background:var(--navy);color:#fff; }
+.wiz-step-dot.wiz-done .wiz-dot-circle { border-color:var(--navy);background:var(--navy);color:#fff; }
+.wiz-dot-label { font-size:10px;color:var(--text-muted);text-align:center;white-space:nowrap;font-family:var(--font-ui);font-weight:500; }
+.wiz-step-dot.wiz-active .wiz-dot-label { color:var(--navy);font-weight:700; }
+.wiz-step-dot.wiz-done .wiz-dot-label { color:var(--navy); }
+
+.wiz-sec-label { font-family:var(--font-mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--navy);border-bottom:1px solid rgba(9,77,146,.18);padding-bottom:.4rem;margin-bottom:1rem; }
+
+.wiz-finput { height:34px;padding:0 10px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-main);font-size:.88rem;font-family:var(--font-ui);outline:none;width:100%;transition:border-color .15s; }
+.wiz-finput:focus { border-color:var(--navy);box-shadow:0 0 0 3px rgba(9,77,146,.08); }
+.wiz-finput.wiz-valid { border-color:#0d9488; }
+.wiz-finput.wiz-error { border-color:#931f1d; }
+
+.wiz-fsel { height:34px;padding:0 28px 0 10px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-main);font-size:.88rem;font-family:var(--font-ui);outline:none;width:100%;appearance:none;cursor:pointer; }
+.wiz-fsel:focus { border-color:var(--navy);box-shadow:0 0 0 3px rgba(9,77,146,.08); }
+
+.wiz-qty { height:34px;padding:0 8px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-main);font-size:.88rem;font-family:var(--font-mono);text-align:center;outline:none;width:100%; }
+.wiz-qty:focus { border-color:var(--navy);box-shadow:0 0 0 3px rgba(9,77,146,.08); }
+
+.wiz-sku-in { height:34px;padding:0 10px 0 28px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:rgba(9,77,146,.02);color:var(--text-main);font-size:.82rem;font-family:var(--font-mono);outline:none;width:100%;transition:border-color .15s; }
+.wiz-sku-in::placeholder { color:var(--text-muted);font-family:var(--font-ui);font-size:.82rem; }
+.wiz-sku-in:focus { border-color:var(--navy);background:var(--bg-surface);box-shadow:0 0 0 3px rgba(9,77,146,.08); }
+.wiz-sku-in.wiz-sku-sel { border-color:rgba(9,77,146,.4);background:rgba(9,77,146,.04);color:var(--navy);font-weight:600; }
+
+.wiz-drop { position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-md);z-index:100;overflow:hidden;box-shadow:0 4px 16px rgba(27,32,33,.12); }
+.wiz-dopt { display:flex;align-items:center;justify-content:space-between;padding:7px 11px;cursor:pointer;border-bottom:1px solid var(--border-color);gap:8px;transition:background .1s; }
+.wiz-dopt:last-child { border-bottom:none; }
+.wiz-dopt:hover { background:rgba(9,77,146,.04); }
+
+.wiz-spill { font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap;font-family:var(--font-mono); }
+.wiz-sok { background:rgba(45,212,191,.12);color:#0d9488;border:1px solid rgba(45,212,191,.3); }
+.wiz-slow { background:rgba(245,158,11,.10);color:#d97706;border:1px solid rgba(217,119,6,.3); }
+.wiz-snone { background:rgba(147,31,29,.09);color:#931f1d;border:1px solid rgba(147,31,29,.25); }
+
+.wiz-rbtn { width:30px;height:34px;border:1px solid rgba(147,31,29,.22);background:rgba(147,31,29,.06);border-radius:var(--radius-sm);color:#931f1d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s;flex-shrink:0; }
+.wiz-rbtn:hover { background:rgba(147,31,29,.14); }
+.wiz-rbtn.wiz-dis { opacity:.3;pointer-events:none; }
+
+.wiz-add-row { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px dashed rgba(9,77,146,.35);border-radius:var(--radius-sm);background:rgba(9,77,146,.04);color:var(--navy);font-size:.8rem;font-weight:600;cursor:pointer;margin-top:6px;font-family:var(--font-ui); }
+.wiz-add-row:hover { background:rgba(9,77,146,.09); }
+
+.wiz-user-card { display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(9,77,146,.04);border-radius:var(--radius-md);border:1px solid rgba(9,77,146,.14);margin-bottom:14px; }
+.wiz-avatar { width:34px;height:34px;border-radius:50%;background:var(--rust);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:var(--font-ui);letter-spacing:.04em; }
+
+.wiz-summary-row { display:flex;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-color);gap:12px; }
+.wiz-summary-row:last-child { border-bottom:none; }
+
+.wiz-item-chip { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;background:rgba(9,77,146,.07);border:1px solid rgba(9,77,146,.15);font-size:.75rem;color:var(--navy);font-family:var(--font-mono);margin:2px; }
+
+.wiz-btn-back { padding:7px 16px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:transparent;color:var(--text-muted);font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-ui); }
+.wiz-btn-back:hover { background:rgba(0,0,0,.04); }
+
+.wiz-btn-next { padding:7px 20px;border:none;border-radius:var(--radius-sm);background:var(--navy);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .12s;font-family:var(--font-ui); }
+.wiz-btn-next:hover { background:#063870; }
+.wiz-btn-next:disabled { background:var(--border-color);color:var(--text-muted);cursor:not-allowed; }
+
+.wiz-btn-save { padding:7px 20px;border:none;border-radius:var(--radius-sm);background:var(--rust);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .12s;font-family:var(--font-ui); }
+.wiz-btn-save:hover { background:#7a3530; }
+
+.wiz-nav-row { display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-color); }
+
+.wiz-flabel { font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:.25rem;display:block;font-family:var(--font-ui); }
+.wiz-req { color:var(--rust); }
+.wiz-hint { font-size:.72rem;color:var(--text-muted);margin-top:.2rem;font-family:var(--font-ui); }
+
+.wiz-success-icon { width:52px;height:52px;border-radius:50%;background:rgba(45,212,191,.12);border:1.5px solid rgba(45,212,191,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 14px; }
+
+.wiz-textarea { padding:8px 10px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-main);font-size:.88rem;outline:none;width:100%;resize:none;font-family:var(--font-ui); }
+.wiz-textarea:focus { border-color:var(--navy);box-shadow:0 0 0 3px rgba(9,77,146,.08); }
+</style>
+
 <script>
-  // ── Reabrir modal si hubo errores de validación del backend ──
-  {% if form.errors or form.non_field_errors %}
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCrearPrestamo')).show();
-  {% endif %}
+// ─────────────────────────────────────────────────────────────
+//  WIZARD — datos inyectados desde Django
+// ─────────────────────────────────────────────────────────────
+const WIZ_USUARIOS  = JSON.parse(document.getElementById('wiz-usuarios-data').textContent);
+const WIZ_PRODUCTOS = JSON.parse(document.getElementById('wiz-productos-data').textContent);
+const WIZ_CSRF      = JSON.parse(document.getElementById('wiz-csrf-token').textContent);
+const WIZ_URL       = JSON.parse(document.getElementById('wiz-action-url').textContent);
 
-  // ══════════════════════════════════════════════════════════════
-  // MINE-141 / MINE-142 — Modal Editar: poblar datos + guardar
-  // ══════════════════════════════════════════════════════════════
-  document.getElementById('modalEditarPrestamo')
-    .addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      if (!btn) return;
+const WIZ_STEPS = [
+  {label:'Usuario',    sub:'Identificación'},
+  {label:'Herramientas', sub:'Selección'},
+  {label:'Detalles',   sub:'Fecha y notas'},
+  {label:'Confirmación', sub:'Resumen'},
+];
 
-      // Poblar campos con los data-* del botón disparador
-      document.getElementById('edit_pk').value            = btn.dataset.pk          || '';
-      document.getElementById('edit_usuario').value       = btn.dataset.usuario      || '';
-      document.getElementById('edit_observaciones').value = btn.dataset.observaciones || '';
+let wizCurrent = 0;
+let wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', obs:'', items:[]};
 
-      // Seleccionar el estado correcto en el <select>
-      const estadoSel = document.getElementById('edit_estado');
-      const estadoVal = btn.dataset.estado || 'activo';
-      for (const opt of estadoSel.options) {
-        opt.selected = (opt.value === estadoVal);
-      }
-    });
+// ── Helpers ────────────────────────────────────────────────────
+function wzSc(s){ return s===0?'wiz-snone':s<=3?'wiz-slow':'wiz-sok'; }
+function wzSl(s){ return s===0?'Sin stock':s<=3?'Bajo: '+s:'Stock: '+s; }
+function wzCheck(){ return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>`; }
+function wzArR(){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`; }
+function wzArL(){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>`; }
 
-  // MINE-142: Validación mínima antes de enviar el formulario de edición
-  document.getElementById('formEditarPrestamo')
-    .addEventListener('submit', function (e) {
-      const usuarioInput = document.getElementById('edit_usuario');
-      const errorDiv     = document.getElementById('edit_usuario_error');
-      const val          = usuarioInput.value.trim();
+// ── Progress bar ───────────────────────────────────────────────
+function wzRenderProgress(){
+  const bar = document.getElementById('wiz-progress-bar');
+  if(!bar) return;
+  bar.innerHTML = WIZ_STEPS.map((s, i) => {
+    let cls = 'wiz-step-dot';
+    if(i < wizCurrent) cls += ' wiz-done';
+    if(i === wizCurrent) cls += ' wiz-active';
+    const inner = i < wizCurrent ? wzCheck() : (i+1);
+    return `<div class="${cls}">
+      <div class="wiz-dot-circle">${inner}</div>
+      <div class="wiz-dot-label">${s.label}</div>
+    </div>`;
+  }).join('');
+}
 
-      if (!val) {
+// ── Can advance? ───────────────────────────────────────────────
+function wzCanAdvance(){
+  if(wizCurrent === 0){
+    return wizState.doc.trim().length >= 5 && wizState.nombre.trim().length >= 3;
+  }
+  if(wizCurrent === 1){
+    return wizState.items.length > 0 && wizState.items.every(it => it.pk && it.qty >= 1);
+  }
+  return true;
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function wzRender(){
+  wzRenderProgress();
+  const panel = document.getElementById('wiz-panel');
+  if(!panel) return;
+  if(wizCurrent === 0) panel.innerHTML = wzStep0();
+  else if(wizCurrent === 1) panel.innerHTML = wzStep1();
+  else if(wizCurrent === 2) panel.innerHTML = wzStep2();
+  else panel.innerHTML = wzStep3();
+  if(wizCurrent === 1) wzInitSkuDropdown();
+}
+
+function wzUpdateNav(){
+  const btn = document.getElementById('wiz-btn-next');
+  if(btn) btn.disabled = !wzCanAdvance();
+}
+
+// ══ STEP 0: Usuario ═══════════════════════════════════════════
+function wzStep0(){
+  const initials = wizState.nombre.trim()
+    ? wizState.nombre.trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()
+    : '';
+
+  const usuariosOptions = WIZ_USUARIOS.map(u =>
+    `<option value="${u.doc}" ${wizState.doc===u.doc?'selected':''}>${u.nombre} (${u.doc})</option>`
+  ).join('');
+
+  return `
+    <div class="wiz-sec-label">Identifica al responsable</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="wiz-flabel">Seleccionar del sistema</label>
+        <div style="position:relative">
+          <select class="wiz-fsel" id="wiz-sel-usuario" onchange="wzPickUsuario(this.value)">
+            <option value="">— Buscar usuario registrado —</option>
+            ${usuariosOptions}
+          </select>
+          <svg style="position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-muted)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="wiz-flabel">Tipo de documento <span class="wiz-req">*</span></label>
+        <div style="position:relative">
+          <select class="wiz-fsel" id="wiz-tipo" onchange="wizState.tipo=this.value">
+            <option value="CC" ${wizState.tipo==='CC'?'selected':''}>CC — Cédula</option>
+            <option value="CE" ${wizState.tipo==='CE'?'selected':''}>CE — Extranjería</option>
+            <option value="TI" ${wizState.tipo==='TI'?'selected':''}>TI — Tarjeta Identidad</option>
+            <option value="PP" ${wizState.tipo==='PP'?'selected':''}>PP — Pasaporte</option>
+          </select>
+          <svg style="position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-muted)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="wiz-flabel">Número de documento <span class="wiz-req">*</span></label>
+        <input class="wiz-finput" id="wiz-doc" type="text" placeholder="Ej: 1012345678"
+          value="${wizState.doc}" oninput="wzOnDocInput(this)" autocomplete="off">
+        <div class="wiz-hint">Mínimo 5 caracteres</div>
+      </div>
+      <div class="col-md-6">
+        <label class="wiz-flabel">Nombre completo <span class="wiz-req">*</span></label>
+        <input class="wiz-finput" id="wiz-nombre" type="text" placeholder="Nombre completo"
+          value="${wizState.nombre}" oninput="wizState.nombre=this.value;wzUpdateNav()">
+      </div>
+    </div>
+
+    ${wizState.nombre ? `
+    <div class="wiz-user-card">
+      <div class="wiz-avatar">${initials}</div>
+      <div>
+        <div style="font-weight:700;font-size:.9rem;color:var(--text-main);font-family:var(--font-ui);">${wizState.nombre}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono);">${wizState.tipo} · ${wizState.doc}</div>
+      </div>
+      <div style="margin-left:auto">
+        <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(45,212,191,.12);color:#0d9488;border:1px solid rgba(45,212,191,.3);border-radius:20px;font-size:.72rem;font-weight:600;padding:2px 8px;font-family:var(--font-mono);">${wzCheck()} Identificado</span>
+      </div>
+    </div>` : ''}
+
+    <div class="wiz-nav-row">
+      <div></div>
+      <button class="wiz-btn-next" id="wiz-btn-next" onclick="wzAdvance()" ${wzCanAdvance()?'':'disabled'}>
+        Continuar ${wzArR()}
+      </button>
+    </div>`;
+}
+
+function wzOnDocInput(el){
+  wizState.doc = el.value.trim();
+  const match = WIZ_USUARIOS.find(u => u.doc === el.value.trim());
+  if(match){
+    wizState.nombre = match.nombre;
+    wizState.tipo   = match.tipo;
+    const ni = document.getElementById('wiz-nombre');
+    const ti = document.getElementById('wiz-tipo');
+    if(ni) ni.value = match.nombre;
+    if(ti) ti.value = match.tipo;
+  }
+  wzUpdateNav();
+}
+
+function wzPickUsuario(doc){
+  const u = WIZ_USUARIOS.find(u => u.doc === doc);
+  if(!u) return;
+  wizState.doc    = u.doc;
+  wizState.nombre = u.nombre;
+  wizState.tipo   = u.tipo;
+  wzRender();
+}
+
+// ══ STEP 1: Herramientas ══════════════════════════════════════
+function wzStep1(){
+  if(!wizState.items.length) wizState.items = [{pk:'',sku:'',nombre:'',qty:1,stock:0}];
+
+  const colLabels = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 72px 30px;gap:8px;margin-bottom:6px;">
+      <div style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-family:var(--font-ui);">Buscar por SKU</div>
+      <div style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-family:var(--font-ui);">Seleccionar</div>
+      <div style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-family:var(--font-ui);">Cantidad</div>
+      <div></div>
+    </div>`;
+
+  const itemsHtml = wizState.items.map((it, idx) => {
+    const prodOptions = WIZ_PRODUCTOS.map(p =>
+      `<option value="${p.pk}" data-stock="${p.stock}" data-sku="${p.sku}" data-nombre="${p.nombre}" ${it.pk==p.pk?'selected':''}>${p.nombre} (${p.sku})</option>`
+    ).join('');
+
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 72px 30px;gap:8px;align-items:start;margin-bottom:8px;" id="wiz-irow-${idx}">
+      <div>
+        <div style="position:relative" id="wiz-skuwrap-${idx}">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-muted)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="wiz-sku-in ${it.pk?'wiz-sku-sel':''}" id="wiz-sku-in-${idx}"
+            placeholder="SKU o nombre…" value="${it.pk ? it.sku+' — '+it.nombre : ''}"
+            oninput="wzOnSkuInput(this,${idx})" autocomplete="off">
+          <div class="wiz-drop" id="wiz-drop-${idx}" style="display:none"></div>
+        </div>
+        ${it.pk ? `<span class="wiz-spill ${wzSc(it.stock)}" style="margin-top:4px;display:inline-block;">${it.stock===0?'':'✓ '} ${wzSl(it.stock)}</span>` : ''}
+      </div>
+      <div style="position:relative">
+        <select class="wiz-fsel" id="wiz-psel-${idx}" onchange="wzOnSelChange(this,${idx})" style="font-size:.82rem">
+          <option value="">— Seleccionar —</option>
+          ${prodOptions}
+        </select>
+        <svg style="position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-muted)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div>
+        <input type="number" class="wiz-qty" id="wiz-qty-${idx}" min="1" max="${it.stock||99}"
+          value="${it.qty}" oninput="wizState.items[${idx}].qty=Math.max(1,parseInt(this.value)||1);wzUpdateNav()">
+      </div>
+      <div>
+        <button class="wiz-rbtn ${wizState.items.length===1?'wiz-dis':''}" onclick="wzRemoveItem(${idx})">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="wiz-sec-label">Selecciona las herramientas</div>
+    ${colLabels}
+    <div id="wiz-items-con">${itemsHtml}</div>
+    <button class="wiz-add-row" onclick="wzAddItem()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Agregar otra herramienta
+    </button>
+    <div class="wiz-nav-row">
+      <button class="wiz-btn-back" onclick="wzBack()">${wzArL()} Volver</button>
+      <button class="wiz-btn-next" id="wiz-btn-next" onclick="wzAdvance()" ${wzCanAdvance()?'':'disabled'}>
+        Continuar ${wzArR()}
+      </button>
+    </div>`;
+}
+
+function wzOnSkuInput(el, idx){
+  wizState.items[idx].pk = '';
+  const q = el.value.trim().toLowerCase();
+  const drop = document.getElementById('wiz-drop-'+idx);
+  if(!drop) return;
+  if(!q){ drop.style.display='none'; return; }
+  const hits = WIZ_PRODUCTOS.filter(p =>
+    p.sku.toLowerCase().includes(q) || p.nombre.toLowerCase().includes(q)
+  ).slice(0, 6);
+  if(!hits.length){
+    drop.innerHTML = `<div style="padding:8px 11px;font-size:.8rem;color:var(--text-muted);font-family:var(--font-ui);">Sin resultados</div>`;
+  } else {
+    drop.innerHTML = hits.map(p => `
+      <div class="wiz-dopt" data-pk="${p.pk}">
+        <div>
+          <div style="font-size:.75rem;font-family:var(--font-mono);font-weight:600;color:var(--navy)">${p.sku}</div>
+          <div style="font-size:.82rem;color:var(--text-main);font-family:var(--font-ui)">${p.nombre}</div>
+        </div>
+        <span class="wiz-spill ${wzSc(p.stock)}">${wzSl(p.stock)}</span>
+      </div>`).join('');
+    drop.querySelectorAll('.wiz-dopt').forEach(o => {
+      o.addEventListener('mousedown', e => {
         e.preventDefault();
-        errorDiv.textContent = 'El nombre de usuario no puede estar vacío.';
-        errorDiv.style.display = 'block';
-        usuarioInput.style.borderColor = '#931f1d';
-        usuarioInput.focus();
-      } else {
-        errorDiv.style.display = 'none';
-        usuarioInput.style.borderColor = '';
-      }
+        const p = WIZ_PRODUCTOS.find(x => x.pk == o.dataset.pk);
+        if(p){ wizState.items[idx] = {pk:p.pk,sku:p.sku,nombre:p.nombre,qty:1,stock:p.stock}; wzRender(); }
+      });
     });
+  }
+  drop.style.display = 'block';
+}
 
-  // Limpiar error al escribir en el campo usuario del modal editar
-  document.getElementById('edit_usuario').addEventListener('input', function () {
-    const errorDiv = document.getElementById('edit_usuario_error');
-    errorDiv.style.display = 'none';
-    this.style.borderColor = '';
+function wzOnSelChange(sel, idx){
+  const o = sel.options[sel.selectedIndex];
+  if(!o || !o.value){ wizState.items[idx] = {pk:'',sku:'',nombre:'',qty:1,stock:0}; wzRender(); return; }
+  const p = WIZ_PRODUCTOS.find(p => p.pk == o.value);
+  if(p){ wizState.items[idx] = {pk:p.pk,sku:p.sku,nombre:p.nombre,qty:1,stock:p.stock}; wzRender(); }
+}
+
+function wzAddItem(){
+  wizState.items.push({pk:'',sku:'',nombre:'',qty:1,stock:0});
+  wzRender();
+}
+
+function wzRemoveItem(idx){
+  wizState.items.splice(idx,1);
+  if(!wizState.items.length) wizState.items = [{pk:'',sku:'',nombre:'',qty:1,stock:0}];
+  wzRender();
+}
+
+function wzInitSkuDropdown(){
+  document.addEventListener('click', e => {
+    document.querySelectorAll('.wiz-drop').forEach(d => {
+      if(!d.parentElement || !d.parentElement.contains(e.target)) d.style.display='none';
+    });
+  }, {once: false});
+}
+
+// ══ STEP 2: Detalles ══════════════════════════════════════════
+function wzStep2(){
+  const validItems = wizState.items.filter(i => i.pk);
+  return `
+    <div class="wiz-sec-label">Fecha y observaciones</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="wiz-flabel">Fecha de vencimiento</label>
+        <input class="wiz-finput" id="wiz-fecha" type="date" value="${wizState.fecha}"
+          oninput="wizState.fecha=this.value">
+        <div class="wiz-hint">Dejar vacío si no tiene plazo definido</div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="wiz-flabel">Observaciones</label>
+      <textarea class="wiz-textarea" id="wiz-obs" rows="3"
+        placeholder="Notas adicionales (opcional)…"
+        oninput="wizState.obs=this.value">${wizState.obs}</textarea>
+    </div>
+    <div style="background:rgba(9,77,146,.04);border-radius:var(--radius-md);padding:10px 13px;border:1px solid rgba(9,77,146,.12);">
+      <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-ui)">Resumen hasta ahora</div>
+      <div style="font-size:.85rem;color:var(--text-main);font-family:var(--font-ui);display:flex;flex-direction:column;gap:3px">
+        <span><span style="color:var(--text-muted)">Usuario:</span> ${wizState.nombre} (${wizState.doc})</span>
+        <span><span style="color:var(--text-muted)">Ítems:</span> ${validItems.map(i=>`${i.sku} ×${i.qty}`).join(' · ') || '—'}</span>
+      </div>
+    </div>
+    <div class="wiz-nav-row">
+      <button class="wiz-btn-back" onclick="wzBack()">${wzArL()} Volver</button>
+      <button class="wiz-btn-next" onclick="wzAdvance()">Revisar ${wzArR()}</button>
+    </div>`;
+}
+
+// ══ STEP 3: Confirmación ══════════════════════════════════════
+function wzStep3(){
+  const validItems = wizState.items.filter(i => i.pk);
+  const fechaStr = wizState.fecha
+    ? new Date(wizState.fecha+'T00:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})
+    : 'Sin fecha límite';
+  const initials = wizState.nombre.trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const totalUnidades = validItems.reduce((a,b) => a+b.qty, 0);
+
+  return `
+    <div class="wiz-sec-label">Revisión final</div>
+    <div class="wiz-user-card">
+      <div class="wiz-avatar">${initials}</div>
+      <div>
+        <div style="font-weight:700;font-size:.9rem;color:var(--text-main);font-family:var(--font-ui);">${wizState.nombre}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono);">${wizState.tipo} · ${wizState.doc}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:7px;font-family:var(--font-ui)">Herramientas</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${validItems.map(it=>`<span class="wiz-item-chip"><span style="opacity:.65">${it.sku}</span> ${it.nombre} <strong>×${it.qty}</strong></span>`).join('')}
+      </div>
+    </div>
+
+    <div style="background:var(--bg-body);border-radius:var(--radius-md);border:1px solid var(--border-color);overflow:hidden;margin-bottom:4px;">
+      <div class="wiz-summary-row" style="padding:8px 12px"><span style="font-size:.82rem;color:var(--text-muted)">Fecha vencimiento</span><span style="font-size:.88rem;font-weight:600;color:var(--text-main)">${fechaStr}</span></div>
+      <div class="wiz-summary-row" style="padding:8px 12px"><span style="font-size:.82rem;color:var(--text-muted)">Total ítems</span><span style="font-size:.88rem;font-weight:600;color:var(--text-main)">${validItems.length} producto${validItems.length!==1?'s':''}, ${totalUnidades} unidad${totalUnidades!==1?'es':''}</span></div>
+      <div class="wiz-summary-row" style="padding:8px 12px"><span style="font-size:.82rem;color:var(--text-muted)">Observaciones</span><span style="font-size:.82rem;color:var(--text-muted);font-weight:400;text-align:right">${wizState.obs||'—'}</span></div>
+      <div class="wiz-summary-row" style="padding:8px 12px"><span style="font-size:.82rem;color:var(--text-muted)">Estado inicial</span><span style="background:rgba(9,77,146,.10);color:var(--navy);border:1px solid rgba(9,77,146,.2);border-radius:20px;font-size:.72rem;font-weight:600;padding:2px 8px;font-family:var(--font-mono)">Activo</span></div>
+    </div>
+
+    <div class="wiz-nav-row">
+      <button class="wiz-btn-back" onclick="wzBack()">${wzArL()} Editar</button>
+      <button class="wiz-btn-save" onclick="wzSubmit()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Registrar préstamo
+      </button>
+    </div>`;
+}
+
+// ══ SUCCESS ═══════════════════════════════════════════════════
+function wzShowSuccess(){
+  const validItems = wizState.items.filter(i => i.pk);
+  document.getElementById('wiz-progress-wrap').style.display = 'none';
+  document.getElementById('wiz-panel').innerHTML = `
+    <div style="text-align:center;padding:32px 24px;">
+      <div class="wiz-success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text-main);margin-bottom:6px;font-family:var(--font-ui)">¡Préstamo registrado!</div>
+      <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:20px;font-family:var(--font-ui)">El préstamo fue creado y el stock fue descontado correctamente.</div>
+      <div style="background:rgba(9,77,146,.04);border-radius:var(--radius-md);border:1px solid rgba(9,77,146,.12);padding:12px 16px;text-align:left;margin-bottom:20px">
+        <div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Usuario</span><span style="font-size:.88rem;font-weight:600">${wizState.nombre}</span></div>
+        <div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Herramientas</span><span style="font-size:.82rem">${validItems.map(i=>i.sku+' ×'+i.qty).join(', ')}</span></div>
+        <div class="wiz-summary-row" style="padding:5px 0"><span style="font-size:.82rem;color:var(--text-muted)">Estado</span><span style="background:rgba(9,77,146,.10);color:var(--navy);border:1px solid rgba(9,77,146,.2);border-radius:20px;font-size:.72rem;font-weight:600;padding:2px 8px;font-family:var(--font-mono)">Activo</span></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="wzResetAndNew()" style="padding:7px 20px;border:1px solid rgba(9,77,146,.4);border-radius:var(--radius-sm);background:rgba(9,77,146,.07);color:var(--navy);font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--font-ui)">Nuevo préstamo</button>
+        <button onclick="location.reload()" style="padding:7px 20px;border:none;border-radius:var(--radius-sm);background:var(--navy);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--font-ui)">Ver préstamos</button>
+      </div>
+    </div>`;
+}
+
+// ── Navigation ────────────────────────────────────────────────
+function wzAdvance(){
+  if(wizCurrent === 0){
+    const docEl    = document.getElementById('wiz-doc');
+    const nombreEl = document.getElementById('wiz-nombre');
+    const tipoEl   = document.getElementById('wiz-tipo');
+    if(docEl)    wizState.doc    = docEl.value.trim();
+    if(nombreEl) wizState.nombre = nombreEl.value.trim();
+    if(tipoEl)   wizState.tipo   = tipoEl.value;
+  }
+  if(wizCurrent === 2){
+    const fechaEl = document.getElementById('wiz-fecha');
+    const obsEl   = document.getElementById('wiz-obs');
+    if(fechaEl) wizState.fecha = fechaEl.value;
+    if(obsEl)   wizState.obs   = obsEl.value;
+  }
+  if(wzCanAdvance()){ wizCurrent++; wzRender(); }
+}
+
+function wzBack(){
+  if(wizCurrent > 0){ wizCurrent--; wzRender(); }
+}
+
+function wzResetAndNew(){
+  wizCurrent = 0;
+  wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', obs:'', items:[]};
+  const pw = document.getElementById('wiz-progress-wrap');
+  if(pw) pw.style.display = '';
+  wzRender();
+}
+
+// ── Submit real al servidor ───────────────────────────────────
+function wzSubmit(){
+  const validItems = wizState.items.filter(i => i.pk && i.qty >= 1);
+  if(!validItems.length) return;
+
+  const btn = document.querySelector('.wiz-btn-save');
+  if(btn){ btn.disabled=true; btn.textContent='Guardando…'; }
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = WIZ_URL;
+  form.style.display = 'none';
+
+  const addField = (name, value) => {
+    const i = document.createElement('input');
+    i.type = 'hidden'; i.name = name; i.value = value;
+    form.appendChild(i);
+  };
+
+  addField('csrfmiddlewaretoken', WIZ_CSRF);
+  addField('usuario',          wizState.doc);
+  addField('nombre_usuario',   wizState.nombre);
+  addField('fecha_vencimiento', wizState.fecha || '');
+  addField('observaciones',    wizState.obs || '');
+
+  validItems.forEach(it => {
+    addField('producto[]', it.pk);
+    addField('cantidad[]', it.qty);
   });
 
+  document.body.appendChild(form);
+  form.submit();
+}
 
-  // ══════════════════════════════════════════════════════════════
-  // MINE-143 / MINE-144 — Modal Eliminar: poblar datos + confirmar
-  // ══════════════════════════════════════════════════════════════
-  document.getElementById('modalEliminarPrestamo')
-    .addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      if (!btn) return;
-      document.getElementById('eliminar_pk').value          = btn.dataset.pk      || '';
-      document.getElementById('eliminar_usuario_label').textContent = btn.dataset.usuario || '';
-    });
+// ── Init modal ────────────────────────────────────────────────
+const wizModal = document.getElementById('modalCrearPrestamo');
+if(wizModal){
+  wizModal.addEventListener('shown.bs.modal', function(){
+    wzRender();
+  });
+  wizModal.addEventListener('hidden.bs.modal', function(){
+    wizCurrent = 0;
+    wizState   = {doc:'', tipo:'CC', nombre:'', fecha:'', obs:'', items:[]};
+    const pw = document.getElementById('wiz-progress-wrap');
+    if(pw) pw.style.display = '';
+    const panel = document.getElementById('wiz-panel');
+    if(panel) panel.innerHTML = '';
+    const bar = document.getElementById('wiz-progress-bar');
+    if(bar) bar.innerHTML = '';
+  });
+}
+</script>
 
+<script>
+// ── Modal Editar ──
+document.getElementById('modalEditarPrestamo')
+  .addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    if (!btn) return;
+    document.getElementById('edit_pk').value                = btn.dataset.pk          || '';
+    document.getElementById('edit_usuario').value           = btn.dataset.usuario      || '';
+    document.getElementById('edit_nombre_usuario').value    = btn.dataset.nombreUsuario|| '';
+    document.getElementById('edit_observaciones').value     = btn.dataset.observaciones|| '';
+    document.getElementById('edit_fecha_vencimiento').value = btn.dataset.fechaVencimiento || '';
+    const selEstado = document.getElementById('edit_estado');
+    const estado    = btn.dataset.estado || 'activo';
+    for (const opt of selEstado.options) opt.selected = (opt.value === estado);
+  });
 
-  // ══════════════════════════════════════════════════════════════
-  // MINE-125 / MINE-126 — Modal Cancelar: poblar datos
-  // ══════════════════════════════════════════════════════════════
-  document.getElementById('modalCancelarPrestamo')
-    .addEventListener('show.bs.modal', function (event) {
-      const btn = event.relatedTarget;
-      if (!btn) return;
-      document.getElementById('cancelar_pk').value                   = btn.dataset.pk      || '';
-      document.getElementById('cancelar_usuario_label').textContent  = btn.dataset.usuario || '';
-    });
-
-
-  // ══════════════════════════════════════════════════════════════
-  // MINE-145 / MINE-146 — Validar cantidad en formularios devolver
-  // ══════════════════════════════════════════════════════════════
-  document.querySelectorAll('.devolver-form').forEach(function (form) {
-    const maxQty    = parseInt(form.dataset.max, 10);
-    const input     = form.querySelector('.devolver-cantidad');
-    const errorDiv  = form.closest('div').querySelector('.devolver-error');
-
-    function showError(msg) {
-      errorDiv.textContent = msg;
+document.getElementById('formEditarPrestamo')
+  .addEventListener('submit', function(e) {
+    const input    = document.getElementById('edit_usuario');
+    const errorDiv = document.getElementById('edit_usuario_error');
+    if (!input.value.trim()) {
+      e.preventDefault();
+      errorDiv.textContent   = 'El documento no puede estar vacío.';
       errorDiv.style.display = 'block';
       input.style.borderColor = '#931f1d';
-    }
-    function clearError() {
-      errorDiv.style.display = 'none';
+      input.focus();
+    } else {
+      errorDiv.style.display  = 'none';
       input.style.borderColor = '';
     }
-
-    // MINE-145: Validar en tiempo real mientras el usuario escribe
-    input.addEventListener('input', function () {
-      const val = parseInt(this.value, 10);
-      if (isNaN(val) || val < 1) {
-        showError('La cantidad debe ser al menos 1.');
-      } else if (val > maxQty) {
-        showError('Máximo ' + maxQty + ' unidad(es) a devolver.');
-      } else {
-        clearError();
-      }
-    });
-
-    // MINE-146: Bloquear envío si la cantidad es inválida
-    form.addEventListener('submit', function (e) {
-      const val = parseInt(input.value, 10);
-      if (isNaN(val) || val < 1) {
-        e.preventDefault();
-        showError('La cantidad debe ser al menos 1.');
-        input.focus();
-      } else if (val > maxQty) {
-        e.preventDefault();
-        showError('No puedes devolver más de ' + maxQty + ' unidad(es).');
-        input.focus();
-      } else {
-        clearError();
-      }
-    });
   });
 
+document.getElementById('edit_usuario').addEventListener('input', function() {
+  document.getElementById('edit_usuario_error').style.display = 'none';
+  this.style.borderColor = '';
+});
 
-  // ══════════════════════════════════════════════════════════════
-  // MINE-128 / MINE-129 / MINE-130 — Panel de stock al seleccionar producto
-  // ══════════════════════════════════════════════════════════════
-  const productoSel  = document.getElementById('id_producto');
-  const stockInfo    = document.getElementById('stock-info');
-  const stockAlert   = document.getElementById('stock-alert');
-  const stockLabel   = document.getElementById('stock-label');
-
-  if (productoSel) {
-    function updateStock() {
-      const selected = productoSel.options[productoSel.selectedIndex];
-      const stock    = selected ? parseInt(selected.dataset.stock, 10) : NaN;
-
-      stockAlert.style.display = 'none';
-      stockInfo.style.display  = 'none';
-
-      if (!selected || !selected.value) return;
-
-      if (isNaN(stock) || stock <= 0) {
-        stockAlert.style.display = 'flex';
-      } else {
-        stockLabel.textContent   = 'Disponible: ' + stock + ' unidad(es)';
-        stockInfo.style.background  = 'rgba(45,212,191,.09)';
-        stockInfo.style.border      = '1px solid rgba(45,212,191,.25)';
-        stockInfo.style.color       = '#0d9488';
-        stockInfo.style.display     = 'flex';
-      }
-    }
-    productoSel.addEventListener('change', updateStock);
-    updateStock();
-  }
-
-
-  // ══════════════════════════════════════════════════════════════
-  // Chevron animado en filas desplegables
-  // ══════════════════════════════════════════════════════════════
-  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (btn) {
-    const targetId = btn.dataset.bsTarget;
-    if (!targetId) return;
-    const collapseEl = document.querySelector(targetId);
-    if (!collapseEl) return;
-    const chevron = btn.querySelector('.row-chevron');
-    if (!chevron) return;
-
-    collapseEl.addEventListener('show.bs.collapse',  function () { chevron.style.transform = 'rotate(90deg)'; });
-    collapseEl.addEventListener('hide.bs.collapse',  function () { chevron.style.transform = 'rotate(0deg)'; });
+// ── Modal Cancelar ──
+document.getElementById('modalCancelarPrestamo')
+  .addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    if (!btn) return;
+    document.getElementById('cancelar_pk').value                  = btn.dataset.pk      || '';
+    document.getElementById('cancelar_usuario_label').textContent = btn.dataset.usuario || '';
   });
+
+// ── Modal Eliminar ──
+document.getElementById('modalEliminarPrestamo')
+  .addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    if (!btn) return;
+    document.getElementById('eliminar_pk').value                  = btn.dataset.pk      || '';
+    document.getElementById('eliminar_usuario_label').textContent = btn.dataset.usuario || '';
+  });
+
+// ── Validación devolver ítems ──
+document.querySelectorAll('.devolver-form').forEach(function(form) {
+  const maxQty   = parseInt(form.dataset.max, 10);
+  const input    = form.querySelector('.devolver-cantidad');
+  const errorDiv = form.closest('div').querySelector('.devolver-error');
+  function showError(msg) { errorDiv.textContent=msg; errorDiv.style.display='block'; input.style.borderColor='#931f1d'; }
+  function clearError() { errorDiv.style.display='none'; input.style.borderColor=''; }
+  input.addEventListener('input', function() {
+    const val = parseInt(this.value, 10);
+    if (isNaN(val) || val < 1) showError('Mínimo 1.');
+    else if (val > maxQty) showError('Máximo ' + maxQty + '.');
+    else clearError();
+  });
+  form.addEventListener('submit', function(e) {
+    const val = parseInt(input.value, 10);
+    if (isNaN(val) || val < 1) { e.preventDefault(); showError('Mínimo 1.'); input.focus(); }
+    else if (val > maxQty) { e.preventDefault(); showError('Máximo ' + maxQty + '.'); input.focus(); }
+    else clearError();
+  });
+});
+
+// ── Chevron animado ──
+document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(btn) {
+  const targetId = btn.dataset.bsTarget;
+  if (!targetId) return;
+  const collapseEl = document.querySelector(targetId);
+  if (!collapseEl) return;
+  const chevron = btn.querySelector('.row-chevron');
+  if (!chevron) return;
+  collapseEl.addEventListener('show.bs.collapse', function() { chevron.style.transform = 'rotate(90deg)'; });
+  collapseEl.addEventListener('hide.bs.collapse', function() { chevron.style.transform = 'rotate(0deg)'; });
+});
 </script>
 {% endblock js %}

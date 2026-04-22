@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 from django.db import IntegrityError
 
 from .models import Producto, Categoria
@@ -26,7 +26,6 @@ def inventario(request):
     post_cat_nombre = ""
     post_cat_descripcion = ""
 
-    # ====================== POST ======================
     if request.method == "POST":
         accion = request.POST.get("accion", "")
 
@@ -46,7 +45,9 @@ def inventario(request):
                     form_modal_errors = True
                 else:
                     try:
-                        p = form.save()
+                        p = form.save(commit=False)
+                        p.stock = 1
+                        p.save()
                         messages.success(request, f'Herramienta "{p.nombre}" creada correctamente.')
                         return redirect("inventario:inventario")
                     except IntegrityError:
@@ -147,11 +148,9 @@ def inventario(request):
             messages.success(request, f'Categoría "{nombre}" eliminada.')
             return redirect("inventario:inventario")
 
-    # ====================== GET ======================
-    productos = Producto.objects.select_related("categoria").all()
+    # ── GET: lista con filtros ──
+    productos  = Producto.objects.select_related("categoria").all()
     categorias = Categoria.objects.prefetch_related("productos").all()
-
-    # Aplicar filtros
     if form_filtro.is_valid():
         busqueda = form_filtro.cleaned_data.get("busqueda")
         cat_filtro = form_filtro.cleaned_data.get("categoria")
@@ -176,30 +175,58 @@ def inventario(request):
         mant_form = MantenimientoForm()
         mant_modal_errors = False
 
-    # ====================== CONTEXT ======================
+    # ── Ordenamiento dinámico ──
+    orden = request.GET.get("orden", "nombre")
+    direccion = request.GET.get("dir", "asc")
+    campos_validos = {"nombre", "codigo_sku", "stock", "categoria__nombre"}
+    if orden not in campos_validos:
+        orden = "nombre"
+    orden_db = f"-{orden}" if direccion == "desc" else orden
+    productos = productos.order_by(orden_db)
+
+    # ── KPIs ──
+    total_productos = productos.count()
+    total_stock     = productos.aggregate(s=Sum("stock"))["s"] or 0
+    sin_stock       = productos.filter(stock=0).count()
+    stock_bajo      = productos.filter(stock__gt=0, stock__lte=5).count()
+
+    # Alertas de stock bajo
+    alertas_stock = Producto.objects.filter(stock__lte=5).order_by("stock").values_list("nombre", "stock")[:5]
+
     context = {
-        "productos": productos,
-        "categorias": categorias,
-        "form_filtro": form_filtro,
-        "form_modal_errors": form_modal_errors,
+        "productos":              productos,
+        "categorias":             categorias,
+        "form_filtro":            form_filtro,
+        "form_modal_errors":      form_modal_errors,
         "modal_categoria_errors": modal_categoria_errors,
-        "error_producto": error_producto,
-        "error_categoria": error_categoria,
-        "post_sku": post_sku,
-        "post_nombre": post_nombre,
-        "post_descripcion": post_descripcion,
-        "post_stock": post_stock,
-        "post_categoria": post_categoria,
-        "post_cat_nombre": post_cat_nombre,
-        "post_cat_descripcion": post_cat_descripcion,
-        "total": productos.count(),
+        "error_producto":         error_producto,
+        "error_categoria":        error_categoria,
+        "post_sku":               post_sku,
+        "post_nombre":            post_nombre,
+        "post_descripcion":       post_descripcion,
+        "post_stock":             post_stock,
+        "post_categoria":         post_categoria,
+        "post_cat_nombre":        post_cat_nombre,
+        "post_cat_descripcion":   post_cat_descripcion,
+        "total":                  total_productos,
+        # KPIs
+        "kpi_total_productos":    total_productos,
+        "kpi_total_stock":        total_stock,
+        "kpi_sin_stock":          sin_stock,
+        "kpi_stock_bajo":         stock_bajo,
+        # Ordenamiento activo
+        "orden_activo":           orden,
+        "dir_activo":             direccion,
+        # Alertas de stock
+        "alertas_stock":          alertas_stock,
+        "hay_alertas":            bool(alertas_stock),
 
         # Variables para mantenimiento
-        "mant_form": mant_form,
-        "mant_modal_errors": mant_modal_errors,
+        "mant_form":              mant_form,
+        "mant_modal_errors":      mant_modal_errors,
         "mant_producto_id_error": mant_producto_id or '',
-        "mant_sku_error": mant_sku,
-        "mant_nombre_error": mant_nombre,
+        "mant_sku_error":         mant_sku,
+        "mant_nombre_error":      mant_nombre,
     }
 
     return render(request, "inventario.html", context)
