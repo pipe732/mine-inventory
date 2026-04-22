@@ -1,0 +1,299 @@
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %}
+Detalle de Mantenimiento
+{% endblock %}
+{% block content %} 
+
+{% include "mantenimiento/partials/_cabecera.html" with 
+titulo="Detalle de Mantenimiento"
+subtitulo=m.producto.nombre url_cancelar=url_cancelar
+%}
+
+<div class="row g-4">
+  <!-- Columna principal -->
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Item / Herramienta" %}
+        <p style="font-weight: 700; font-size: 1rem; margin: 0">
+          <span
+            style="
+              font-family: var(--font-mono);
+              color: var(--text-muted);
+              font-size: 0.85rem;
+            "
+            >[{{ m.producto.codigo_sku }}]</span
+          >
+          {{ m.producto.nombre }}
+        </p>
+        {% if m.ubicacion_snapshot %}
+        <p
+          style="
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin: 0.25rem 0 0;
+          "
+        >
+          Ubicación al registrar: {{ m.ubicacion_snapshot }}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Descripcion del problema / falla" %}
+        <p style="font-size: 0.9rem; line-height: 1.6; margin: 0">
+          {{ m.descripcion_problema }}
+        </p>
+      </div>
+    </div>
+
+    {% if m.acciones_realizadas %}
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Acciones realizadas / planificadas" %}
+        <p style="font-size: 0.9rem; line-height: 1.6; margin: 0">
+          {{ m.acciones_realizadas }}
+        </p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if m.materiales_usados or m.notas_adicionales or m.evidencia_adicional %}
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Seguimiento adicional" %}
+        {% if m.materiales_usados %}
+          <p style="font-size: 0.86rem; margin-bottom: 0.6rem"><strong>Materiales / repuestos:</strong> {{ m.materiales_usados }}</p>
+        {% endif %}
+        {% if m.notas_adicionales %}
+          <p style="font-size: 0.86rem; margin-bottom: 0.6rem"><strong>Notas:</strong> {{ m.notas_adicionales }}</p>
+        {% endif %}
+        {% if m.evidencia_adicional %}
+          <a href="{{ m.evidencia_adicional.url }}" target="_blank" class="btn-outline-mine">Ver evidencia adjunta</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if cambios_auditoria %}
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Historial de cambios" %}
+        <div class="table-responsive">
+          <table class="table-app" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Motivo</th>
+                <th>Cambios</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in cambios_auditoria %}
+              <tr>
+                <td style="font-family: var(--font-mono);">{{ c.fecha_edicion|date:"d/m/Y H:i" }}</td>
+                <td>{{ c.editado_por.get_full_name|default:c.editado_por.username|default:"Sistema" }}</td>
+                <td>
+                  {{ c.get_motivo_edicion_display }}
+                  {% if c.detalle_motivo %}
+                    <br><small style="color: var(--text-muted);">{{ c.detalle_motivo }}</small>
+                  {% endif %}
+                </td>
+                <td><code style="font-size: 0.72rem; white-space: pre-wrap;">{{ c.cambios }}</code></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Estado del registro" %}
+
+        <div class="d-flex flex-column gap-2" style="font-size: 0.88rem">
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="color: var(--text-muted)">Tipo</span>
+            <span class="badge-state badge-pendiente">
+              {{ m.get_tipo_mantenimiento_display }}
+            </span>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="color: var(--text-muted)">Prioridad</span>
+            <span class="badge-state badge-pendiente">{{ m.get_prioridad_display }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="color: var(--text-muted)">Estado</span>
+            {% include "mantenimiento/partials/_badge_estado_registro.html" with estado=m.estado_registro etiqueta=m.get_estado_registro_display %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="color: var(--text-muted)">Tipo de estado</span>
+            {% if m.tipo_estado %}
+            <span
+              class="badge-state"
+              style="background:{{ m.tipo_estado.color|default:'#6c757d' }};
+                           color:#fff; border:none;"
+            >
+              {{ m.tipo_estado.nombre }}
+            </span>
+            {% else %}
+            <span style="color: var(--text-muted)">—</span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="color: var(--text-muted)">Responsable</span>
+            <span style="font-weight: 600">
+              {{
+              m.responsable.get_full_name|default:m.responsable.username|default:"—"
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Fechas" %}
+
+        <div class="d-flex flex-column gap-2" style="font-size: 0.85rem">
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Reporte</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.fecha_reporte|date:"d/m/Y" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Inicio</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.fecha_inicio|date:"d/m/Y" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Fin estimado</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.fecha_fin_estimada|date:"d/m/Y"|default:"—" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Fin real</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.fecha_fin_real|date:"d/m/Y"|default:"—" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Tiempo empleado</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.tiempo_empleado_horas|default:"—" }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Costos" %}
+
+        <div class="d-flex flex-column gap-2" style="font-size: 0.85rem">
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Estimado</span>
+            <span style="font-family: var(--font-mono)">
+              {% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{%
+              endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span style="color: var(--text-muted)">Real</span>
+            <span style="font-family: var(--font-mono); font-weight: 600">
+              {% if m.costo_real %}${{ m.costo_real }}{% else %}—{% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding: 1.25rem">
+        {% include "mantenimiento/partials/_section_heading.html" with titulo="Auditoria" %}
+
+        <div
+          class="d-flex flex-column gap-2"
+          style="font-size: 0.82rem; color: var(--text-muted)"
+        >
+          <div class="d-flex justify-content-between">
+            <span>Registrado por</span>
+            <span
+              >{{
+              m.creado_por.get_full_name|default:m.creado_por.username|default:"—"
+              }}</span
+            >
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Creado el</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.creado_en|date:"d/m/Y H:i" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Actualizado</span>
+            <span style="font-family: var(--font-mono)">
+              {{ m.actualizado_en|date:"d/m/Y H:i" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Última edición por</span>
+            <span>{{ m.actualizado_por.get_full_name|default:m.actualizado_por.username|default:"—" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex gap-2 mt-4">
+  {% if puede_editar %}
+  <a href="{% url 'mantenimiento:mantenimiento_editar' m.pk %}" class="btn-primary-mine">
+    Editar registro
+  </a>
+  {% endif %}
+  <a
+    href="{% url 'mantenimiento:historial_producto' m.producto.pk %}"
+    class="btn-outline-mine"
+  >
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+    >
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12 a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+    Ver historial del ítem
+  </a>
+  <a
+    href="{% url 'mantenimiento:mantenimiento_lista' %}"
+    class="btn-outline-mine"
+  >
+    ← Volver
+  </a>
+</div>
+
+{% endblock %}
