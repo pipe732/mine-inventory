@@ -279,7 +279,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
     context_object_name = 'mantenimientos'
 
     def get_queryset(self):
-        #mensaje por si falla
+
         self.producto = get_object_or_404(Producto, pk=self.kwargs['producto_id'])
 
         qs = Mantenimiento.objects.filter(

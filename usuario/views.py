@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 
 from .models import Usuario, Rol, validar_numero_documento
 from .decorators import login_required, admin_required, usuario_required
+from common.mixins import sesion_requerida
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{10}$'),
@@ -286,12 +287,12 @@ def home_view(request):
         return redirect('home')
     # Usuario normal → su página principal
     return redirect('home_usuario')
- 
 
 
 # ─────────────────────────────────────────────────────────────
 #  LISTA DE USUARIOS  — solo Admin
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @admin_required
 def lista_usuarios_view(request):
     """Lista y fichas de usuarios con búsqueda y filtros."""
@@ -327,6 +328,7 @@ def lista_usuarios_view(request):
 # ─────────────────────────────────────────────────────────────
 #  DETALLE USUARIO (JSON para modal)  — solo Admin
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @admin_required
 def detalle_usuario_json(request, numero_documento):
     usuario = get_object_or_404(
@@ -351,6 +353,7 @@ def detalle_usuario_json(request, numero_documento):
 # ─────────────────────────────────────────────────────────────
 #  EXPORTAR USUARIOS CSV  — solo Admin
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @admin_required
 def exportar_usuarios_csv(request):
     qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
@@ -392,6 +395,7 @@ def exportar_usuarios_csv(request):
 # ─────────────────────────────────────────────────────────────
 #  PERFIL  — cualquier usuario autenticado
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @login_required
 def perfil_view(request):
     doc     = request.session.get('usuario_documento')

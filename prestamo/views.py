@@ -9,8 +9,9 @@ import datetime
 from .forms import PrestamoForm
 from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
+from common.mixins import sesion_requerida   
 
-
+@sesion_requerida   
 def _marcar_vencidos():
     hoy = timezone.localdate()
     return Prestamo.objects.filter(
@@ -138,7 +139,7 @@ def aprobar_prestamo_view(request, pk):
         'items':    items,
     })
 
-
+@sesion_requerida   
 def prestamos_view(request):
     _marcar_vencidos()
 
@@ -515,6 +516,7 @@ def usuario_solicitar_prestamo(request):
     return redirect('prestamo_usuario')
 
 
+@sesion_requerida
 def prestamo_api(request, pk):
     try:
         # 1. Asegúrate de usar el modelo 'Prestamo'
