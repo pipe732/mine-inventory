@@ -1,11 +1,10 @@
 # prestamo/views.py
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Q
-import datetime
-
 from .forms import PrestamoForm
 from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
@@ -13,10 +12,45 @@ from inventario.models import Producto
 
 def _marcar_vencidos():
     hoy = timezone.localdate()
-    return Prestamo.objects.filter(
+    vencidos = Prestamo.objects.filter(
         estado__in=['activo', 'parcial'],
-        fecha_vencimiento__lt=hoy,
-    ).update(estado='vencido')
+        fecha_vencimiento__lt=hoy
+    )
+    count = vencidos.update(estado='vencido')
+    return count
+
+
+def _get_context_base():
+    """Datos comunes que siempre se necesitan en la vista (GET y POST fallido)."""
+    from usuario.models import Usuario
+    usuarios_sistema = list(
+        Usuario.objects.all().order_by('nombre_completo').values(
+            'numero_documento', 'nombre_completo', 'tipo_documento'
+        )
+    )
+    productos = Producto.objects.filter(stock__gt=0).order_by('nombre')
+
+    # Serializar usuarios de forma segura para el wizard
+    usuarios_json = json.dumps([
+        {
+            'doc':    u['numero_documento'],
+            'nombre': u['nombre_completo'],
+            'tipo':   u['tipo_documento'],
+        }
+        for u in usuarios_sistema
+    ], ensure_ascii=False)
+
+    productos_json = json.dumps([
+        {
+            'pk':     p.pk,
+            'sku':    p.codigo_sku,
+            'nombre': p.nombre,
+            'stock':  p.stock,
+        }
+        for p in productos
+    ], ensure_ascii=False)
+
+    return usuarios_sistema, productos, usuarios_json, productos_json
 
 
 def prestamos_view(request):
@@ -25,7 +59,6 @@ def prestamos_view(request):
     if request.method == 'POST':
         accion = request.POST.get('accion')
 
-        # ── Cancelar préstamo ──────────────────────────────────────────────
         if accion == 'cancelar':
             prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'))
             for item in prestamo.items.filter(devuelto=False):
@@ -38,34 +71,29 @@ def prestamos_view(request):
             messages.success(request, f'Préstamo #{prestamo.pk} cancelado y stock repuesto.')
             return redirect('prestamo')
 
-        # ── Editar préstamo ────────────────────────────────────────────────
         elif accion == 'editar':
             prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'))
-            prestamo.estado         = request.POST.get('estado', prestamo.estado)
-            prestamo.observaciones  = request.POST.get('observaciones', '')
-            prestamo.nombre_usuario = request.POST.get('nombre_usuario', '')
-
+            prestamo.estado = request.POST.get('estado', prestamo.estado)
+            prestamo.observaciones = request.POST.get('observaciones', '')
             usuario_str = request.POST.get('usuario', '').strip()
+            nombre_str  = request.POST.get('nombre_usuario', '').strip()
             if usuario_str:
                 prestamo.usuario = usuario_str
-
-            fv = request.POST.get('fecha_vencimiento', '').strip()
-            try:
-                prestamo.fecha_vencimiento = datetime.date.fromisoformat(fv) if fv else None
-            except ValueError:
+            prestamo.nombre_usuario = nombre_str
+            fecha_str = request.POST.get('fecha_vencimiento', '').strip()
+            if fecha_str:
+                from datetime import date
+                try:
+                    prestamo.fecha_vencimiento = date.fromisoformat(fecha_str)
+                except ValueError:
+                    messages.error(request, 'Formato de fecha inválido.')
+                    return redirect('prestamo')
+            else:
                 prestamo.fecha_vencimiento = None
-
-            hme = request.POST.get('hora_max_entrega', '').strip()
-            try:
-                prestamo.hora_max_entrega = datetime.time.fromisoformat(hme) if hme else None
-            except ValueError:
-                prestamo.hora_max_entrega = None
-
             prestamo.save()
             messages.success(request, f'Préstamo #{prestamo.pk} actualizado.')
             return redirect('prestamo')
 
-        # ── Eliminar préstamo ──────────────────────────────────────────────
         elif accion == 'eliminar':
             prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'))
             for item in prestamo.items.filter(devuelto=False):
@@ -75,7 +103,6 @@ def prestamos_view(request):
             messages.success(request, 'Préstamo eliminado correctamente.')
             return redirect('prestamo')
 
-        # ── Devolver ítem individual ───────────────────────────────────────
         elif accion == 'devolver_item':
             item = get_object_or_404(ItemPrestamo, pk=request.POST.get('item_pk'))
             cantidad = int(request.POST.get('cantidad_devuelta', item.cantidad))
@@ -91,18 +118,12 @@ def prestamos_view(request):
             messages.success(request, f'"{item.producto.nombre}" devuelto correctamente.')
             return redirect('prestamo')
 
-        # ── Crear nuevo préstamo ───────────────────────────────────────────
         else:
             form = PrestamoForm(request.POST)
             if form.is_valid():
                 producto_ids = request.POST.getlist('producto[]')
                 cantidades   = request.POST.getlist('cantidad[]')
-
-                items_raw = [
-                    (pid, qty)
-                    for pid, qty in zip(producto_ids, cantidades)
-                    if pid
-                ]
+                items_raw = [(pid, qty) for pid, qty in zip(producto_ids, cantidades) if pid]
 
                 if not items_raw:
                     form.add_error(None, 'Debes seleccionar al menos una herramienta.')
@@ -136,23 +157,7 @@ def prestamos_view(request):
                         for e in errores:
                             form.add_error(None, e)
                     else:
-                        prestamo = form.save(commit=False)
-                        prestamo.nombre_usuario = request.POST.get('nombre_usuario', '')
-
-                        fv = request.POST.get('fecha_vencimiento', '').strip()
-                        try:
-                            prestamo.fecha_vencimiento = datetime.date.fromisoformat(fv) if fv else None
-                        except ValueError:
-                            prestamo.fecha_vencimiento = None
-
-                        hme = request.POST.get('hora_max_entrega', '').strip()
-                        try:
-                            prestamo.hora_max_entrega = datetime.time.fromisoformat(hme) if hme else None
-                        except ValueError:
-                            prestamo.hora_max_entrega = None
-
-                        prestamo.save()
-
+                        prestamo = form.save()
                         for producto, cantidad in items_validated:
                             ItemPrestamo.objects.create(
                                 prestamo=prestamo,
@@ -161,13 +166,12 @@ def prestamos_view(request):
                             )
                             producto.stock -= cantidad
                             producto.save(update_fields=['stock'])
-
                         messages.success(request, 'Préstamo registrado exitosamente.')
                         return redirect('prestamo')
     else:
         form = PrestamoForm()
 
-    # ── GET: filtros ───────────────────────────────────────────────────────
+    # ── Filtros GET ──
     q          = request.GET.get('q', '').strip()
     estado_f   = request.GET.get('estado', '').strip()
     vencidos_f = request.GET.get('vencidos', '').strip()
@@ -188,13 +192,11 @@ def prestamos_view(request):
         hoy = timezone.localdate()
         prestamos = prestamos.filter(
             fecha_vencimiento__lt=hoy,
-            estado__in=['activo', 'parcial', 'vencido'],
+            estado__in=['activo', 'parcial', 'vencido']
         )
 
-    productos = Producto.objects.filter(stock__gt=0).order_by('nombre')
-
-    from usuario.models import Usuario
-    usuarios_sistema = Usuario.objects.all().order_by('nombre_completo')
+    # ── Datos para el wizard — SIEMPRE se calculan ──
+    usuarios_sistema, productos, usuarios_json, productos_json = _get_context_base()
 
     total_prestamos     = Prestamo.objects.count()
     prestamos_activos   = Prestamo.objects.filter(estado='activo').count()
@@ -205,7 +207,7 @@ def prestamos_view(request):
     proximos_vencer = Prestamo.objects.filter(
         estado__in=['activo', 'parcial'],
         fecha_vencimiento__lte=hoy + timezone.timedelta(days=3),
-        fecha_vencimiento__gte=hoy,
+        fecha_vencimiento__gte=hoy
     ).count()
 
     return render(request, 'prestamo.html', {
@@ -213,6 +215,8 @@ def prestamos_view(request):
         'prestamos':           prestamos,
         'productos':           productos,
         'usuarios_sistema':    usuarios_sistema,
+        'usuarios_json':       usuarios_json,
+        'productos_json':      productos_json,
         'total_prestamos':     total_prestamos,
         'prestamos_activos':   prestamos_activos,
         'prestamos_devueltos': prestamos_devueltos,
@@ -230,17 +234,17 @@ def prestamo_api(request, pk):
     except Prestamo.DoesNotExist:
         return JsonResponse({'error': 'No encontrado'}, status=404)
 
+    hoy = timezone.localdate()
     data = {
-        'id':                p.pk,
-        'usuario':           str(p.usuario),
-        'nombre_usuario':    p.nombre_usuario,
-        'estado':            p.estado,
-        'observaciones':     p.observaciones,
-        'fecha_prestamo':    p.fecha_prestamo.isoformat(),
+        'id':               p.pk,
+        'usuario':          str(p.usuario),
+        'nombre_usuario':   p.nombre_usuario,
+        'estado':           p.estado,
+        'observaciones':    p.observaciones,
+        'fecha_prestamo':   p.fecha_prestamo.isoformat(),
         'fecha_vencimiento': p.fecha_vencimiento.isoformat() if p.fecha_vencimiento else None,
-        'hora_max_entrega':  p.hora_max_entrega.strftime('%H:%M') if p.hora_max_entrega else None,
-        'dias_restantes':    p.dias_restantes,
-        'urgencia':          p.urgencia,
+        'dias_restantes':   p.dias_restantes,
+        'urgencia':         p.urgencia,
         'items': [
             {
                 'id':       item.pk,

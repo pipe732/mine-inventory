@@ -17,10 +17,10 @@ from .models import Usuario, Rol, validar_numero_documento
 from .decorators import login_required, admin_required, usuario_required
 
 DOC_RULES = {
-    'CC': re.compile(r'^\d{6,10}$'),
-    'CE': re.compile(r'^[A-Za-z0-9]{6,12}$'),
-    'PP': re.compile(r'^[A-Za-z0-9]{5,9}$'),
-    'TI': re.compile(r'^\d{10,11}$'),
+    'CC': re.compile(r'^\d{10}$'),
+    'CE': re.compile(r'^[A-Za-z0-9]{12}$'),
+    'PP': re.compile(r'^[A-Za-z0-9]{9}$'),
+    'TI': re.compile(r'^\d{10}$'),
 }
 DOC_LABELS = {
     'CC': 'Cédula de Ciudadanía',
@@ -29,10 +29,10 @@ DOC_LABELS = {
     'TI': 'Tarjeta de Identidad',
 }
 DOC_HINTS = {
-    'CC': 'La Cédula de Ciudadanía debe tener entre 6 y 10 dígitos.',
-    'CE': 'La Cédula de Extranjería debe tener entre 6 y 12 caracteres alfanuméricos.',
-    'PP': 'El Pasaporte debe tener entre 5 y 9 caracteres alfanuméricos.',
-    'TI': 'La Tarjeta de Identidad debe tener 10 u 11 dígitos.',
+    'CC': 'La Cédula de Ciudadanía debe tener entre 10 dígitos.',
+    'CE': 'La Cédula de Extranjería debe tener entre 12 caracteres alfanuméricos.',
+    'PP': 'El Pasaporte debe tener entre 9 caracteres alfanuméricos.',
+    'TI': 'La Tarjeta de Identidad debe tener 10  dígitos.',
 }
 TIPOS_VALIDOS = set(DOC_RULES.keys())
 
