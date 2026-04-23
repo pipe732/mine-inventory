@@ -12,7 +12,7 @@ from inventario.models import Producto
 from common.mixins import sesion_requerida   
 
 @sesion_requerida   
-def _marcar_vencidos():
+def _marcar_vencidos(request):
     hoy = timezone.localdate()
     return Prestamo.objects.filter(
         estado__in=['activo', 'parcial'],
@@ -21,7 +21,7 @@ def _marcar_vencidos():
 
 @sesion_requerida   
 def prestamos_view(request):
-    _marcar_vencidos()
+    _marcar_vencidos(request)
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
