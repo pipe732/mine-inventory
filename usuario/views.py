@@ -1,6 +1,6 @@
 import re
-import time
-from django.shortcuts import render, redirect
+import csv
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
@@ -9,14 +9,18 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from .models import Usuario, Rol, validar_numero_documento
+from django.http import HttpResponse, JsonResponse
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 
+from .models import Usuario, Rol, validar_numero_documento
+from .decorators import login_required, admin_required, usuario_required
+
 DOC_RULES = {
-    'CC': re.compile(r'^\d{6,10}$'),
-    'CE': re.compile(r'^[A-Za-z0-9]{6,12}$'),
-    'PP': re.compile(r'^[A-Za-z0-9]{5,9}$'),
-    'TI': re.compile(r'^\d{10,11}$'),
+    'CC': re.compile(r'^\d{10}$'),
+    'CE': re.compile(r'^[A-Za-z0-9]{12}$'),
+    'PP': re.compile(r'^[A-Za-z0-9]{9}$'),
+    'TI': re.compile(r'^\d{10}$'),
 }
 DOC_LABELS = {
     'CC': 'Cédula de Ciudadanía',
@@ -25,12 +29,13 @@ DOC_LABELS = {
     'TI': 'Tarjeta de Identidad',
 }
 DOC_HINTS = {
-    'CC': 'La Cédula de Ciudadanía debe tener entre 6 y 10 dígitos.',
-    'CE': 'La Cédula de Extranjería debe tener entre 6 y 12 caracteres alfanuméricos.',
-    'PP': 'El Pasaporte debe tener entre 5 y 9 caracteres alfanuméricos.',
-    'TI': 'La Tarjeta de Identidad debe tener 10 u 11 dígitos.',
+    'CC': 'La Cédula de Ciudadanía debe tener entre 10 dígitos.',
+    'CE': 'La Cédula de Extranjería debe tener entre 12 caracteres alfanuméricos.',
+    'PP': 'El Pasaporte debe tener entre 9 caracteres alfanuméricos.',
+    'TI': 'La Tarjeta de Identidad debe tener 10  dígitos.',
 }
 TIPOS_VALIDOS = set(DOC_RULES.keys())
+
 
 def _validar_documento(tipo, numero):
     if tipo not in TIPOS_VALIDOS:
@@ -74,9 +79,10 @@ def login_view(request):
             messages.error(request, 'Documento o contraseña incorrectos.')
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
+        # Guardar rol en sesión para los decoradores
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.id_rol.nombre
+        request.session['usuario_rol']            = usuario.id_rol.nombre   # 'Admin' | 'Usuario'
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
         return redirect('home')
 
@@ -92,7 +98,7 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO
+#  REGISTRO  — siempre asigna rol "Usuario" (id=2)
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
     # Todos los roles disponibles para el registro
@@ -195,7 +201,7 @@ def olvido_contrasena_view(request):
         try:
             usuario = Usuario.objects.get(correo=email)
         except Usuario.DoesNotExist:
-            messages.success(request, 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.')
+            messages.success(request, 'Si el correo está registrado, recibirás un enlace.')
             return render(request, 'olvido_contrasena.html')
 
         token = get_random_string(40)
@@ -267,3 +273,206 @@ def nueva_contrasena_view(request, uid, token):
         return redirect('login')
 
     return render(request, 'nueva_contrasena.html')
+
+
+# ─────────────────────────────────────────────────────────────
+#  HOME  — redirige según rol
+# ─────────────────────────────────────────────────────────────
+@login_required
+def home_view(request):
+    rol = request.session.get('usuario_rol', '').lower()
+    if rol == 'admin':
+        return render(request, 'home_admin.html')
+    return render(request, 'home_usuario.html')
+
+
+# ─────────────────────────────────────────────────────────────
+#  LISTA DE USUARIOS  — solo Admin
+# ─────────────────────────────────────────────────────────────
+@admin_required
+def lista_usuarios_view(request):
+    """Lista y fichas de usuarios con búsqueda y filtros."""
+    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+
+    q        = request.GET.get('q', '').strip()
+    rol_id   = request.GET.get('rol', '')
+    tipo_doc = request.GET.get('tipo_doc', '')
+
+    if q:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=q) |
+            Q(numero_documento__icontains=q) |
+            Q(correo__icontains=q)
+        )
+    if rol_id:
+        qs = qs.filter(id_rol__id=rol_id)
+    if tipo_doc:
+        qs = qs.filter(tipo_documento=tipo_doc)
+
+    ctx = {
+        'usuarios':  qs,
+        'roles':     Rol.objects.all(),
+        'tipos_doc': Usuario.TIPO_DOCUMENTO_CHOICES,
+        'q':         q,
+        'rol_id':    rol_id,
+        'tipo_doc':  tipo_doc,
+        'total':     qs.count(),
+    }
+    return render(request, 'lista_usuarios.html', ctx)
+
+
+# ─────────────────────────────────────────────────────────────
+#  DETALLE USUARIO (JSON para modal)  — solo Admin
+# ─────────────────────────────────────────────────────────────
+@admin_required
+def detalle_usuario_json(request, numero_documento):
+    usuario = get_object_or_404(
+        Usuario.objects.select_related('id_rol', 'destinado', 'solicitado'),
+        numero_documento=numero_documento,
+    )
+    data = {
+        'numero_documento':       usuario.numero_documento,
+        'nombre_completo':        usuario.nombre_completo,
+        'correo':                 usuario.correo,
+        'telefono':               usuario.telefono,
+        'tipo_documento_display': usuario.get_tipo_documento_display(),
+        'rol':                    usuario.id_rol.nombre,
+        'destinado':      usuario.destinado.nombre_completo if usuario.destinado else None,
+        'destinado_doc':  usuario.destinado.numero_documento if usuario.destinado else None,
+        'solicitado':     usuario.solicitado.nombre_completo if usuario.solicitado else None,
+        'solicitado_doc': usuario.solicitado.numero_documento if usuario.solicitado else None,
+    }
+    return JsonResponse(data)
+
+
+# ─────────────────────────────────────────────────────────────
+#  EXPORTAR USUARIOS CSV  — solo Admin
+# ─────────────────────────────────────────────────────────────
+@admin_required
+def exportar_usuarios_csv(request):
+    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+
+    q        = request.GET.get('q', '').strip()
+    rol_id   = request.GET.get('rol', '')
+    tipo_doc = request.GET.get('tipo_doc', '')
+
+    if q:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=q) |
+            Q(numero_documento__icontains=q) |
+            Q(correo__icontains=q)
+        )
+    if rol_id:
+        qs = qs.filter(id_rol__id=rol_id)
+    if tipo_doc:
+        qs = qs.filter(tipo_documento=tipo_doc)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="usuarios.csv"'
+    response.write('\ufeff')  # BOM para Excel
+
+    writer = csv.writer(response)
+    writer.writerow(['Número de Documento', 'Tipo de Documento', 'Nombre Completo',
+                     'Correo', 'Teléfono', 'Rol'])
+    for u in qs:
+        writer.writerow([
+            u.numero_documento,
+            u.get_tipo_documento_display(),
+            u.nombre_completo,
+            u.correo,
+            u.telefono,
+            u.id_rol.nombre,
+        ])
+    return response
+
+
+# ─────────────────────────────────────────────────────────────
+#  PERFIL  — cualquier usuario autenticado
+# ─────────────────────────────────────────────────────────────
+@login_required
+def perfil_view(request):
+    doc     = request.session.get('usuario_documento')
+    usuario = get_object_or_404(Usuario, numero_documento=doc)
+    errores = {}
+    accion_activa = ''
+
+    if request.method == 'POST':
+        accion_activa = request.POST.get('accion', '')
+
+        # ── Editar datos personales ──────────────────────────────────
+        if accion_activa == 'editar_perfil':
+            nombre   = request.POST.get('nombre_completo', '').strip()
+            correo   = request.POST.get('correo', '').strip().lower()
+            telefono = request.POST.get('telefono', '').strip()
+
+            if not nombre:
+                errores['nombre_completo'] = 'El nombre no puede estar vacío.'
+            if not correo or '@' not in correo:
+                errores['correo'] = 'Ingresa un correo válido.'
+            if telefono and not telefono.isdigit():
+                errores['telefono'] = 'El teléfono solo debe contener dígitos.'
+            if not errores.get('correo'):
+                if Usuario.objects.filter(correo=correo).exclude(numero_documento=doc).exists():
+                    errores['correo'] = 'Este correo ya está en uso por otro usuario.'
+
+            if not errores:
+                usuario.nombre_completo = nombre
+                usuario.correo          = correo
+                usuario.telefono        = telefono
+                usuario.save(update_fields=['nombre_completo', 'correo', 'telefono'])
+                request.session['usuario_nombre'] = nombre
+                messages.success(request, 'Perfil actualizado correctamente.')
+                return redirect('perfil')
+
+        # ── Cambiar contraseña ───────────────────────────────────────
+        elif accion_activa == 'cambiar_password':
+            actual   = request.POST.get('password_actual', '')
+            nueva    = request.POST.get('password_nueva', '')
+            confirma = request.POST.get('password_confirma', '')
+
+            if not check_password(actual, usuario.password):
+                errores['password_actual'] = 'La contraseña actual es incorrecta.'
+            if len(nueva) < 8:
+                errores['password_nueva'] = 'La nueva contraseña debe tener al menos 8 caracteres.'
+            if nueva != confirma:
+                errores['password_confirma'] = 'Las contraseñas no coinciden.'
+
+            if not errores:
+                usuario.password = make_password(nueva)
+                usuario.save(update_fields=['password'])
+                messages.success(request, 'Contraseña actualizada correctamente.')
+                return redirect('perfil')
+
+        # ── Guardar configuración de notificaciones ──────────────────
+        elif accion_activa == 'guardar_config':
+            request.session['cfg_notif_prestamos']    = 'notif_prestamos'    in request.POST
+            request.session['cfg_notif_vencimientos'] = 'notif_vencimientos' in request.POST
+            request.session['cfg_notif_devoluciones'] = 'notif_devoluciones' in request.POST
+            messages.success(request, 'Configuración guardada.')
+            return redirect('perfil')
+
+    cfg_notif_prestamos    = request.session.get('cfg_notif_prestamos',    True)
+    cfg_notif_vencimientos = request.session.get('cfg_notif_vencimientos', True)
+    cfg_notif_devoluciones = request.session.get('cfg_notif_devoluciones', True)
+
+    return render(request, 'perfil.html', {
+        'usuario':       usuario,
+        'errores':       errores,
+        'accion_activa': accion_activa,
+        'tab_list': [
+            ('tab-datos',    'Datos personales', ''),
+            ('tab-password', 'Contraseña',       ''),
+            ('tab-config',   'Notificaciones',   ''),
+        ],
+        'notificaciones_lista': [
+            ('notif_prestamos',    'Nuevos préstamos asignados',
+             'Recibir alerta cuando se te asigne un préstamo.',    cfg_notif_prestamos),
+            ('notif_vencimientos', 'Próximos a vencer',
+             'Alerta 3 días antes de que venza un préstamo activo.', cfg_notif_vencimientos),
+            ('notif_devoluciones', 'Devoluciones pendientes',
+             'Recordatorio de devoluciones en estado pendiente.',  cfg_notif_devoluciones),
+        ],
+        'cfg_notif_prestamos':    cfg_notif_prestamos,
+        'cfg_notif_vencimientos': cfg_notif_vencimientos,
+        'cfg_notif_devoluciones': cfg_notif_devoluciones,
+    })

@@ -510,6 +510,33 @@ tbody tr:last-child td { border-bottom: none; }
     border-top: 1px solid var(--border-color);
 }
 
+#modalMantenimiento .modal-dialog {
+    max-width: 900px;
+}
+
+#modalMantenimiento .modal-content {
+    max-height: calc(100vh - 2rem);
+}
+
+#modalMantenimiento .modal-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 220px);
+}
+
+@media (max-width: 768px) {
+    #modalMantenimiento .modal-dialog {
+        margin: .5rem;
+    }
+
+    #modalMantenimiento .modal-content {
+        max-height: calc(100vh - 1rem);
+    }
+
+    #modalMantenimiento .modal-body {
+        max-height: calc(100vh - 180px);
+    }
+}
+
 /* ════════════════════════════════════
    CHART
 ════════════════════════════════════ */

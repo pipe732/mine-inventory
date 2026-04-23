@@ -228,38 +228,46 @@ def _data_inventario():
 
 def _data_prestamos():
     from prestamo.models import Prestamo
-    qs = Prestamo.objects.all()
-    headers = ['#', 'Usuario', 'Producto', 'Cantidad', 'Estado', 'Fecha préstamo']
-    rows = [
-        (
+    qs = Prestamo.objects.prefetch_related('items__producto').all()
+    headers = ['#', 'Usuario', 'Productos', 'Cantidades', 'Estado', 'Fecha préstamo', 'Observaciones']
+    rows = []
+    for p in qs:
+        items = p.items.all()
+        productos  = ', '.join(i.producto.nombre for i in items) or '—'
+        cantidades = ', '.join(str(i.cantidad)   for i in items) or '—'
+        rows.append((
             p.pk,
             p.usuario,
-            p.producto,
-            p.cantidad,
+            productos,
+            cantidades,
             p.get_estado_display(),
             p.fecha_prestamo.strftime('%d/%m/%Y %H:%M'),
-        )
-        for p in qs
-    ]
+            p.observaciones or '—',
+        ))
     return headers, rows, 'Préstamos'
 
 
 def _data_devoluciones():
     from devoluciones.models import Devolucion
-    qs = Devolucion.objects.all()
-    headers = ['#', 'N° Orden', 'Producto', 'Cantidad', 'Motivo', 'Estado', 'Fecha']
-    rows = [
-        (
+    qs = Devolucion.objects.select_related('prestamo').prefetch_related('items__producto').all()
+    headers = ['#', 'Préstamo', 'Usuario', 'Tipo', 'Ítems devueltos', 'Motivo', 'Estado', 'Fecha']
+    rows = []
+    for d in qs:
+        items_str = ', '.join(
+            f'{i.producto.nombre} x{i.cantidad}' for i in d.items.all()
+        ) or '—'
+        motivo = (d.motivo or '')
+        motivo = motivo[:60] + ('…' if len(motivo) > 60 else '')
+        rows.append((
             d.pk,
-            d.numero_orden,
-            d.producto,
-            d.cantidad,
-            d.motivo[:60] + ('…' if len(d.motivo) > 60 else ''),
+            f'#{d.prestamo_id}',
+            d.prestamo.usuario,
+            'Total' if d.devolucion_total else 'Parcial',
+            items_str,
+            motivo or '—',
             d.get_estado_display(),
             d.fecha_creacion.strftime('%d/%m/%Y'),
-        )
-        for d in qs
-    ]
+        ))
     return headers, rows, 'Devoluciones'
 
 

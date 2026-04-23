@@ -1,0 +1,24 @@
+{# templates/partials/_notif_row.html #}
+{# Uso: {% include "partials/_notif_row.html" with activa=cfg_notif_prestamos label="Texto" %} #}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+  <span style="font-family:var(--font-ui);font-size:.85rem;color:var(--text-main);">
+    {{ label }}
+  </span>
+  {% if activa %}
+    <span style="display:inline-flex;align-items:center;gap:.3rem;
+                 background:rgba(22,163,74,.1);color:#15803d;
+                 font-size:.72rem;font-weight:700;font-family:var(--font-mono);
+                 padding:.15rem .55rem;border-radius:20px;border:1px solid rgba(22,163,74,.2);">
+      <span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
+      Activa
+    </span>
+  {% else %}
+    <span style="display:inline-flex;align-items:center;gap:.3rem;
+                 background:rgba(0,0,0,.05);color:var(--text-muted);
+                 font-size:.72rem;font-weight:700;font-family:var(--font-mono);
+                 padding:.15rem .55rem;border-radius:20px;border:1px solid rgba(0,0,0,.08);">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);display:inline-block;"></span>
+      Inactiva
+    </span>
+  {% endif %}
+</div>

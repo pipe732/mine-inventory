@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="mb-0">Almacenes</h4>
+      <small class="text-muted">Gestión de almacenes</small>
+    </div>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalAlmacen">
+      ➕ Nuevo Almacén
+    </button>
+  </div>
+
+  <table class="table table-bordered align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Detalles</th>
+        <th>Capacidad</th>
+        <th>Fecha Creación</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for almacen in almacenes %}
+      <tr>
+        <td>{{ almacen.id }}</td>
+        <td>{{ almacen.nombre }}</td>
+        <td>{{ almacen.detalles|default:"—" }}</td>
+        <td>{{ almacen.capacidad|default:"—" }}</td>
+        <td>{{ almacen.fecha_creacion|date:"d/m/Y H:i" }}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-secondary"
+                  onclick="abrirEditarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}','{{ almacen.detalles|default:''|escapejs }}','{{ almacen.capacidad|default:'' }}')">
+            ✏️ Editar
+          </button>
+          <button class="btn btn-sm btn-outline-danger"
+                  onclick="abrirEliminarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}')">
+            🗑️ Eliminar
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center text-muted">No hay almacenes registrados</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal fade" id="modalAlmacen" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">➕ Nuevo Almacén</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'almacenes' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="crear">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">NOMBRE *</label>
+            {{ form.nombre }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            {{ form.detalles }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">CAPACIDAD</label>
+            {{ form.capacidad }}
+          </div>
+          {% if form.errors %}
+            <div class="alert alert-danger">{{ form.errors }}</div>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Almacén</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditarAlmacen" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">✏️ Editar Almacén</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'almacenes' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="editar">
+        <input type="hidden" name="almacen_id" id="edit_almacen_id">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">NOMBRE *</label>
+            <input type="text" name="nombre" id="edit_almacen_nombre" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            <textarea name="detalles" id="edit_almacen_detalles" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">CAPACIDAD</label>
+            <input type="number" name="capacidad" id="edit_almacen_capacidad" class="form-control" min="0">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminarAlmacen" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">🗑️ Eliminar Almacén</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>¿Estás seguro de eliminar</p>
+        <p id="eliminar_almacen_nombre" class="fw-bold text-danger"></p>
+        <p class="text-muted small">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <form method="POST" action="{% url 'almacenes' %}">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="eliminar">
+          <input type="hidden" name="almacen_id" id="eliminar_almacen_id">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if show_modal %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('modalAlmacen')).show();
+  });
+</script>
+{% endif %}
+
+<script>
+  function abrirEditarAlmacen(pk, nombre, detalles, capacidad) {
+    document.getElementById('edit_almacen_id').value       = pk;
+    document.getElementById('edit_almacen_nombre').value   = nombre;
+    document.getElementById('edit_almacen_detalles').value = detalles;
+    document.getElementById('edit_almacen_capacidad').value = capacidad;
+    new bootstrap.Modal(document.getElementById('modalEditarAlmacen')).show();
+  }
+
+  function abrirEliminarAlmacen(pk, nombre) {
+    document.getElementById('eliminar_almacen_id').value           = pk;
+    document.getElementById('eliminar_almacen_nombre').textContent = '"' + nombre + '"';
+    new bootstrap.Modal(document.getElementById('modalEliminarAlmacen')).show();
+  }
+</script>
+
+{% endblock %}
