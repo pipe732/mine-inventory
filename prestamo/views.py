@@ -9,8 +9,9 @@ import datetime
 from .forms import PrestamoForm
 from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
+from common.mixins import sesion_requerida   
 
-
+@sesion_requerida   
 def _marcar_vencidos():
     hoy = timezone.localdate()
     return Prestamo.objects.filter(
@@ -18,7 +19,7 @@ def _marcar_vencidos():
         fecha_vencimiento__lt=hoy,
     ).update(estado='vencido')
 
-
+@sesion_requerida   
 def prestamos_view(request):
     _marcar_vencidos()
 
@@ -223,7 +224,7 @@ def prestamos_view(request):
         'filtro_vencidos':     vencidos_f,
     })
 
-
+@sesion_requerida   
 def prestamo_api(request, pk):
     try:
         p = Prestamo.objects.prefetch_related('items__producto').get(pk=pk)
