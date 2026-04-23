@@ -5,12 +5,7 @@
 {%endblock %} 
 {% block content %}
 
-{% include "mantenimiento/partials/_cabecera.html" with
-    titulo=titulo
-    subtitulo=subtitulo
-    url_accion=url_accion
-    label_accion=label_accion
-%}
+{% include "mantenimiento/partials/_cabecera.html" with titulo=titulo subtitulo=subtitulo url_accion=url_accion label_accion=label_accion %}
 
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
@@ -92,11 +87,9 @@
             {% include "mantenimiento/partials/_action_icon_button.html" with href=editar_url title="Editar" icon="edit" %}
           </td>
         </tr>
-        {% empty %} {% include "mantenimiento/partials/_tabla_empty.html" with
-        colspan=7 empty_mensaje="Aún no hay tipos de estado registrados."
-        empty_hint="Usa
-        <strong>Nuevo Tipo de Estado</strong>
-        para agregar uno." %} {% endfor %}
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Aún no hay tipos de estado registrados." empty_hint="Usa Nuevo Tipo de Estado para agregar uno." %}
+        {% endfor %}
       </tbody>
     </table>
   </div>
