@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* ══ Variables propias de la vista usuario ══ */
+  .pu-timeline {
+    position: relative;
+    padding-left: 1.8rem;
+  }
+  .pu-timeline::before {
+    content: '';
+    position: absolute;
+    left: .52rem; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--u-blue, #094D92), transparent);
+    opacity: .18;
+  }
+
+  .pu-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: box-shadow .2s, transform .15s;
+    position: relative;
+  }
+  .pu-card:hover { box-shadow: 0 6px 28px rgba(27,32,33,.09); transform: translateY(-1px); }
+  .pu-card.pu-vencido { border-color: rgba(147,31,29,.3); background: rgba(147,31,29,.02); }
+  .pu-card.pu-proximo { border-color: rgba(217,119,6,.28); background: rgba(245,158,11,.015); }
+  .pu-card.pu-pendiente { border-color: rgba(201,168,76,.3); background: rgba(201,168,76,.025); }
+
+  /* Marcador de timeline */
+  .pu-dot {
+    position: absolute;
+    left: -1.8rem;
+    top: 1.2rem;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-surface);
+    flex-shrink: 0;
+  }
+
+  /* Header de cada card */
+  .pu-card-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .65rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .pu-card-header:hover { background: rgba(9,77,146,.02); }
+
+  /* Pill de estado */
+  .pu-status {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 700;
+    padding: .2rem .6rem; border-radius: 100px;
+    font-family: var(--font-ui);
+    white-space: nowrap;
+  }
+  .pu-status::before { content:''; width:6px; height:6px; border-radius:50%; }
+  .ps-activo    { background:#e8f5e9;color:#1b5e20; } .ps-activo::before    { background:#2e7d32; }
+  .ps-devuelto  { background:#e3f2fd;color:#0d47a1; } .ps-devuelto::before  { background:#1565c0; }
+  .ps-vencido   { background:#fce4ec;color:#880e4f; } .ps-vencido::before   { background:#b71c1c; }
+  .ps-parcial   { background:#fff8e1;color:#e65100; } .ps-parcial::before   { background:#ef6c00; }
+  .ps-pendiente { background:rgba(201,168,76,.18);color:#7a5a00; } .ps-pendiente::before { background:var(--u-gold,#C9A84C); }
+
+  /* Chips de herramientas */
+  .pu-herr-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-family: var(--font-mono); font-size: .72rem;
+    background: rgba(9,77,146,.06);
+    border: 1px solid rgba(9,77,146,.14);
+    color: #094D92;
+    padding: .18rem .55rem; border-radius: 6px;
+    margin: .12rem .12rem .12rem 0;
+  }
+  .pu-herr-chip.devuelto {
+    background: rgba(42,122,75,.07);
+    border-color: rgba(42,122,75,.18);
+    color: #2A7A4B;
+  }
+
+  /* Cuerpo colapsable */
+  .pu-card-body {
+    border-top: 1px solid var(--border-color);
+    padding: 1.1rem 1.25rem;
+    display: none;
+    animation: puSlide .2s ease;
+  }
+  @keyframes puSlide { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+
+  /* Progreso de devolución */
+  .pu-progress-wrap {
+    background: rgba(0,0,0,.05);
+    border-radius: 100px; height: 6px; overflow: hidden;
+    margin-top: .4rem;
+  }
+  .pu-progress-fill { height: 100%; border-radius: 100px; transition: width .4s; }
+
+  /* Urgency banner */
+  .pu-urgency {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .65rem 1rem;
+    font-family: var(--font-ui); font-size: .82rem;
+    font-weight: 600;
+  }
+
+  /* Filtros horizontales */
+  .pu-filtros {
+    display: flex; gap: .5rem; flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+  }
+  .pu-filtro-btn {
+    padding: .35rem .9rem;
+    border-radius: 100px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-family: var(--font-ui); font-size: .8rem; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  .pu-filtro-btn:hover, .pu-filtro-btn.active {
+    background: #094D92; color: #fff; border-color: #094D92;
+  }
+
+  /* Vacío */
+  .pu-empty {
+    text-align: center; padding: 4rem 1rem;
+    color: var(--text-muted); font-family: var(--font-ui);
+  }
+  .pu-empty svg { opacity: .18; display: block; margin: 0 auto 1rem; }
+
+  /* Botón solicitar flotante */
+  .pu-fab {
+    position: fixed; bottom: 5rem; right: 1.6rem; z-index: 1000;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #C9A84C, #d4b86a);
+    border: none; color: #1B2021;
+    box-shadow: 0 6px 22px rgba(201,168,76,.45);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform .2s, box-shadow .2s;
+  }
+  .pu-fab:hover { transform: scale(1.12); box-shadow: 0 10px 28px rgba(201,168,76,.55); }
+  @media (min-width:769px) { .pu-fab { display: none; } }
+
+  /* Header vista ──── */
+  .pu-page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .pu-page-header h5 {
+    font-family: var(--font-ui); font-weight: 700; font-size: 1.05rem;
+    color: var(--text-main); margin: 0; letter-spacing: .03em;
+  }
+  .pu-page-header p { font-size: .8rem; color: var(--text-muted); margin: .15rem 0 0; }
+
+  .pu-btn-solicitar {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .55rem 1.2rem;
+    background: #C9A84C;
+    border: none; border-radius: 100px;
+    font-family: var(--font-ui); font-weight: 700;
+    font-size: .88rem; color: #1B2021;
+    cursor: pointer;
+    box-shadow: 0 3px 14px rgba(201,168,76,.35);
+    transition: transform .15s, box-shadow .15s;
+    white-space: nowrap;
+  }
+  .pu-btn-solicitar:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,.45); }
+</style>
+
+<!-- ══ ALERTAS ══ -->
+{% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-dismissible fade show d-flex align-items-center gap-2 mb-3"
+       style="background:{% if message.tags == 'error' %}rgba(147,31,29,.09){% else %}rgba(42,122,75,.09){% endif %};
+              border:1px solid {% if message.tags == 'error' %}rgba(147,31,29,.22){% else %}rgba(42,122,75,.22){% endif %};
+              border-radius:var(--radius-md);color:var(--text-main);font-family:var(--font-ui);"
+       role="alert">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{% if message.tags == 'error' %}#931f1d{% else %}#2A7A4B{% endif %}" stroke-width="2.2">
+      {% if message.tags == 'error' %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      {% else %}<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>{% endif %}
+    </svg>
+    {{ message }}
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" style="filter:opacity(.4);"></button>
+  </div>
+  {% endfor %}
+{% endif %}
+
+<!-- ══ HEADER ══ -->
+<div class="pu-page-header">
+  <div>
+    <h5>Mis Préstamos</h5>
+    <p>Historial y estado de tus solicitudes · <span style="font-family:var(--font-mono);font-size:.72rem;">{{ usuario.nombre_completo }}</span></p>
+  </div>
+  <button class="pu-btn-solicitar" data-bs-toggle="modal" data-bs-target="#modalSolicitar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Nueva solicitud
+  </button>
+</div>
+
+<!-- ══ BANNERS DE ALERTA ══ -->
+{% if vencidos_count %}
+<div class="pu-urgency mb-3" style="background:rgba(147,31,29,.08);border:1px solid rgba(147,31,29,.22);border-radius:10px;color:#931f1d;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  Tienes <strong>{{ vencidos_count }} préstamo{{ vencidos_count|pluralize }}</strong> vencido{{ vencidos_count|pluralize }}. Contacta al administrador lo antes posible.
+</div>
+{% endif %}
+
+{% if proximos_vencer %}
+<div class="pu-urgency mb-3" style="background:rgba(245,158,11,.08);border:1px solid rgba(217,119,6,.22);border-radius:10px;color:#d97706;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/>
+  </svg>
+  <strong>{{ proximos_vencer }} préstamo{{ proximos_vencer|pluralize }}</strong> vence{{ proximos_vencer|pluralize:"n," }} en los próximos 3 días.
+</div>
+{% endif %}
+
+<!-- ══ FILTROS ══ -->
+<div class="pu-filtros">
+  <button class="pu-filtro-btn active" onclick="filtrar('todos', this)">
+    Todos <span style="font-family:var(--font-mono);font-size:.7rem;opacity:.7;">{{ total_prestamos }}</span>
+  </button>
+  <button class="pu-filtro-btn" onclick="filtrar('activo', this)">
+    Activos <span style="font-family:var(--font-mono);font-size:.7rem;opacity:.7;">{{ total_activos }}</span>
+  </button>
+  {% if pendientes_aprobacion %}
+  <button class="pu-filtro-btn" onclick="filtrar('pendiente', this)" style="border-color:rgba(201,168,76,.4);color:#926e1a;">
+    Pendientes <span style="font-family:var(--font-mono);font-size:.7rem;">{{ pendientes_aprobacion }}</span>
+  </button>
+  {% endif %}
+  <button class="pu-filtro-btn" onclick="filtrar('devuelto', this)">Devueltos</button>
+  {% if vencidos_count %}
+  <button class="pu-filtro-btn" onclick="filtrar('vencido', this)" style="border-color:rgba(147,31,29,.35);color:#931f1d;">
+    Vencidos <span style="font-family:var(--font-mono);font-size:.7rem;">{{ vencidos_count }}</span>
+  </button>
+  {% endif %}
+</div>
+
+<!-- ══ LISTA DE PRÉSTAMOS ══ -->
+{% if all_prestamos %}
+<div class="pu-timeline" id="lista-prestamos">
+  {% for p in all_prestamos %}
+  <div class="pu-card {% if p.urgencia == 'vencido' or p.estado == 'vencido' %}pu-vencido{% elif p.urgencia == 'proximo' %}pu-proximo{% elif p.estado == 'pendiente' %}pu-pendiente{% endif %}"
+       data-estado="{{ p.estado }}">
+    <div class="pu-dot" style="background:{% if p.estado == 'activo' %}#2A7A4B{% elif p.estado == 'devuelto' %}#094D92{% elif p.estado == 'vencido' %}#931f1d{% elif p.estado == 'pendiente' %}#C9A84C{% else %}#d97706{% endif %};"></div>
+
+    <!-- Header clickeable -->
+    <div class="pu-card-header" onclick="toggleCard('body-{{ p.pk }}', 'chv-{{ p.pk }}')">
+      <div style="flex:1;min-width:0;">
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);font-weight:700;">#{{ p.pk }}</span>
+          <span class="pu-status ps-{{ p.estado }}">{{ p.get_estado_display }}</span>
+
+          {% if p.urgencia == 'vencido' %}
+          <span style="font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:#931f1d;background:rgba(147,31,29,.1);padding:.14rem .45rem;border-radius:100px;border:1px solid rgba(147,31,29,.22);">
+            Venció {{ p.fecha_vencimiento|date:"d/m/Y" }}
+          </span>
+          {% elif p.urgencia == 'proximo' %}
+          <span style="font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:#d97706;background:rgba(245,158,11,.1);padding:.14rem .45rem;border-radius:100px;border:1px solid rgba(217,119,6,.22);">
+            ⚠ {{ p.dias_restantes }}d restantes
+          </span>
+          {% elif p.estado == 'pendiente' %}
+          <span style="font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:#926e1a;background:rgba(201,168,76,.12);padding:.14rem .45rem;border-radius:100px;border:1px solid rgba(201,168,76,.28);">
+            ⏳ Esperando aprobación
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Chips de herramientas -->
+        <div>
+          {% for item in p.items.all %}
+          <span class="pu-herr-chip {% if item.devuelto %}devuelto{% endif %}">
+            {% if item.devuelto %}
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            {% else %}
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            {% endif %}
+            {{ item.producto.nombre }} ×{{ item.cantidad }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0;">
+        <span style="font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);">{{ p.fecha_prestamo|date:"d/m/Y" }}</span>
+        <svg id="chv-{{ p.pk }}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="transition:transform .22s;">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Barra de progreso devolución (solo si activo o parcial) -->
+    {% if p.estado == 'activo' or p.estado == 'parcial' %}
+    {% with total_items=p.items.count %}
+    {% if total_items > 0 %}
+    <div style="padding:0 1.25rem .75rem; display: flex; align-items: center; gap: .75rem;">
+      <div class="pu-progress-wrap" style="flex:1;">
+        {% with devueltos=p.items.filter.devuelto.True.count|default:0 %}
+        <div class="pu-progress-fill" style="width:{% widthratio devueltos total_items 100 %}%;background:{% if p.estado == 'parcial' %}#2A7A4B{% else %}rgba(9,77,146,.5){% endif %};"></div>
+        {% endwith %}
+      </div>
+      <span style="font-family:var(--font-mono);font-size:.68rem;color:var(--text-muted);white-space:nowrap;">
+        {{ p.items.all|length }} ítem{{ p.items.count|pluralize }}
+      </span>
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+
+    <!-- Body colapsable -->
+    <div class="pu-card-body" id="body-{{ p.pk }}">
+      <div class="row g-3" style="font-family:var(--font-ui);">
+
+        <!-- Detalle por ítem -->
+        <div class="col-12">
+          <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600;margin-bottom:.65rem;font-family:var(--font-mono);">Herramientas del préstamo</div>
+          {% for item in p.items.all %}
+          <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;
+                      border-radius:10px;margin-bottom:.4rem;
+                      background:{% if item.devuelto %}rgba(42,122,75,.05){% else %}rgba(9,77,146,.04){% endif %};
+                      border:1px solid {% if item.devuelto %}rgba(42,122,75,.18){% else %}rgba(9,77,146,.1){% endif %};">
+            <div style="width:30px;height:30px;border-radius:8px;background:{% if item.devuelto %}rgba(42,122,75,.12){% else %}rgba(9,77,146,.1){% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              {% if item.devuelto %}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2A7A4B" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              {% else %}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#094D92" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              {% endif %}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;font-size:.88rem;color:var(--text-main);">{{ item.producto.nombre }}</div>
+              <div style="font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono);">SKU: {{ item.producto.codigo_sku }}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:var(--font-mono);font-weight:700;font-size:.82rem;color:{% if item.devuelto %}#2A7A4B{% else %}#094D92{% endif %};">×{{ item.cantidad }}</div>
+              <div style="font-size:.68rem;font-family:var(--font-ui);color:{% if item.devuelto %}#2A7A4B{% else %}var(--text-muted){% endif %};">
+                {% if item.devuelto %}Devuelto ✓{% else %}Pendiente{% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Meta info -->
+        <div class="col-sm-4">
+          <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.3rem;">Fecha préstamo</div>
+          <div style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-main);">{{ p.fecha_prestamo|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% if p.fecha_vencimiento %}
+        <div class="col-sm-4">
+          <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.3rem;">Fecha vencimiento</div>
+          <div style="font-family:var(--font-mono);font-size:.82rem;color:{% if p.urgencia == 'vencido' %}#931f1d{% elif p.urgencia == 'proximo' %}#d97706{% else %}var(--text-main){% endif %};">
+            {{ p.fecha_vencimiento|date:"d/m/Y" }}
+            {% if p.dias_restantes is not None %}
+              <span style="font-size:.68rem;color:var(--text-muted);">
+                ({% if p.dias_restantes < 0 %}hace {{ p.dias_restantes|abs }}d{% elif p.dias_restantes == 0 %}hoy{% else %}en {{ p.dias_restantes }}d{% endif %})
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        {% if p.observaciones %}
+        <div class="col-12">
+          <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.3rem;">Observaciones</div>
+          <div style="font-size:.85rem;color:var(--text-main);">{{ p.observaciones }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Acciones del usuario -->
+        {% if p.estado == 'activo' or p.estado == 'parcial' %}
+        <div class="col-12">
+          <div style="padding:.65rem .9rem;background:rgba(9,77,146,.04);border:1px solid rgba(9,77,146,.12);border-radius:10px;font-size:.8rem;font-family:var(--font-ui);color:var(--text-muted);display:flex;align-items:center;gap:.6rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#094D92" stroke-width="2" style="flex-shrink:0;">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Para devolver herramientas, dirígete al administrador con tu documento de identidad.
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="pu-empty">
+  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.2">
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+  </svg>
+  <p style="font-weight:700;font-size:1rem;color:var(--text-main);margin-bottom:.4rem;">No tienes préstamos aún</p>
+  <p style="font-size:.85rem;margin-bottom:1.5rem;">Solicita herramientas del inventario del Centro Minero.</p>
+  <button class="pu-btn-solicitar" data-bs-toggle="modal" data-bs-target="#modalSolicitar">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Hacer mi primera solicitud
+  </button>
+</div>
+{% endif %}
+
+<!-- FAB móvil -->
+<button class="pu-fab" data-bs-toggle="modal" data-bs-target="#modalSolicitar" title="Nueva solicitud">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL — SOLICITAR PRÉSTAMO
+══════════════════════════════════════════ -->
+<div class="modal fade" id="modalSolicitar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div style="background:linear-gradient(135deg,#1B2021 0%,#094D92 100%);padding:1.2rem 1.5rem;border-radius:var(--radius-lg) var(--radius-lg) 0 0;">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <h5 style="font-family:var(--font-ui);font-weight:800;font-size:1rem;color:#EFECCA;margin:0;letter-spacing:.04em;">
+              Solicitar Préstamo
+            </h5>
+            <p style="font-family:var(--font-mono);font-size:.63rem;color:rgba(239,236,202,.4);margin:.15rem 0 0;letter-spacing:.09em;text-transform:uppercase;">
+              Centro Minero · Tus solicitudes llegan al administrador
+            </p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <!-- Indicador de pasos -->
+        <div class="d-flex align-items-center gap-2 mt-3">
+          {% for lbl in "12" %}
+          <div id="slbl-{{ forloop.counter }}" style="display:flex;align-items:center;gap:.4rem;font-family:var(--font-ui);font-size:.72rem;font-weight:{% if forloop.first %}700{% else %}500{% endif %};color:{% if forloop.first %}#C9A84C{% else %}rgba(239,236,202,.35){% endif %};">
+            <span id="snum-{{ forloop.counter }}" style="width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.68rem;background:{% if forloop.first %}#C9A84C{% else %}rgba(255,255,255,.1){% endif %};color:{% if forloop.first %}#1B2021{% else %}rgba(239,236,202,.35){% endif %};">
+              {{ forloop.counter }}
+            </span>
+            {% if forloop.counter == 1 %}Herramientas{% else %}Detalles & Confirmar{% endif %}
+          </div>
+          {% if not forloop.last %}<div style="flex:1;height:1px;background:rgba(255,255,255,.12);"></div>{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'usuario_solicitar_prestamo' %}" novalidate id="formSolicitar">
+        {% csrf_token %}
+
+        <!-- PASO 1: Herramientas -->
+        <div id="sp-1" class="active" style="display:block;animation:fadeSlideUp .2s ease;">
+          <div class="modal-body" style="padding:1.5rem;">
+            <div style="font-family:var(--font-mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:#094D92;border-bottom:1px solid rgba(9,77,146,.15);padding-bottom:.4rem;margin-bottom:1.1rem;">
+              ¿Qué herramientas necesitas?
+            </div>
+
+            <div id="sprod-container">
+              <div class="sprod-row" style="display:grid;grid-template-columns:1fr 88px 30px;gap:.5rem;align-items:start;margin-bottom:.55rem;">
+                <div>
+                  <select name="producto[]" class="form-control form-select sprod-sel">
+                    <option value="">— Selecciona —</option>
+                    {% for prod in productos_disponibles %}
+                    <option value="{{ prod.pk }}" data-stock="{{ prod.stock }}">
+                      {{ prod.nombre }}{% if prod.stock <= 0 %} ⚠{% endif %}
+                    </option>
+                    {% endfor %}
+                  </select>
+                  <div class="sprod-info" style="display:none;font-size:.73rem;padding:.25rem .55rem;border-radius:6px;margin-top:.25rem;font-family:var(--font-ui);"></div>
+                </div>
+                <input type="number" name="cantidad[]" class="form-control" min="1" value="1">
+                <button type="button" class="sprod-del"
+                        style="width:30px;height:36px;border-radius:6px;border:1px solid rgba(147,31,29,.2);background:rgba(147,31,29,.06);color:#931f1d;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;opacity:.3;pointer-events:none;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="button" id="sprod-add"
+                    style="display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .7rem;margin-top:.2rem;border-radius:6px;border:1px dashed rgba(9,77,146,.3);background:rgba(9,77,146,.04);color:#094D92;font-family:var(--font-ui);font-size:.77rem;cursor:pointer;font-weight:600;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              Añadir otra
+            </button>
+
+            <div id="sprod-err" style="display:none;margin-top:.7rem;padding:.5rem .75rem;background:rgba(147,31,29,.08);border:1px solid rgba(147,31,29,.2);border-radius:8px;font-size:.78rem;color:#931f1d;font-family:var(--font-ui);">
+              Selecciona al menos una herramienta.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn-primary-mine" onclick="spGo(2)">
+              Siguiente →
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: Detalles + Confirmar -->
+        <div id="sp-2" style="display:none;animation:fadeSlideUp .2s ease;">
+          <div class="modal-body" style="padding:1.5rem;">
+            <div style="font-family:var(--font-mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:#094D92;border-bottom:1px solid rgba(9,77,146,.15);padding-bottom:.4rem;margin-bottom:1.1rem;">
+              Detalles de la solicitud
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label">Devolución estimada</label>
+                <input type="date" name="fecha_devolucion_estimada" class="form-control" id="sp-fecha">
+              </div>
+              <div class="col-12">
+                <label class="form-label">¿Para qué necesitas las herramientas? *</label>
+                <textarea name="motivo" class="form-control" id="sp-motivo" rows="3"
+                          placeholder="Ej: Práctica de taller, módulo de soldadura — grupo 3A…"></textarea>
+                <div id="sp-motivo-err" style="display:none;font-size:.71rem;color:#931f1d;margin-top:.18rem;">Mínimo 10 caracteres.</div>
+              </div>
+            </div>
+
+            <!-- Resumen visual -->
+            <div style="margin-top:1.2rem;background:rgba(9,77,146,.04);border:1px solid rgba(9,77,146,.14);border-radius:10px;padding:.9rem 1.1rem;">
+              <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600;font-family:var(--font-mono);margin-bottom:.55rem;">Tu solicitud incluye</div>
+              <div id="sp-resumen" style="display:flex;flex-wrap:wrap;gap:.3rem;"></div>
+            </div>
+
+            <!-- Nota de proceso -->
+            <div style="margin-top:.85rem;padding:.7rem .95rem;background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:10px;font-size:.8rem;font-family:var(--font-ui);color:#7a5a00;display:flex;gap:.6rem;align-items:flex-start;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2" style="flex-shrink:0;margin-top:.1rem;">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <div>El administrador revisará tu solicitud y <strong>escaneará físicamente</strong> las herramientas antes de entregártelas. Recibirás confirmación.</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-outline-mine" onclick="spGo(1)">← Atrás</button>
+            <button type="submit" style="display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.3rem;background:#C9A84C;border:none;border-radius:100px;font-family:var(--font-ui);font-weight:700;font-size:.88rem;color:#1B2021;cursor:pointer;box-shadow:0 3px 14px rgba(201,168,76,.35);" onclick="return validarPaso2()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              Enviar solicitud
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fadeSlideUp {
+    from { opacity:0; transform:translateY(8px); }
+    to { opacity:1; transform:none; }
+  }
+</style>
+
+{% endblock %}
+
+{% block js %}
+<script>
+// ── Toggle de cards ────────────────────────────────────────
+function toggleCard(bodyId, chevId) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById(chevId);
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+// ── Filtrado por estado ────────────────────────────────────
+function filtrar(estado, btn) {
+  document.querySelectorAll('.pu-filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#lista-prestamos .pu-card').forEach(card => {
+    if (estado === 'todos') {
+      card.style.display = '';
+    } else {
+      card.style.display = card.dataset.estado === estado ? '' : 'none';
+    }
+  });
+}
+
+// ── Multi-producto solicitud ───────────────────────────────
+function spGetOpts() {
+  return document.querySelector('#sprod-container .sprod-sel')?.innerHTML || '';
+}
+function spBuildRow() {
+  const div = document.createElement('div');
+  div.className = 'sprod-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 88px 30px;gap:.5rem;align-items:start;margin-bottom:.55rem;';
+  div.innerHTML = `
+    <div>
+      <select name="producto[]" class="form-control form-select sprod-sel">${spGetOpts()}</select>
+      <div class="sprod-info" style="display:none;font-size:.73rem;padding:.25rem .55rem;border-radius:6px;margin-top:.25rem;font-family:var(--font-ui);"></div>
+    </div>
+    <input type="number" name="cantidad[]" class="form-control" min="1" value="1">
+    <button type="button" class="sprod-del"
+            style="width:30px;height:36px;border-radius:6px;border:1px solid rgba(147,31,29,.2);background:rgba(147,31,29,.06);color:#931f1d;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>`;
+  return div;
+}
+function spRefreshDel() {
+  const rows = document.querySelectorAll('#sprod-container .sprod-row');
+  rows.forEach(r => {
+    const b = r.querySelector('.sprod-del');
+    if (!b) return;
+    b.style.opacity = rows.length === 1 ? '.3' : '1';
+    b.style.pointerEvents = rows.length === 1 ? 'none' : '';
+  });
+}
+function spUpdateInfo(sel) {
+  const row = sel.closest('.sprod-row');
+  const info = row.querySelector('.sprod-info');
+  const opt = sel.options[sel.selectedIndex];
+  const stock = parseInt(opt?.dataset.stock, 10);
+  info.style.display = 'none';
+  if (!opt?.value) return;
+  info.style.display = 'block';
+  if (isNaN(stock) || stock <= 0) {
+    info.style.background = 'rgba(147,31,29,.08)'; info.style.border = '1px solid rgba(147,31,29,.2)'; info.style.color = '#931f1d';
+    info.textContent = '⚠ Sin stock';
+  } else {
+    info.style.background = 'rgba(42,122,75,.08)'; info.style.border = '1px solid rgba(42,122,75,.2)'; info.style.color = '#2A7A4B';
+    info.textContent = '✓ Stock: ' + stock;
+  }
+}
+
+document.getElementById('sprod-container').addEventListener('change', e => {
+  if (e.target.classList.contains('sprod-sel')) spUpdateInfo(e.target);
+});
+document.getElementById('sprod-container').addEventListener('click', e => {
+  const btn = e.target.closest('.sprod-del');
+  if (!btn) return;
+  const rows = document.querySelectorAll('#sprod-container .sprod-row');
+  if (rows.length > 1) { btn.closest('.sprod-row').remove(); spRefreshDel(); }
+});
+document.getElementById('sprod-add').addEventListener('click', () => {
+  document.getElementById('sprod-container').appendChild(spBuildRow());
+  spRefreshDel();
+});
+
+// ── Stepper ────────────────────────────────────────────────
+function spGo(n) {
+  if (n === 2) {
+    const sels = document.querySelectorAll('#sprod-container .sprod-sel');
+    const ok = Array.from(sels).some(s => s.value !== '');
+    document.getElementById('sprod-err').style.display = ok ? 'none' : 'block';
+    if (!ok) return;
+    construirSpResumen();
+  }
+
+  document.getElementById('sp-1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('sp-2').style.display = n === 2 ? 'block' : 'none';
+  document.getElementById('sp-1').style.animation = n === 1 ? 'fadeSlideUp .2s ease' : '';
+  document.getElementById('sp-2').style.animation = n === 2 ? 'fadeSlideUp .2s ease' : '';
+
+  // Update step labels
+  [1,2].forEach(i => {
+    const lbl = document.getElementById('slbl-' + i);
+    const num = document.getElementById('snum-' + i);
+    if (!lbl) return;
+    if (i < n) { lbl.style.color='rgba(239,236,202,.6)'; if(num){num.style.background='rgba(42,122,75,.35)';num.style.color='#7de0a4';num.textContent='✓';} }
+    else if (i === n) { lbl.style.color='#C9A84C'; lbl.style.fontWeight='700'; if(num){num.style.background='#C9A84C';num.style.color='#1B2021';num.textContent=i;} }
+    else { lbl.style.color='rgba(239,236,202,.35)'; if(num){num.style.background='rgba(255,255,255,.1)';num.style.color='rgba(239,236,202,.35)';num.textContent=i;} }
+  });
+}
+
+function construirSpResumen() {
+  const container = document.getElementById('sp-resumen');
+  container.innerHTML = '';
+  document.querySelectorAll('#sprod-container .sprod-row').forEach(row => {
+    const sel = row.querySelector('.sprod-sel');
+    const qty = row.querySelector('input[name="cantidad[]"]');
+    if (!sel?.value) return;
+    const nombre = sel.options[sel.selectedIndex].text.replace(/⚠/g,'').trim();
+    const chip = document.createElement('span');
+    chip.className = 'pu-herr-chip';
+    chip.textContent = nombre.split('·')[0].trim() + ' ×' + (qty?.value || 1);
+    container.appendChild(chip);
+  });
+}
+
+function validarPaso2() {
+  const motivo = document.getElementById('sp-motivo').value.trim();
+  const err = document.getElementById('sp-motivo-err');
+  if (motivo.length < 10) {
+    err.style.display = 'block';
+    document.getElementById('sp-motivo').focus();
+    return false;
+  }
+  err.style.display = 'none';
+  return true;
+}
+
+// Reset modal
+document.getElementById('modalSolicitar').addEventListener('hidden.bs.modal', () => {
+  spGo(1);
+  document.getElementById('sp-motivo').value = '';
+  document.getElementById('sp-fecha').value = '';
+  document.querySelectorAll('#sprod-container .sprod-row').forEach((r,i) => { if(i>0) r.remove(); });
+  const firstSel = document.querySelector('#sprod-container .sprod-sel');
+  const firstQty = document.querySelector('#sprod-container input[name="cantidad[]"]');
+  if (firstSel) firstSel.selectedIndex = 0;
+  if (firstQty) firstQty.value = 1;
+  spRefreshDel();
+});
+
+spRefreshDel();
+</script>
+{% endblock js %}
