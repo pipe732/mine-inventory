@@ -7,7 +7,7 @@ from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 
-from .mixins import SesionRequeridaMixin, ContextoMixin
+from common.mixins import SesionRequeridaMixin, ContextoMixin
 from .models import TipoEstado, Mantenimiento
 from .forms import TipoEstadoForm, MantenimientoForm, MantenimientoUpdateForm
 from inventario.models import Producto
