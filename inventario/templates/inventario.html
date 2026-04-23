@@ -82,6 +82,16 @@
       </svg>
       Categorías
     </button>
+    <button class="btn-outline-mine"
+            data-bs-toggle="modal" data-bs-target="#modal3DHerramienta">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+      Vista 3D
+    </button>
     <button class="btn-primary-mine"
             data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -1157,6 +1167,255 @@ document.addEventListener("DOMContentLoaded", function () {
     new bootstrap.Modal(document.getElementById('modalCategorias')).show();
   });
   {% endif %}
+</script>
+
+<!-- ══ VISOR 3D — Three.js ══ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+  var modal3d = document.getElementById('modal3DHerramienta');
+  var initialized = false;
+  var animId = null;
+
+  modal3d.addEventListener('shown.bs.modal', function () {
+    if (!initialized) { init3D(); initialized = true; }
+    else { resumeRender(); }
+  });
+  modal3d.addEventListener('hidden.bs.modal', function () {
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+  });
+
+  function init3D() {
+    var cv = document.getElementById('canvas3d');
+    var lc = document.getElementById('labels3d');
+    var wrap = cv.parentElement;
+    var W = function(){ return wrap.clientWidth; };
+
+    var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.setClearColor(0x0f1117);
+    renderer.setSize(W(), 480);
+
+    var scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0f1117, 30, 80);
+
+    var camera = new THREE.PerspectiveCamera(42, W() / 480, 0.1, 200);
+    camera.position.set(0, 0, 22);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    var key = new THREE.DirectionalLight(0xfff4e0, 1.4);
+    key.position.set(6, 12, 10); key.castShadow = true;
+    scene.add(key);
+    var rim = new THREE.DirectionalLight(0x88aaff, 0.5);
+    rim.position.set(-8, -4, -6); scene.add(rim);
+    scene.add(new THREE.DirectionalLight(0xffeedd, 0.3)).position.set(0, -10, 8);
+
+    function mats(c, r, m) { return new THREE.MeshStandardMaterial({ color:c, roughness:r||0.5, metalness:m||0.2 }); }
+    var woodMat   = mats(0xd4a85a, 0.85, 0.0);
+    var metalMat  = mats(0x2a2a2e, 0.3,  0.85);
+    var bladeMat  = mats(0x1a1a1f, 0.25, 0.9);
+    var gripMat   = mats(0xe87c1e, 0.55, 0.15);
+    var collarMat = mats(0x3a3a40, 0.4,  0.9);
+
+    var root = new THREE.Group();
+    scene.add(root);
+
+    /* Puño Y */
+    var pG = new THREE.Group();
+    pG.add(new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,1.2,16), gripMat));
+    [-0.38,0.38].forEach(function(x){
+      var arm = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.9,12), gripMat);
+      arm.rotation.z = x>0?-0.55:0.55; arm.position.set(x*1.1,0.75,0); pG.add(arm);
+      var cap = new THREE.Mesh(new THREE.SphereGeometry(0.17,10,8), gripMat);
+      cap.position.set(x*1.6,1.12,0); pG.add(cap);
+    });
+    var cr = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,1.05,12), gripMat);
+    cr.rotation.z = Math.PI/2; cr.position.y = 0.82; pG.add(cr);
+    pG.position.y = 7.6; root.add(pG);
+
+    /* Mango */
+    var hG = new THREE.Group();
+    hG.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.26,11.2,16), woodMat));
+    for(var i=0;i<5;i++){
+      var b=new THREE.Mesh(new THREE.CylinderGeometry(0.23,0.27,0.06,16), mats(0xb8882a,0.9,0));
+      b.position.y=-4+i*2; hG.add(b);
+    }
+    var lbl=new THREE.Mesh(new THREE.CylinderGeometry(0.265,0.265,1.2,16), mats(0xc89040,0.8,0));
+    lbl.position.y=1.5; hG.add(lbl);
+    hG.position.y=1.5; root.add(hG);
+
+    /* Collar */
+    var cG = new THREE.Group();
+    cG.add(new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.38,1.1,20), collarMat));
+    [0.45,-0.45].forEach(function(y){
+      var r=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.45,0.12,20), metalMat);
+      r.position.y=y; cG.add(r);
+    });
+    cG.position.y=-5.3; root.add(cG);
+
+    /* Hombros */
+    var sG = new THREE.Group();
+    sG.add(new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.7,1.0,16), metalMat));
+    [-1.52,1.52].forEach(function(x){
+      var e=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.7,1.4), metalMat);
+      e.position.set(x,-0.8,0); sG.add(e);
+    });
+    var sp=new THREE.Mesh(new THREE.BoxGeometry(1.55,1.0,0.06), metalMat);
+    sp.position.y=-0.9; sG.add(sp);
+    sG.position.y=-6.4; root.add(sG);
+
+    /* Cabeza */
+    var bG = new THREE.Group();
+    var bs=new THREE.Shape();
+    bs.moveTo(-1.4,0); bs.lineTo(1.4,0); bs.lineTo(1.55,-3.5); bs.lineTo(-1.55,-3.5); bs.closePath();
+    var blade=new THREE.Mesh(new THREE.ExtrudeGeometry(bs,{depth:0.06,bevelEnabled:false}), bladeMat);
+    blade.rotation.x=Math.PI/2; blade.position.set(-1.4,0,0.03); bG.add(blade);
+    var rib=new THREE.Mesh(new THREE.BoxGeometry(0.12,3.5,0.12), mats(0x111115,0.2,0.95));
+    rib.position.set(0,-1.8,0.07); bG.add(rib);
+    var te=new THREE.Mesh(new THREE.BoxGeometry(3.1,0.12,0.35), metalMat);
+    te.position.set(0,-0.06,-0.14); bG.add(te);
+    [-1.52,1.52].forEach(function(x){
+      var se=new THREE.Mesh(new THREE.BoxGeometry(0.12,3.5,0.12), metalMat);
+      se.position.set(x,-1.75,0); bG.add(se);
+    });
+    bG.position.y=-8.3; root.add(bG);
+
+    var parts=[
+      {group:pG,  baseY:7.6,  label:'Puño "Y"',         detail:'Agarre ergonómico de doble mano', side:1},
+      {group:hG,  baseY:1.5,  label:'Mango',             detail:'Madera de hickory tratada', side:-1},
+      {group:cG,  baseY:-5.3, label:'Collar',            detail:'Refuerzo metálico de unión', side:1},
+      {group:sG,  baseY:-6.4, label:'Hombros rolados',   detail:'Tope de pie para mayor fuerza', side:-1},
+      {group:bG,  baseY:-8.3, label:'Cabeza cuadrada',   detail:'Acero forjado calibre 14', side:1},
+    ];
+    var explodeOffsets=[3.5,1.8,0,-1.8,-3.5];
+    var labelColors=['#f5a623','#4ec9b0','#7cc4f7','#e36464','#b5a4e8'];
+
+    /* Orbit */
+    var isDrag=false, px=0, py=0, rotY=0.3, rotX=0.1, zoom=22;
+    cv.addEventListener('mousedown', function(e){isDrag=true;px=e.clientX;py=e.clientY;});
+    cv.addEventListener('mouseup',   function(){isDrag=false;});
+    cv.addEventListener('mouseleave',function(){isDrag=false;});
+    cv.addEventListener('mousemove', function(e){
+      if(!isDrag)return;
+      rotY+=(e.clientX-px)*0.01; rotX+=(e.clientY-py)*0.008;
+      rotX=Math.max(-0.9,Math.min(0.9,rotX)); px=e.clientX; py=e.clientY;
+    });
+    cv.addEventListener('wheel',function(e){
+      zoom=Math.max(10,Math.min(38,zoom+e.deltaY*0.04)); e.preventDefault();
+    },{passive:false});
+    var lt=null;
+    cv.addEventListener('touchstart',function(e){lt=e.touches[0];});
+    cv.addEventListener('touchmove',function(e){
+      rotY+=(e.touches[0].clientX-lt.clientX)*0.012;
+      rotX+=(e.touches[0].clientY-lt.clientY)*0.009;
+      rotX=Math.max(-0.9,Math.min(0.9,rotX)); lt=e.touches[0]; e.preventDefault();
+    },{passive:false});
+
+    /* Clicks on parts */
+    var raycaster=new THREE.Raycaster(), mouse=new THREE.Vector2(), activePart=null;
+    cv.addEventListener('click',function(e){
+      var rect=cv.getBoundingClientRect();
+      mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+      mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+      raycaster.setFromCamera(mouse,camera);
+      var meshes=[];
+      parts.forEach(function(p){ if(p.group.visible) p.group.traverse(function(c){ if(c.isMesh){c.userData.pRef=p;meshes.push(c);}});});
+      var hits=raycaster.intersectObjects(meshes);
+      if(hits.length){
+        activePart=hits[0].object.userData.pRef;
+        document.getElementById('p3d-name').textContent=activePart.label;
+        document.getElementById('p3d-detail').textContent=activePart.detail;
+      } else {
+        activePart=null;
+        document.getElementById('p3d-name').textContent='Pala Truper T-2000';
+        document.getElementById('p3d-detail').textContent='Haz clic en una parte';
+      }
+    });
+
+    /* Buttons */
+    var showLabels=true, exploded=false, explodeT=0;
+    var btnL=document.getElementById('btn3d-labels');
+    var btnE=document.getElementById('btn3d-explode');
+    var btnR=document.getElementById('btn3d-reset');
+    function styleBtn(btn,on){
+      btn.style.background=on?'#e87c1e':'transparent';
+      btn.style.borderColor=on?'#e87c1e':'rgba(255,255,255,.18)';
+      btn.style.color=on?'#fff':'rgba(255,255,255,.6)';
+    }
+    styleBtn(btnL,true);
+    btnL.addEventListener('click',function(){ showLabels=!showLabels; styleBtn(btnL,showLabels); });
+    btnE.addEventListener('click',function(){ exploded=!exploded; styleBtn(btnE,exploded); });
+    btnR.addEventListener('click',function(){ rotY=0.3;rotX=0.1;zoom=22;exploded=false;styleBtn(btnE,false); });
+
+    /* Labels canvas */
+    function resizeLC(){
+      var w=W();
+      lc.width=w; lc.height=480;
+      lc.style.width=w+'px'; lc.style.height='480px';
+    }
+    resizeLC();
+    window.addEventListener('resize',function(){
+      var w=W();
+      renderer.setSize(w,480);
+      camera.aspect=w/480; camera.updateProjectionMatrix();
+      resizeLC();
+    });
+
+    function toScreen(v3){
+      var v=v3.clone().project(camera);
+      return { x:(v.x*0.5+0.5)*lc.width, y:(-v.y*0.5+0.5)*lc.height };
+    }
+
+    function drawLabels3D(){
+      var ctx=lc.getContext('2d');
+      ctx.clearRect(0,0,lc.width,lc.height);
+      if(!showLabels) return;
+      parts.forEach(function(p,i){
+        var sp=toScreen(new THREE.Vector3(0,p.group.position.y,0));
+        var col=labelColors[i], side=p.side, xOff=side>0?90:-90;
+        var tx=sp.x+xOff, ty=sp.y;
+        ctx.strokeStyle=col; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(sp.x+(side>0?12:-12),ty); ctx.lineTo(tx+(side>0?-8:8),ty); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(sp.x+(side>0?10:-10),ty,3.5,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+        ctx.font='500 12px system-ui,sans-serif';
+        var tw=ctx.measureText(p.label).width, pad=8;
+        var bx=side>0?tx-pad:tx-tw-pad;
+        ctx.fillStyle='rgba(10,17,35,0.85)';
+        ctx.beginPath(); ctx.roundRect(bx,ty-11,tw+pad*2,20,4); ctx.fill();
+        ctx.strokeStyle=col; ctx.lineWidth=0.7; ctx.stroke();
+        ctx.fillStyle=col; ctx.fillText(p.label,bx+pad,ty+4);
+      });
+    }
+
+    function resumeRender(){ if(!animId) loop(); }
+
+    var tick=0;
+    function loop(){
+      animId=requestAnimationFrame(loop);
+      tick+=0.012;
+      var tgt=exploded?1:0;
+      explodeT+=(tgt-explodeT)*0.08;
+      parts.forEach(function(p,i){ p.group.position.y=p.baseY+explodeOffsets[i]*explodeT; });
+      root.rotation.y=rotY+Math.sin(tick*0.3)*0.008;
+      root.rotation.x=rotX;
+      camera.position.z=zoom;
+      parts.forEach(function(p){
+        var hl=activePart===p;
+        p.group.traverse(function(c){
+          if(c.isMesh&&c.material){
+            c.material.emissive=new THREE.Color(hl?0x221800:0x000000);
+            c.material.emissiveIntensity=hl?0.5:0;
+          }
+        });
+      });
+      renderer.render(scene,camera);
+      drawLabels3D();
+    }|gd
+    loop();
+  }
+})();x
 </script>
 
 {% endblock js %}
