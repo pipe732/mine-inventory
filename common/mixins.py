@@ -1,6 +1,7 @@
 # mantenimiento/mixins.py
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from functools import wraps
 
 
 class SesionRequeridaMixin:
@@ -47,3 +48,16 @@ class ContextoMixin:
         if self.url_cancelar:
             ctx['url_cancelar'] = reverse_lazy(self.url_cancelar)
         return ctx
+
+#aplicamos mixins en el views.py de mantenimiento. No tocamos la logica del views.py
+from functools import wraps
+
+def sesion_requerida(func):
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
+            return func(request, *args, **kwargs)
+        if not request.session.get('usuario_documento'):
+            return redirect('login')
+        return func(request, *args, **kwargs)
+    return wrapper
