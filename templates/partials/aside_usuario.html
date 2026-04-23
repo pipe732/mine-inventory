@@ -19,7 +19,7 @@
       </div>
 
       <a
-      href="{% url 'home' %}"
+      href="{% url 'home_usuario' %}"
       class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium {% if request.resolver_match.url_name == 'home' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}"
       style="font-size: 0.88rem"
     >
@@ -38,7 +38,7 @@
       Principal
     </a>
         <a
-      href="{% url 'prestamo' %}"
+      href="{% url 'usuario_solicitar_prestamo' %}"
       class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium {% if request.resolver_match.url_name == 'prestamo' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}"
       style="font-size: 0.88rem"
     >
