@@ -49,9 +49,11 @@ class ContextoMixin:
             ctx['url_cancelar'] = reverse_lazy(self.url_cancelar)
         return ctx
 
-#aplicamos mixins en el views.py de mantenimiento. No tocamos la logica del views.py
-from functools import wraps
 
+"""
+creamos funcion reutilizable
+ESTA FUNCION SE IMPORTA EN TODOS LOS MODELOS CON: @sesion_requerida
+"""
 def sesion_requerida(func):
     @wraps(func)
     def wrapper(request, *args, **kwargs):
