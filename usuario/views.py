@@ -95,6 +95,9 @@ def logout_view(request):
 #  REGISTRO
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
+    # Todos los roles disponibles para el registro
+    roles_disponibles = Rol.objects.all()
+
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -102,10 +105,18 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
+        rol_id         = request.POST.get('rol', '').strip()
 
-        ctx = {'username': username, 'email': email, 'tipo_documento': tipo_documento, 'documento': documento}
+        ctx = {
+            'username': username,
+            'email': email,
+            'tipo_documento': tipo_documento,
+            'documento': documento,
+            'roles': roles_disponibles,
+            'rol_seleccionado': rol_id,
+        }
 
-        if not all([username, email, tipo_documento, documento, password1, password2]):
+        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
@@ -130,7 +141,13 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        rol_default, _ = Rol.objects.get_or_create(id=1, defaults={'nombre': 'Usuario'})
+        # Obtener el rol seleccionado (solo roles permitidos, no Administrador)
+        try:
+            rol_seleccionado = roles_disponibles.get(id=rol_id)
+        except Rol.DoesNotExist:
+            messages.error(request, 'El rol seleccionado no es válido.')
+            return render(request, 'registro.html', ctx)
+
         usuario = Usuario(
             numero_documento=documento,
             nombre_completo=username,
@@ -138,7 +155,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol_default,
+            id_rol=rol_seleccionado,
         )
 
         try:
@@ -150,11 +167,18 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol_default.nombre
+        request.session['usuario_rol']            = rol_seleccionado.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
         return redirect('home')
 
-    return render(request, 'registro.html', {'username': '', 'email': '', 'tipo_documento': 'CC', 'documento': ''})
+    return render(request, 'registro.html', {
+        'username': '',
+        'email': '',
+        'tipo_documento': 'CC',
+        'documento': '',
+        'roles': roles_disponibles,
+        'rol_seleccionado': '',
+    })
 
 
 # ─────────────────────────────────────────────────────────────
@@ -174,11 +198,10 @@ def olvido_contrasena_view(request):
             messages.success(request, 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.')
             return render(request, 'olvido_contrasena.html')
 
-        # Genera token y lo guarda en sesión con expiración de 15 minutos
         token = get_random_string(40)
         request.session[f'reset_token_{usuario.numero_documento}'] = {
             'token': token,
-            'expira': time.time() + 900  # 15 minutos en segundos
+            'expira': time.time() + 900
         }
 
         uid  = urlsafe_base64_encode(force_bytes(usuario.numero_documento))
@@ -238,7 +261,6 @@ def nueva_contrasena_view(request, uid, token):
         usuario.password = make_password(password1)
         usuario.save(update_fields=['password'])
 
-        # Invalida el token para que no se reutilice
         del request.session[f'reset_token_{documento}']
 
         messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
