@@ -13,6 +13,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from .models import Usuario, Rol, validar_numero_documento
+from common.mixins import sesion_requerida 
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
@@ -246,6 +247,7 @@ def nueva_contrasena_view(request, uid, token):
 # ─────────────────────────────────────────────────────────────
 #  LISTA DE USUARIOS
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 def lista_usuarios_view(request):
     """Lista y fichas de usuarios con búsqueda y filtros."""
     qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
@@ -280,6 +282,7 @@ def lista_usuarios_view(request):
 # ─────────────────────────────────────────────────────────────
 #  DETALLE USUARIO (JSON para modal)
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 def detalle_usuario_json(request, numero_documento):
     """Devuelve los datos de un usuario en JSON para el modal."""
     usuario = get_object_or_404(
@@ -305,6 +308,7 @@ def detalle_usuario_json(request, numero_documento):
 # ─────────────────────────────────────────────────────────────
 #  EXPORTAR USUARIOS CSV
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 def exportar_usuarios_csv(request):
     """Exporta la lista filtrada de usuarios a CSV."""
     qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
@@ -347,7 +351,7 @@ def exportar_usuarios_csv(request):
 # Asegúrate de tener estos imports al inicio del archivo (ya existen la mayoría):
 #   from django.contrib.auth.hashers import make_password, check_password
 #   from django.contrib import messages
-
+@sesion_requerida
 def perfil_view(request):
     doc = request.session.get('usuario_documento')
     if not doc:

@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 
 from .models import ReporteHistorial
 from .generators import generar_reporte
-
+from common.mixins import sesion_requerida 
 
 MODULOS = [
     ('inventario',     'Inventario',     'bi-boxes',          'Productos, SKU, stock y categorías'),
@@ -16,6 +16,7 @@ MODULOS = [
 ]
 
 
+@sesion_requerida                                    
 def reportes_view(request):
     historial = ReporteHistorial.objects.all()[:50]
     return render(request, 'reportes.html', {
@@ -24,6 +25,7 @@ def reportes_view(request):
     })
 
 
+@sesion_requerida                                    
 @require_POST
 def generar_reporte_view(request):
     modulo  = request.POST.get('modulo', '').strip()

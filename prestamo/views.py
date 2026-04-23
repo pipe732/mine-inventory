@@ -7,8 +7,9 @@ from django.db.models import Q
 from .forms import PrestamoForm
 from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
+from common.mixins import sesion_requerida   
 
-
+@sesion_requerida   
 def _marcar_vencidos():
     """Actualiza automáticamente el estado de préstamos cuya fecha venció."""
     hoy = timezone.localdate()
@@ -19,7 +20,7 @@ def _marcar_vencidos():
     count = vencidos.update(estado='vencido')
     return count
 
-
+@sesion_requerida   
 def prestamos_view(request):
     # Auto-marcar vencidos cada vez que se carga la vista
     _marcar_vencidos()
@@ -210,7 +211,7 @@ def prestamos_view(request):
         'filtro_vencidos':     vencidos_f,
     })
 
-
+@sesion_requerida   
 def prestamo_api(request, pk):
     """Endpoint AJAX usado por el modal de devoluciones."""
     try:
