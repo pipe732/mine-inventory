@@ -101,6 +101,9 @@ def logout_view(request):
 #  REGISTRO  — siempre asigna rol "Usuario" (id=2)
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
+    # Todos los roles disponibles para el registro
+    roles_disponibles = Rol.objects.all()
+
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -108,13 +111,18 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
+        rol_id         = request.POST.get('rol', '').strip()
 
         ctx = {
-            'username': username, 'email': email,
-            'tipo_documento': tipo_documento, 'documento': documento,
+            'username': username,
+            'email': email,
+            'tipo_documento': tipo_documento,
+            'documento': documento,
+            'roles': roles_disponibles,
+            'rol_seleccionado': rol_id,
         }
 
-        if not all([username, email, tipo_documento, documento, password1, password2]):
+        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
@@ -139,8 +147,12 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # ── Rol fijo: "Usuario" (id=2). El rol Admin se asigna solo desde el admin de Django.
-        rol_usuario, _ = Rol.objects.get_or_create(id=2, defaults={'nombre': 'Usuario'})
+        # Obtener el rol seleccionado (solo roles permitidos, no Administrador)
+        try:
+            rol_seleccionado = roles_disponibles.get(id=rol_id)
+        except Rol.DoesNotExist:
+            messages.error(request, 'El rol seleccionado no es válido.')
+            return render(request, 'registro.html', ctx)
 
         usuario = Usuario(
             numero_documento=documento,
@@ -149,7 +161,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol_usuario,
+            id_rol=rol_seleccionado,
         )
 
         try:
@@ -161,12 +173,17 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol_usuario.nombre   # 'Usuario'
+        request.session['usuario_rol']            = rol_seleccionado.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
         return redirect('home')
 
     return render(request, 'registro.html', {
-        'username': '', 'email': '', 'tipo_documento': 'CC', 'documento': '',
+        'username': '',
+        'email': '',
+        'tipo_documento': 'CC',
+        'documento': '',
+        'roles': roles_disponibles,
+        'rol_seleccionado': '',
     })
 
 
@@ -188,7 +205,10 @@ def olvido_contrasena_view(request):
             return render(request, 'olvido_contrasena.html')
 
         token = get_random_string(40)
-        request.session[f'reset_token_{usuario.numero_documento}'] = token
+        request.session[f'reset_token_{usuario.numero_documento}'] = {
+            'token': token,
+            'expira': time.time() + 900
+        }
 
         uid  = urlsafe_base64_encode(force_bytes(usuario.numero_documento))
         link = request.build_absolute_uri(
@@ -201,6 +221,7 @@ def olvido_contrasena_view(request):
                 message=(
                     f'Hola {usuario.nombre_completo},\n\n'
                     f'Haz clic en el siguiente enlace para cambiar tu contraseña:\n\n{link}\n\n'
+                    'Este enlace expira en 15 minutos.\n\n'
                     'Si no solicitaste esto, ignora este mensaje.\n\n'
                     'SENA – Centro Minero · Regional Boyacá'
                 ),
@@ -208,7 +229,7 @@ def olvido_contrasena_view(request):
                 recipient_list=[email],
                 fail_silently=False,
             )
-            messages.success(request, 'Te enviamos un enlace a tu correo para restablecer tu contraseña.')
+            messages.success(request, 'Te enviamos un enlace a tu correo. Tienes 15 minutos para usarlo.')
         except Exception:
             messages.error(request, 'No se pudo enviar el correo. Contacta al administrador.')
 
@@ -226,8 +247,8 @@ def nueva_contrasena_view(request, uid, token):
         messages.error(request, 'El enlace no es válido.')
         return redirect('olvido_contrasena')
 
-    token_guardado = request.session.get(f'reset_token_{documento}')
-    if not token_guardado or token_guardado != token:
+    data = request.session.get(f'reset_token_{documento}')
+    if not data or data['token'] != token or time.time() > data['expira']:
         messages.error(request, 'El enlace ya fue usado o expiró. Solicita uno nuevo.')
         return redirect('olvido_contrasena')
 
@@ -245,6 +266,7 @@ def nueva_contrasena_view(request, uid, token):
 
         usuario.password = make_password(password1)
         usuario.save(update_fields=['password'])
+
         del request.session[f'reset_token_{documento}']
 
         messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
