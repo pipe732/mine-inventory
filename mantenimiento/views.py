@@ -7,7 +7,7 @@ from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 
-from common.mixins import SesionRequeridaMixin, ContextoMixin
+from common.mixins import SesionRequeridaMixin, ContextoMixin, sesion_requerida
 from .models import TipoEstado, Mantenimiento
 from .forms import TipoEstadoForm, MantenimientoForm, MantenimientoUpdateForm
 from inventario.models import Producto
@@ -327,17 +327,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         ctx['total_registros']= self._qs_filtrado.count()
         return ctx
 
-#api
-def login_requerido(view_func):
-    """Decorador de sesión para vistas funcionales."""
-    def wrapper(request, *args, **kwargs):
-        if not request.session.get('usuario_documento'):
-            return redirect('login')
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-
-@login_requerido
+@sesion_requerida  
 def registrar_desde_inventario(request):
     """
     Recibe el POST del modal de mantenimiento lanzado desde inventario.
