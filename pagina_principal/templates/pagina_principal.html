@@ -3,46 +3,82 @@
 {% block content %}
 <div class="container-fluid py-4">
 
+<!-- ══ ESTILOS ANIMACIONES KPI ══ -->
+<style>
+  .kpi-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .kpi-card.kpi-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .kpi-accent-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 4px 4px 0 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.65s ease 0.2s;
+  }
+  .kpi-card.kpi-visible .kpi-accent-bar {
+    transform: scaleX(1);
+  }
+</style>
+
   <!-- ═══════════════════════════════════
        KPI CARDS
   ═══════════════════════════════════ -->
   <div class="row g-3 mb-4">
 
     <div class="col-6 col-md-3">
-      <div class="card h-100">
+      <div class="card h-100 kpi-card" data-kpi-delay="0">
+        <div class="kpi-accent-bar" style="background:#378ADD;"></div>
         <div class="card-body">
           <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Total herramientas</p>
-          <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--text-main);">{{ total_productos }}</h2>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--text-main);" data-target="{{ total_productos }}">0</h2>
           <small style="color:var(--text-muted);">{{ total_categorias }} categoría{{ total_categorias|pluralize:",s" }}</small>
         </div>
       </div>
     </div>
 
     <div class="col-6 col-md-3">
-      <div class="card h-100">
+      <div class="card h-100 kpi-card" data-kpi-delay="130">
+        <div class="kpi-accent-bar" style="background:#9f86c0;"></div>
         <div class="card-body">
           <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Préstamos activos</p>
-          <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--navy);">{{ prestamos_activos_count }}</h2>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--navy);" data-target="{{ prestamos_activos_count }}">0</h2>
           <small style="color:var(--text-muted);">en este momento</small>
         </div>
       </div>
     </div>
 
     <div class="col-6 col-md-3">
-      <div class="card h-100">
+      <div class="card h-100 kpi-card" data-kpi-delay="260">
+        <div class="kpi-accent-bar" style="background:#E24B4A;"></div>
         <div class="card-body">
           <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Vencidos</p>
-          <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--rust);">{{ prestamos_vencidos_count }}</h2>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--rust);" data-target="{{ prestamos_vencidos_count }}">0</h2>
           <small style="color:var(--text-muted);">requieren atención</small>
         </div>
       </div>
     </div>
 
     <div class="col-6 col-md-3">
-      <div class="card h-100">
+      <div class="card h-100 kpi-card" data-kpi-delay="390">
+        <div class="kpi-accent-bar" style="background:#1D9E75;"></div>
         <div class="card-body">
           <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Devoluciones pend.</p>
-          <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--sage);">{{ devoluciones_pendientes_count }}</h2>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--sage);" data-target="{{ devoluciones_pendientes_count }}">0</h2>
           <small style="color:var(--text-muted);">por resolver</small>
         </div>
       </div>
@@ -309,12 +345,32 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════════ -->
-
 {% endblock content %}
 {% block extra_js %}
+<script>
+  /* ══ ANIMACIÓN 1: entrada escalonada + ANIMACIÓN 2: contador ══ */
+  document.addEventListener('DOMContentLoaded', function () {
+    function animarContador(el, target, duracion) {
+      var inicio = performance.now();
+      function paso(ahora) {
+        var p = Math.min((ahora - inicio) / duracion, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(paso);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(paso);
+    }
+    document.querySelectorAll('.kpi-card').forEach(function (card) {
+      var delay = parseInt(card.getAttribute('data-kpi-delay')) || 0;
+      setTimeout(function () {
+        card.classList.add('kpi-visible');
+        card.querySelectorAll('.kpi-number').forEach(function (num) {
+          animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 950);
+        });
+      }, delay + 150);
+    });
+  });
+</script>
 <script src="{% static 'js/pagina_principal.js' %}"></script>
 {% endblock extra_js %}

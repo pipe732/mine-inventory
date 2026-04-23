@@ -96,12 +96,45 @@
 </div>
 
 
+<!-- ══ ESTILOS ANIMACIONES KPI ══ -->
+<style>
+  .kpi-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .kpi-card.kpi-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .kpi-accent-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 4px 4px 0 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.65s ease 0.2s;
+  }
+  .kpi-card.kpi-visible .kpi-accent-bar {
+    transform: scaleX(1);
+  }
+</style>
+
 <!-- ══ TARJETAS KPI ══ -->
 <div class="row g-3 mb-3">
 
   <!-- Total productos -->
   <div class="col-6 col-md-3">
-    <div class="card h-100" style="padding:.9rem 1.1rem;">
+    <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;" data-kpi-delay="0">
+      <div class="kpi-accent-bar" style="background:#378ADD;"></div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
         <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
                      text-transform:uppercase; color:var(--text-muted);">Herramientas</span>
@@ -111,8 +144,9 @@
           <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
         </svg>
       </div>
-      <div style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:var(--text-main); line-height:1;">{{ kpi_total_productos }}</div>
+      <div class="kpi-number" data-target="{{ kpi_total_productos }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--text-main); line-height:1;">0</div>
       <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
                   margin-top:.3rem;">registro{{ kpi_total_productos|pluralize }}</div>
     </div>
@@ -120,7 +154,8 @@
 
   <!-- Stock total -->
   <div class="col-6 col-md-3">
-    <div class="card h-100" style="padding:.9rem 1.1rem;">
+    <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;" data-kpi-delay="130">
+      <div class="kpi-accent-bar" style="background:#1D9E75;"></div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
         <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
                      text-transform:uppercase; color:var(--text-muted);">Stock total</span>
@@ -132,17 +167,18 @@
           <line x1="3" y1="18" x2="3.01" y2="18"/>
         </svg>
       </div>
-      <div style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:var(--text-main); line-height:1;">{{ kpi_total_stock }}</div>
+      <div class="kpi-number" data-target="{{ kpi_total_stock }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--text-main); line-height:1;">0</div>
       <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
                   margin-top:.3rem;">unidades en stock</div>
     </div>
   </div>
 
-  <!-- Sin stock / stock bajo -->
+  <!-- Sin stock -->
   <div class="col-6 col-md-3">
-    <div class="card h-100" style="padding:.9rem 1.1rem;
-         {% if kpi_sin_stock > 0 %}border-color:rgba(192,57,43,.35);{% endif %}">
+    <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;{% if kpi_sin_stock > 0 %}border-color:rgba(192,57,43,.35);{% endif %}" data-kpi-delay="260">
+      <div class="kpi-accent-bar" style="background:{% if kpi_sin_stock > 0 %}#E24B4A{% else %}#EF9F27{% endif %};"></div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
         <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
                      text-transform:uppercase; color:var(--text-muted);">Sin stock</span>
@@ -154,17 +190,35 @@
           <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <div style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; line-height:1;
-                  color:{% if kpi_sin_stock > 0 %}#c0392b{% else %}var(--text-main){% endif %};">
-        {{ kpi_sin_stock }}
-      </div>
+      <div class="kpi-number" data-target="{{ kpi_sin_stock }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; line-height:1;
+                  color:{% if kpi_sin_stock > 0 %}#c0392b{% else %}var(--text-main){% endif %};">0</div>
       <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
                   margin-top:.3rem;">
         producto{{ kpi_sin_stock|pluralize }} agotado{{ kpi_sin_stock|pluralize }}
-        {% if kpi_stock_bajo > 0 %}
-          · <span style="color:#b46414;">{{ kpi_stock_bajo }} con stock bajo</span>
-        {% endif %}
       </div>
+    </div>
+  </div>
+
+  <!-- Stock bajo -->
+  <div class="col-6 col-md-3">
+    <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;{% if kpi_stock_bajo > 0 %}border-color:rgba(180,100,20,.3);{% endif %}" data-kpi-delay="390">
+      <div class="kpi-accent-bar" style="background:#EF9F27;"></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+        <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em;
+                     text-transform:uppercase; color:var(--text-muted);">Stock bajo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="{% if kpi_stock_bajo > 0 %}#b46414{% else %}var(--navy){% endif %}"
+             stroke-width="2" opacity=".6">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="kpi-number" data-target="{{ kpi_stock_bajo }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; line-height:1;
+                  color:{% if kpi_stock_bajo > 0 %}#b46414{% else %}var(--text-main){% endif %};">0</div>
+      <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted);
+                  margin-top:.3rem;">con 5 unidades o menos</div>
     </div>
   </div>
 
@@ -1033,6 +1087,29 @@ document.addEventListener("DOMContentLoaded", function () {
   new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
 });
 {% endif %}
+  /* ══ ANIMACIÓN 1: entrada escalonada + ANIMACIÓN 2: contador ══ */
+  document.addEventListener('DOMContentLoaded', function () {
+    function animarContador(el, target, duracion) {
+      var inicio = performance.now();
+      function paso(ahora) {
+        var p = Math.min((ahora - inicio) / duracion, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(paso);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(paso);
+    }
+    document.querySelectorAll('.kpi-card').forEach(function (card) {
+      var delay = parseInt(card.getAttribute('data-kpi-delay')) || 0;
+      setTimeout(function () {
+        card.classList.add('kpi-visible');
+        card.querySelectorAll('.kpi-number').forEach(function (num) {
+          animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 950);
+        });
+      }, delay + 150);
+    });
+  });
 
   /* ── Editar producto ── */
   function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId) {
