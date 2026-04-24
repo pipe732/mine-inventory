@@ -6,7 +6,12 @@ from devoluciones.models import Devolucion
 
 
 def dashboard_view(request):
-    """Home del administrador."""
+    """Home del administrador — solo accesible por admins."""
+    # Validar que el usuario sea administrador
+    rol = (request.session.get('usuario_rol') or '').strip().lower()
+    if rol not in ('administrador', 'admin'):
+        return redirect('home_usuario')
+    
     # ── Inventario ──
     total_productos  = Producto.objects.count()
     total_categorias = Categoria.objects.count()

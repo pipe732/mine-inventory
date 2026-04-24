@@ -7,7 +7,7 @@ from usuario.views import login_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', login_view, name='login'),
-    path('home/', include('pagina_principal.urls')),
+    path('home/', include('pagina_principal.urls')),  # Redirige a la página principal o dashboard de administrador
     path('devoluciones/', include('devoluciones.urls')),
     path('usuario/', include('usuario.urls')),
     path('prestamos/', include('prestamo.urls')),

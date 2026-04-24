@@ -283,8 +283,8 @@ def home_view(request):
     rol = (request.session.get('usuario_rol') or '').strip().lower()
     # Administrador → dashboard completo
     if rol in ('administrador', 'admin'):
-        return redirect('home_admin')
-    # Cualquier otro rol → portal de usuario
+        return redirect('home')
+    # Usuario normal → su página principal
     return redirect('home_usuario')
  
 
