@@ -72,22 +72,6 @@
                placeholder="correo@ejemplo.com" value="{{ email|default:'' }}" required />
       </div>
 
-    
-      <div class="field-wrap">
-        <span class="field-lbl">Rol</span>
-        <select name="rol" id="rol" class="mine-input full" required>
-          <option value="" disabled {% if not rol_seleccionado %}selected{% endif %}>
-            Selecciona un rol...
-          </option>
-          {% for rol in roles %}
-            <option value="{{ rol.id }}"
-              {% if rol_seleccionado == rol.id|stringformat:"s" %}selected{% endif %}>
-              {{ rol.nombre }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
       <div class="field-wrap">
         <span class="field-lbl">Documento</span>
         <input type="hidden" id="tipo_documento" name="tipo_documento" value="{{ tipo_documento|default:'CC' }}" />
