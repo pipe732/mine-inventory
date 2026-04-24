@@ -280,10 +280,13 @@ def nueva_contrasena_view(request, uid, token):
 # ─────────────────────────────────────────────────────────────
 @login_required
 def home_view(request):
-    rol = request.session.get('usuario_rol', '').lower()
-    if rol == 'admin':
-        return render(request, 'home_admin.html')
-    return render(request, 'home_usuario.html')
+    rol = (request.session.get('usuario_rol') or '').strip().lower()
+    # Administrador → dashboard completo
+    if rol in ('administrador', 'admin'):
+        return redirect('home_admin')
+    # Cualquier otro rol → portal de usuario
+    return redirect('home_usuario')
+ 
 
 
 # ─────────────────────────────────────────────────────────────
