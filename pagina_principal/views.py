@@ -3,8 +3,8 @@ from django.db.models import Sum, Max
 from inventario.models import Producto, Categoria
 from prestamo.models import Prestamo
 from devoluciones.models import Devolucion
- 
- 
+
+
 def dashboard_view(request):
     # ── Inventario ──
     total_productos  = Producto.objects.count()
@@ -26,7 +26,7 @@ def dashboard_view(request):
     max_stock = stock_por_categoria.aggregate(m=Max('total_stock'))['m'] or 1
     # ── Productos recientes ──
     productos_recientes = Producto.objects.select_related('categoria').order_by('-actualizado_en')[:8]
- 
+
     return render(request, 'pagina_principal.html', {
         'total_productos':               total_productos,
         'total_categorias':              total_categorias,
@@ -39,68 +39,71 @@ def dashboard_view(request):
         'stock_por_categoria':           stock_por_categoria,
         'max_stock':                     max_stock,
     })
- 
- 
+
+
 def home_usuario_view(request):
     from usuario.models import Usuario
     from django.utils import timezone
- 
+
     usuario_id = request.session.get('usuario_id')
-    usuario               = None
-    prestamos_activos     = []
-    solicitudes_pendientes = []
-    historial_reciente    = []
-    total_prestamos       = 0
-    vencidos_count        = 0
-    pendientes_aprobacion = 0
- 
+    usuario             = None
+    all_prestamos       = []
+    prestamos_activos   = []
+    historial_reciente  = []
+    total_prestamos     = 0
+    vencidos_count      = 0
+
     if usuario_id:
         try:
             usuario = Usuario.objects.get(pk=usuario_id)
             nombre  = usuario.nombre_completo
- 
-            todos = (
+
+            # Todos los préstamos del usuario, con sus ítems
+            all_prestamos = (
                 Prestamo.objects
                 .prefetch_related('items__producto')
                 .filter(nombre_usuario=nombre)
                 .order_by('-fecha_prestamo')
             )
- 
-            total_prestamos = todos.count()
- 
-            # Activos, parciales y vencidos (visibles en el panel principal)
-            prestamos_activos = todos.filter(estado__in=['activo', 'parcial', 'vencido'])
- 
+
+            total_prestamos = all_prestamos.count()
+
+            # Activos y parciales (en curso)
+            prestamos_activos = all_prestamos.filter(estado__in=['activo', 'parcial', 'vencido'])
+
+            # Devueltos
+            historial_reciente = all_prestamos.filter(estado='devuelto')
+
             # Alertas
-            vencidos_count = todos.filter(estado='vencido').count()
- 
-            # Historial: últimos devueltos
-            historial_reciente = todos.filter(estado='devuelto')[:10]
- 
+            vencidos_count = all_prestamos.filter(estado='vencido').count()
+
         except Usuario.DoesNotExist:
             pass
- 
+
     productos_disponibles = Producto.objects.filter(stock__gt=0).order_by('nombre')
- 
+
     return render(request, 'home_usuario.html', {
         'usuario':                usuario,
-        'prestamos_activos':      prestamos_activos,
-        'solicitudes_pendientes': solicitudes_pendientes,
-        'historial_reciente':     historial_reciente,
+        'all_prestamos':          all_prestamos,         # ← usado en la tabla
+        'prestamos_activos':      prestamos_activos,     # ← para el stat card
+        'historial_reciente':     historial_reciente,    # ← para el stat card
         'total_prestamos':        total_prestamos,
         'vencidos_count':         vencidos_count,
-        'pendientes_aprobacion':  pendientes_aprobacion,
         'productos_disponibles':  productos_disponibles,
     })
- 
- 
+
+
 def prestamo_usuario_view(request):
     from usuario.models import Usuario
- 
+
     usuario_id = request.session.get('usuario_id')
     usuario       = None
     mis_prestamos = []
- 
+    prestamo      = None
+
+    # Si viene con ?id=X mostramos el detalle de ese préstamo
+    prestamo_id = request.GET.get('id')
+
     if usuario_id:
         try:
             usuario = Usuario.objects.get(pk=usuario_id)
@@ -110,13 +113,18 @@ def prestamo_usuario_view(request):
                 .filter(nombre_usuario=usuario.nombre_completo)
                 .order_by('-fecha_prestamo')
             )
+            if prestamo_id:
+                # Solo mostramos el préstamo si pertenece al usuario
+                prestamo = mis_prestamos.filter(pk=prestamo_id).first()
+
         except Usuario.DoesNotExist:
             pass
- 
+
     productos_disponibles = Producto.objects.filter(stock__gt=0).order_by('nombre')
- 
-    return render(request, 'prestamo_usuario_prima.html', {
+
+    return render(request, 'prestamo_usuario.html', {
         'usuario':               usuario,
         'mis_prestamos':         mis_prestamos,
+        'prestamo':              prestamo,       # ← detalle individual si viene ?id=
         'productos_disponibles': productos_disponibles,
     })

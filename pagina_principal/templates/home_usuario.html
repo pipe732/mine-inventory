@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<body>
+
   <!-- HEADER -->
   <div class="border-bottom pb-3 mb-4">
     <h1 class="h3 fw-semibold mb-1">Mis préstamos</h1>
-    <p class="text-secondary small mb-0">Historial completo de herramientas prestadas a tu cuenta</p>
+    <p class="text-secondary small mb-0">
+      Historial completo de herramientas prestadas a tu cuenta ·
+      <span class="font-monospace">{{ usuario.nombre_completo }}</span>
+    </p>
   </div>
 
   <!-- STATS -->
@@ -13,36 +16,45 @@
     <div class="col-4">
       <div class="card border rounded-3 p-3">
         <p class="text-uppercase text-secondary mb-1" style="font-size:11px;letter-spacing:.06em">Total solicitados</p>
-        <p class="h2 fw-semibold text-primary mb-0">3</p>
+        <p class="h2 fw-semibold text-primary mb-0">{{ total_prestamos }}</p>
         <p class="text-secondary mb-0" style="font-size:12px">desde el inicio</p>
       </div>
     </div>
     <div class="col-4">
       <div class="card border rounded-3 p-3">
         <p class="text-uppercase text-secondary mb-1" style="font-size:11px;letter-spacing:.06em">Activos ahora</p>
-        <p class="h2 fw-semibold text-danger mb-0">1</p>
+        <p class="h2 fw-semibold text-danger mb-0">{{ prestamos_activos|length }}</p>
         <p class="text-secondary mb-0" style="font-size:12px">en tu poder</p>
       </div>
     </div>
     <div class="col-4">
       <div class="card border rounded-3 p-3">
         <p class="text-uppercase text-secondary mb-1" style="font-size:11px;letter-spacing:.06em">Devueltos</p>
-        <p class="h2 fw-semibold text-secondary mb-0">2</p>
+        <p class="h2 fw-semibold text-secondary mb-0">{{ historial_reciente|length }}</p>
         <p class="text-secondary mb-0" style="font-size:12px">completados</p>
       </div>
     </div>
   </div>
 
-  <!-- FILTERS -->
+  <!-- ALERTA VENCIDOS -->
+  {% if vencidos_count %}
+  <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+    <i class="bi bi-exclamation-circle-fill"></i>
+    Tienes <strong>{{ vencidos_count }} préstamo{{ vencidos_count|pluralize }}</strong>
+    vencido{{ vencidos_count|pluralize }}. Contacta al administrador.
+  </div>
+  {% endif %}
+
+  <!-- FILTROS -->
   <div class="d-flex flex-wrap gap-2 mb-3">
-    <button class="btn btn-sm btn-dark" data-filter="todos">Todos</button>
-    <button class="btn btn-sm btn-outline-secondary" data-filter="activo">Activos</button>
-    <button class="btn btn-sm btn-outline-secondary" data-filter="devuelto">Devueltos</button>
-    <button class="btn btn-sm btn-outline-secondary" data-filter="vencido">Vencidos</button>
-    <button class="btn btn-sm btn-outline-secondary" data-filter="pendiente">Pendientes</button>
+    <button class="btn btn-sm btn-dark filter-btn active" data-filter="todos">Todos</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="activo">Activos</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="parcial">Parciales</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="devuelto">Devueltos</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="vencido">Vencidos</button>
   </div>
 
-  <!-- TABLE CARD -->
+  <!-- TABLA -->
   <div class="card border rounded-3">
     <div class="card-header bg-white border-bottom py-3 px-4">
       <span class="fw-semibold small">Registro de préstamos</span>
@@ -53,78 +65,98 @@
           <tr>
             <th class="ps-4 text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">#</th>
             <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Producto</th>
-            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Categoría</th>
             <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Cant.</th>
             <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Estado</th>
             <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Fecha</th>
+            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Vencimiento</th>
             <th></th>
           </tr>
         </thead>
-        <tbody id="loans-tbody"></tbody>
+        <tbody>
+          {% for p in all_prestamos %}
+          <tr class="prestamo-row" data-estado="{{ p.estado }}">
+            <td class="ps-4 text-secondary small font-monospace">#{{ p.pk }}</td>
+            <td>
+              {% for item in p.items.all %}
+                <div class="fw-semibold small">{{ item.producto.nombre }}</div>
+              {% empty %}
+                <span class="text-secondary small">—</span>
+              {% endfor %}
+            </td>
+            <td class="text-secondary small">
+              {% for item in p.items.all %}{{ item.cantidad }}{% if not forloop.last %}+{% endif %}{% endfor %}
+            </td>
+            <td>
+              {% if p.estado == 'activo' %}
+                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2" style="font-size:11px">Activo</span>
+              {% elif p.estado == 'devuelto' %}
+                <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" style="font-size:11px">Devuelto</span>
+              {% elif p.estado == 'parcial' %}
+                <span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle px-3 py-2" style="font-size:11px">Parcial</span>
+              {% elif p.estado == 'vencido' %}
+                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-3 py-2" style="font-size:11px">Vencido</span>
+              {% endif %}
+            </td>
+            <td class="text-secondary small font-monospace">{{ p.fecha_prestamo|date:"d M Y" }}</td>
+            <td class="small font-monospace">
+              {% if p.fecha_vencimiento %}
+                {% if p.urgencia == 'vencido' %}
+                  <span class="text-danger fw-semibold">{{ p.fecha_vencimiento|date:"d/m/Y" }}</span>
+                {% elif p.urgencia == 'proximo' %}
+                  <span class="text-warning fw-semibold">{{ p.fecha_vencimiento|date:"d/m/Y" }}</span>
+                {% else %}
+                  <span class="text-secondary">{{ p.fecha_vencimiento|date:"d/m/Y" }}</span>
+                {% endif %}
+              {% else %}
+                <span class="text-secondary">—</span>
+              {% endif %}
+            </td>
+            <td class="pe-3">
+              <a href="{% url 'prestamo_usuario' %}?id={{ p.pk }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye me-1"></i>Ver
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-5 text-secondary">
+              <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+              No tienes préstamos registrados aún.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
-    <div id="empty-msg" class="text-center text-secondary py-5 d-none">
+    <div id="empty-filter-msg" class="text-center text-secondary py-5 d-none">
       <i class="bi bi-inbox fs-3 d-block mb-2"></i>
       No hay préstamos en esta categoría.
     </div>
   </div>
 
-</div>
 {% endblock %}
+
 {% block js %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const loans = [
-  { id:1, producto:'Impresora Canon MF3010',  categoria:'Electrónica',      cantidad:1, estado:'devuelto', fecha:'22 Abr 2026', sku:'EL-002' },
-  { id:2, producto:'Pala de jardín',           categoria:'Herr. manuales',   cantidad:2, estado:'activo',   fecha:'20 Abr 2026', sku:'HM-001' },
-  { id:3, producto:'Taladro Bosch 800W',       categoria:'Herr. eléctricas', cantidad:1, estado:'devuelto', fecha:'10 Abr 2026', sku:'HE-003' },
-];
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.className = 'btn btn-sm btn-outline-secondary filter-btn';
+      });
+      btn.classList.replace('btn-outline-secondary', 'btn-dark');
 
-const badgeCfg = {
-  activo:    { cls:'bg-success-subtle text-success border border-success-subtle', label:'Activo'    },
-  devuelto:  { cls:'bg-warning-subtle text-warning border border-warning-subtle', label:'Devuelto'  },
-  vencido:   { cls:'bg-danger-subtle text-danger border border-danger-subtle',    label:'Vencido'   },
-  pendiente: { cls:'bg-primary-subtle text-primary border border-primary-subtle', label:'Pendiente' },
-};
+      const filter = btn.dataset.filter;
+      const rows   = document.querySelectorAll('.prestamo-row');
+      let visible  = 0;
 
-function render(filter) {
-  const tbody = document.getElementById('loans-tbody');
-  const empty = document.getElementById('empty-msg');
-  const list  = filter === 'todos' ? loans : loans.filter(l => l.estado === filter);
-  tbody.innerHTML = '';
-  if (!list.length) { empty.classList.remove('d-none'); return; }
-  empty.classList.add('d-none');
-  list.forEach(l => {
-    const { cls, label } = badgeCfg[l.estado] || badgeCfg.pendiente;
-    tbody.insertAdjacentHTML('beforeend', `
-      <tr>
-        <td class="ps-4 text-secondary small">#${l.id}</td>
-        <td>
-          <div class="fw-semibold small">${l.producto}</div>
-          <div class="text-secondary" style="font-size:12px">SKU ${l.sku}</div>
-        </td>
-        <td class="text-secondary small">${l.categoria}</td>
-        <td class="text-secondary small">${l.cantidad}</td>
-        <td><span class="badge rounded-pill ${cls} px-3 py-2" style="font-size:11px">${label}</span></td>
-        <td class="text-secondary small">${l.fecha}</td>
-        <td class="pe-3">
-          <a href="prestamo_usuario.html?id=${l.id}" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-eye me-1"></i>Ver
-          </a>
-        </td>
-      </tr>`);
+      rows.forEach(row => {
+        const show = filter === 'todos' || row.dataset.estado === filter;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      document.getElementById('empty-filter-msg').classList.toggle('d-none', visible > 0);
+    });
   });
-}
-
-document.querySelectorAll('[data-filter]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-filter]').forEach(b => b.className = 'btn btn-sm btn-outline-secondary');
-    btn.className = 'btn btn-sm btn-dark';
-    render(btn.dataset.filter);
-  });
-});
-
-render('todos');
 </script>
-</body>
 {% endblock %}
