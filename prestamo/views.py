@@ -31,7 +31,6 @@ def prestamo_usuario_view(request):
     from usuario.models import Usuario
     usuario = get_object_or_404(Usuario, numero_documento=doc)
 
-    # Filtrar préstamos por el documento del usuario (campo 'usuario' en Prestamo)
     all_prestamos = (
         Prestamo.objects
         .prefetch_related('items__producto')
@@ -44,7 +43,7 @@ def prestamo_usuario_view(request):
     total_prestamos       = all_prestamos.count()
     total_activos         = all_prestamos.filter(estado='activo').count()
     vencidos_count        = all_prestamos.filter(estado='vencido').count()
-    pendientes_aprobacion = 0  # reservado para flujo de aprobación futuro
+    pendientes_aprobacion = all_prestamos.filter(estado='pendiente').count()
 
     proximos_vencer = all_prestamos.filter(
         estado__in=['activo', 'parcial'],
@@ -66,14 +65,108 @@ def prestamo_usuario_view(request):
     })
 
 
+# ── Vista de aprobación de solicitudes (Admin) ─────────────────────────────
+def aprobar_prestamo_view(request, pk):
+    """Admin aprueba un préstamo pendiente y registra el serial de cada herramienta."""
+    doc = request.session.get('usuario_documento')
+    if not doc:
+        return redirect('login')
+
+    rol = request.session.get('usuario_rol', '').lower()
+    if rol not in ('admin', 'administrador'):
+        messages.error(request, 'No tienes permisos para aprobar préstamos.')
+        return redirect('prestamo')
+
+    prestamo = get_object_or_404(Prestamo, pk=pk, estado='pendiente')
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion_aprobacion')
+
+        if accion == 'aprobar':
+            # Verificar stock antes de aprobar
+            errores_stock = []
+            for item in prestamo.items.select_related('producto'):
+                if item.producto.stock < item.cantidad:
+                    errores_stock.append(
+                        f'"{item.producto.nombre}": stock insuficiente '
+                        f'(disponible: {item.producto.stock}, solicitado: {item.cantidad})'
+                    )
+            if errores_stock:
+                for e in errores_stock:
+                    messages.error(request, e)
+                # Re-render the form
+            else:
+                # Guardar seriales y descontar stock
+                for item in prestamo.items.select_related('producto'):
+                    serial_key = f'serial_{item.pk}'
+                    serial_val = request.POST.get(serial_key, '').strip()
+                    item.serial_entregado = serial_val
+                    item.save(update_fields=['serial_entregado'])
+
+                    item.producto.stock -= item.cantidad
+                    item.producto.save(update_fields=['stock', 'actualizado_en'])
+
+                # Guardar fecha de vencimiento si se envía
+                fv = request.POST.get('fecha_vencimiento', '').strip()
+                try:
+                    prestamo.fecha_vencimiento = datetime.date.fromisoformat(fv) if fv else None
+                except ValueError:
+                    prestamo.fecha_vencimiento = None
+
+                prestamo.estado = 'activo'
+                prestamo.save(update_fields=['estado', 'fecha_actualizacion', 'fecha_vencimiento'])
+
+                messages.success(
+                    request,
+                    f'Préstamo #{prestamo.pk} aprobado y entregado a {prestamo.nombre_usuario}.'
+                )
+                return redirect('prestamo')
+
+        elif accion == 'rechazar':
+            motivo_rechazo = request.POST.get('motivo_rechazo', '').strip()
+            if not motivo_rechazo:
+                messages.error(request, 'Debes indicar el motivo del rechazo.')
+            else:
+                # Devolver stock reservado si se reservó al crear
+                prestamo.motivo_rechazo = motivo_rechazo
+                prestamo.estado = 'rechazado'
+                prestamo.save(update_fields=['estado', 'motivo_rechazo', 'fecha_actualizacion'])
+                messages.warning(
+                    request,
+                    f'Solicitud #{prestamo.pk} rechazada.'
+                )
+                return redirect('prestamo')
+
+    items = prestamo.items.select_related('producto').all()
+    return render(request, 'aprobar_prestamo.html', {
+        'prestamo': prestamo,
+        'items':    items,
+    })
+
+
 def prestamos_view(request):
     _marcar_vencidos()
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
 
+        # ── Aprobar solicitud pendiente (quick desde lista) ────────────────
+        if accion == 'aprobar_pendiente':
+            prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'), estado='pendiente')
+            return redirect('aprobar_prestamo', pk=prestamo.pk)
+
+        # ── Rechazar solicitud pendiente (quick desde lista) ──────────────
+        elif accion == 'rechazar_pendiente':
+            prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'))
+            motivo_rechazo = request.POST.get('motivo_rechazo', '').strip()
+            prestamo.motivo_rechazo = motivo_rechazo
+            prestamo.estado = 'rechazado'
+            prestamo.save(update_fields=['estado', 'motivo_rechazo', 'fecha_actualizacion'])
+            messages.warning(request, f'Solicitud #{prestamo.pk} rechazada.')
+            return redirect('prestamo')
+
         # ── Cancelar préstamo ──────────────────────────────────────────────
-        if accion == 'cancelar':
+        elif accion == 'cancelar':
             prestamo = get_object_or_404(Prestamo, pk=request.POST.get('prestamo_pk'))
             for item in prestamo.items.filter(devuelto=False):
                 item.producto.stock += item.cantidad
@@ -138,7 +231,7 @@ def prestamos_view(request):
             messages.success(request, f'"{item.producto.nombre}" devuelto correctamente.')
             return redirect('prestamo')
 
-        # ── Crear nuevo préstamo ───────────────────────────────────────────
+        # ── Crear nuevo préstamo (directo, sin aprobación - rol admin) ─────
         else:
             form = PrestamoForm(request.POST)
             if form.is_valid():
@@ -185,6 +278,8 @@ def prestamos_view(request):
                     else:
                         prestamo = form.save(commit=False)
                         prestamo.nombre_usuario = request.POST.get('nombre_usuario', '')
+                        # Admin crea directamente como activo
+                        prestamo.estado = 'activo'
 
                         fv = request.POST.get('fecha_vencimiento', '').strip()
                         try:
@@ -243,7 +338,6 @@ def prestamos_view(request):
     from usuario.models import Usuario
     usuarios_sistema = Usuario.objects.all().order_by('nombre_completo')
 
-    # JSON para el wizard
     import json
     usuarios_json = json.dumps([
         {'doc': u.numero_documento, 'nombre': u.nombre_completo, 'tipo': u.tipo_documento}
@@ -258,6 +352,7 @@ def prestamos_view(request):
     prestamos_activos   = Prestamo.objects.filter(estado='activo').count()
     prestamos_devueltos = Prestamo.objects.filter(estado='devuelto').count()
     prestamos_vencidos  = Prestamo.objects.filter(estado='vencido').count()
+    prestamos_pendientes = Prestamo.objects.filter(estado='pendiente').count()
 
     hoy = timezone.localdate()
     proximos_vencer = Prestamo.objects.filter(
@@ -267,32 +362,32 @@ def prestamos_view(request):
     ).count()
 
     return render(request, 'prestamo.html', {
-        'form':                form,
-        'prestamos':           prestamos,
-        'productos':           productos,
-        'usuarios_sistema':    usuarios_sistema,
-        'usuarios_json':       usuarios_json,
-        'productos_json':      productos_json,
-        'total_prestamos':     total_prestamos,
-        'prestamos_activos':   prestamos_activos,
-        'prestamos_devueltos': prestamos_devueltos,
-        'prestamos_vencidos':  prestamos_vencidos,
-        'proximos_vencer':     proximos_vencer,
-        'filtro_q':            q,
-        'filtro_estado':       estado_f,
-        'filtro_vencidos':     vencidos_f,
+        'form':                 form,
+        'prestamos':            prestamos,
+        'productos':            productos,
+        'usuarios_sistema':     usuarios_sistema,
+        'usuarios_json':        usuarios_json,
+        'productos_json':       productos_json,
+        'total_prestamos':      total_prestamos,
+        'prestamos_activos':    prestamos_activos,
+        'prestamos_devueltos':  prestamos_devueltos,
+        'prestamos_vencidos':   prestamos_vencidos,
+        'prestamos_pendientes': prestamos_pendientes,
+        'proximos_vencer':      proximos_vencer,
+        'filtro_q':             q,
+        'filtro_estado':        estado_f,
+        'filtro_vencidos':      vencidos_f,
     })
 
 
 # ── Vista para solicitud de préstamo desde el portal de usuario ────────────
 def usuario_solicitar_prestamo(request):
-    """Permite a un usuario autenticado solicitar un préstamo desde su portal."""
+    """Permite a un usuario autenticado solicitar un préstamo — queda en estado 'pendiente'."""
     if request.method != 'POST':
         return redirect('prestamo_usuario')
 
     from usuario.models import Usuario
 
-    # Clave correcta de sesión
     doc = request.session.get('usuario_documento')
     if not doc:
         messages.error(request, 'Debes iniciar sesión para solicitar un préstamo.')
@@ -334,6 +429,7 @@ def usuario_solicitar_prestamo(request):
         except (ValueError, TypeError):
             errores.append(f'Cantidad inválida para "{producto.nombre}".')
             continue
+        # En solicitud solo verificamos que exista stock, no lo descontamos aún
         if producto.stock <= 0:
             errores.append(f'"{producto.nombre}" no tiene stock disponible.')
         elif cantidad > producto.stock:
@@ -349,11 +445,13 @@ def usuario_solicitar_prestamo(request):
             messages.error(request, e)
         return redirect('prestamo_usuario')
 
+    # Crear préstamo en estado PENDIENTE (no descuenta stock todavía)
     prestamo = Prestamo()
-    prestamo.usuario        = doc
-    prestamo.nombre_usuario = usuario.nombre_completo
-    prestamo.observaciones  = motivo
-    prestamo.estado         = 'activo'
+    prestamo.usuario         = doc
+    prestamo.nombre_usuario  = usuario.nombre_completo
+    prestamo.observaciones   = motivo
+    prestamo.motivo_solicitud = motivo
+    prestamo.estado          = 'pendiente'
 
     try:
         prestamo.fecha_vencimiento = datetime.date.fromisoformat(fecha_str) if fecha_str else None
@@ -362,16 +460,19 @@ def usuario_solicitar_prestamo(request):
 
     prestamo.save()
 
+    # Crear ítems SIN descontar stock (se descuenta al aprobar)
     for producto, cantidad in items_validated:
         ItemPrestamo.objects.create(
             prestamo=prestamo,
             producto=producto,
             cantidad=cantidad,
         )
-        producto.stock -= cantidad
-        producto.save(update_fields=['stock'])
 
-    messages.success(request, f'Solicitud de préstamo #{prestamo.pk} registrada exitosamente.')
+    messages.success(
+        request,
+        f'Solicitud #{prestamo.pk} enviada correctamente. '
+        'El administrador la revisará y te entregará las herramientas.'
+    )
     return redirect('prestamo_usuario')
 
 
@@ -394,9 +495,10 @@ def prestamo_api(request, pk):
         'urgencia':          p.urgencia,
         'items': [
             {
-                'id':       item.pk,
-                'devuelto': item.devuelto,
-                'cantidad': item.cantidad,
+                'id':              item.pk,
+                'devuelto':        item.devuelto,
+                'cantidad':        item.cantidad,
+                'serial_entregado': item.serial_entregado,
                 'producto': {
                     'id':         item.producto.pk,
                     'nombre':     item.producto.nombre,
