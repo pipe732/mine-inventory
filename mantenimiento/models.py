@@ -224,3 +224,144 @@ class MantenimientoCambio(models.Model):
 
     def __str__(self):
         return f"Cambio OT #{self.mantenimiento_id} - {self.fecha_edicion:%Y-%m-%d %H:%M}"
+
+
+# ─────────────────────────────────────────────────────────────
+#  CONSUMO DE REPUESTOS EN MANTENIMIENTO
+# ─────────────────────────────────────────────────────────────
+class ConsumoRepuesto(models.Model):
+    """
+    Registra cada repuesto consumido en una orden de trabajo (mantenimiento).
+    Actualiza automáticamente el stock y permite rastrear costos y trazabilidad.
+    """
+
+    mantenimiento = models.ForeignKey(
+        Mantenimiento,
+        on_delete=models.CASCADE,
+        related_name='repuestos_consumidos',
+        verbose_name="Orden de Trabajo"
+    )
+
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.PROTECT,
+        related_name='consumos_mantenimiento',
+        verbose_name="Repuesto"
+    )
+
+    # ── Cantidad y medida ─────────────────────────────────
+    cantidad = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        verbose_name="Cantidad utilizada"
+    )
+
+    # ── Costos ────────────────────────────────────────────
+    costo_unitario = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Costo unitario (en el momento)"
+    )
+
+    subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        editable=False,
+        verbose_name="Subtotal (cantidad × costo unitario)"
+    )
+
+    # ── Trazabilidad ──────────────────────────────────────
+    lote = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Lote / Número de serie"
+    )
+
+    almacen_origen = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Almacén / Ubicación de origen"
+    )
+
+    # ── Auditoría ─────────────────────────────────────────
+    consumido_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='repuestos_consumidos',
+        verbose_name="Consumido por (técnico)"
+    )
+
+    fecha_consumo = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha y hora de consumo"
+    )
+
+    # ── Devoluciones ──────────────────────────────────────
+    devuelto = models.BooleanField(
+        default=False,
+        verbose_name="¿Fue devuelto?"
+    )
+
+    cantidad_devuelta = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        verbose_name="Cantidad devuelta"
+    )
+
+    fecha_devolucion = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de devolución"
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Al guardar:
+        1. Calcula automáticamente el subtotal
+        2. Guarda la ubicación del producto como origen
+        3. Actualiza el stock del inventario
+        """
+        # Calcular subtotal automáticamente
+        self.subtotal = self.cantidad * self.costo_unitario
+
+        # Si es nuevo, guardar ubicación actual del producto
+        if not self.pk and self.producto.ubicacion:
+            self.almacen_origen = self.producto.ubicacion
+
+        super().save(*args, **kwargs)
+
+        # Actualizar stock después de guardar
+        self._actualizar_stock_inventario()
+
+    def _actualizar_stock_inventario(self):
+        """
+        Deduce o suma cantidad del stock dependiendo de consumo o devolución.
+        """
+        if not self.devuelto:
+            # Consumo normal: restar stock
+            self.producto.stock -= int(self.cantidad)
+        else:
+            # Devolución: devolver stock
+            if self.cantidad_devuelta:
+                self.producto.stock += int(self.cantidad_devuelta)
+
+        self.producto.save(update_fields=['stock', 'actualizado_en'])
+
+    def __str__(self):
+        estado = "Devuelto" if self.devuelto else "Consumido"
+        return f"{estado}: {self.producto.nombre} × {self.cantidad} en OT #{self.mantenimiento_id}"
+
+    class Meta:
+        verbose_name = "Consumo de Repuesto"
+        verbose_name_plural = "Consumos de Repuestos"
+        ordering = ['-fecha_consumo']
+        indexes = [
+            models.Index(fields=['mantenimiento', '-fecha_consumo']),
+            models.Index(fields=['producto', '-fecha_consumo']),
+        ]

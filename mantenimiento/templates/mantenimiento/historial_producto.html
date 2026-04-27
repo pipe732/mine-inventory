@@ -117,7 +117,7 @@ Historial —
           </td>
         </tr>
         {% empty %}
-          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Este activo no tiene mantenimientos registrados aún." empty_hint="Usa el botón Nuevo Mantenimiento para agregar el primero." %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Este activo no tiene mantenimientos registrados aún." empty_hint="Usa el botón <strong>Nuevo Mantenimiento</strong> para agregar el primero." %}
         {% endfor %}
       </tbody>
     </table>
