@@ -1,5 +1,6 @@
 import re
 import csv
+import time
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
@@ -12,8 +13,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
 from django.core.exceptions import ValidationError
-
 from .models import Usuario, Rol, validar_numero_documento
+from .decorators import login_required, admin_required, usuario_required
 from common.mixins import sesion_requerida 
 
 DOC_RULES = {
