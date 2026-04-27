@@ -11,14 +11,15 @@ from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
 from common.mixins import sesion_requerida   
 
-@sesion_requerida   
-def _marcar_vencidos():
+@sesion_requerida
+def _marcar_vencidos(request):
     hoy = timezone.localdate()
     return Prestamo.objects.filter(
         estado__in=['activo', 'parcial'],
         fecha_vencimiento__lt=hoy,
     ).update(estado='vencido')
 
+@sesion_requerida
 
 # ── Vista portal de usuario ────────────────────────────────────────────────
 def prestamo_usuario_view(request):
@@ -141,7 +142,7 @@ def aprobar_prestamo_view(request, pk):
 
 @sesion_requerida   
 def prestamos_view(request):
-    _marcar_vencidos()
+    _marcar_vencidos(request)
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
@@ -422,6 +423,7 @@ def prestamos_view(request):
         'filtro_vencidos':      vencidos_f,
     })
 
+@sesion_requerida
 
 # ── Vista para solicitud de préstamo desde el portal de usuario ────────────
 def usuario_solicitar_prestamo(request):

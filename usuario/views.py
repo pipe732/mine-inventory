@@ -1,5 +1,6 @@
 import re
 import csv
+import time
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
@@ -279,6 +280,7 @@ def nueva_contrasena_view(request, uid, token):
 # ─────────────────────────────────────────────────────────────
 #  HOME  — redirige según rol
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @login_required
 def home_view(request):
     rol = (request.session.get('usuario_rol') or '').strip().lower()
@@ -390,7 +392,6 @@ def exportar_usuarios_csv(request):
             u.id_rol.nombre,
         ])
     return response
-
 
 # ─────────────────────────────────────────────────────────────
 #  PERFIL  — cualquier usuario autenticado
