@@ -15,7 +15,7 @@ from django.db.models import Q
 from django.core.exceptions import ValidationError
 
 from .models import Usuario, Rol, validar_numero_documento
-from .decorators import login_required, admin_required
+from .decorators import login_required, admin_required, usuario_required
 from common.mixins import sesion_requerida
 
 DOC_RULES = {
@@ -280,6 +280,7 @@ def nueva_contrasena_view(request, uid, token):
 # ─────────────────────────────────────────────────────────────
 #  HOME  — redirige según rol
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @login_required
 def home_view(request):
     rol = (request.session.get('usuario_rol') or '').strip().lower()
