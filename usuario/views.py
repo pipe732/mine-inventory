@@ -98,12 +98,9 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO  — siempre asigna rol "Usuario" (id=2)
+#  REGISTRO  — siempre asigna rol "Usuario" automáticamente
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
-    # Todos los roles disponibles para el registro
-    roles_disponibles = Rol.objects.all()
-
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -111,18 +108,15 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
-        rol_id         = request.POST.get('rol', '').strip()
 
         ctx = {
             'username': username,
             'email': email,
             'tipo_documento': tipo_documento,
             'documento': documento,
-            'roles': roles_disponibles,
-            'rol_seleccionado': rol_id,
         }
 
-        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
+        if not all([username, email, tipo_documento, documento, password1, password2]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
@@ -147,11 +141,11 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # Obtener el rol seleccionado (solo roles permitidos, no Administrador)
+        # Obtener el rol "Usuario" automáticamente
         try:
-            rol_seleccionado = roles_disponibles.get(id=rol_id)
+            rol_usuario = Rol.objects.get(nombre='Usuario')
         except Rol.DoesNotExist:
-            messages.error(request, 'El rol seleccionado no es válido.')
+            messages.error(request, 'No existe el rol Usuario en el sistema.')
             return render(request, 'registro.html', ctx)
 
         usuario = Usuario(
@@ -161,7 +155,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol_seleccionado,
+            id_rol=rol_usuario,
         )
 
         try:
@@ -173,7 +167,7 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol_seleccionado.nombre
+        request.session['usuario_rol']            = rol_usuario.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
         return redirect('home')
 
@@ -182,8 +176,6 @@ def registro_view(request):
         'email': '',
         'tipo_documento': 'CC',
         'documento': '',
-        'roles': roles_disponibles,
-        'rol_seleccionado': '',
     })
 
 
