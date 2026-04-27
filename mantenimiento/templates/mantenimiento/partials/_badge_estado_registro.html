@@ -1,0 +1,7 @@
+{% if estado == 'cerrado' %}
+  <span class="badge-state badge-aprobada">{{ etiqueta }}</span>
+{% elif estado == 'cancelado' %}
+  <span class="badge-state badge-rechazada">{{ etiqueta }}</span>
+{% else %}
+  <span class="badge-state badge-pendiente">{{ etiqueta }}</span>
+{% endif %}

@@ -2,12 +2,16 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
 from django.db import IntegrityError
+
 from .models import Producto, Categoria
 from .forms import ProductoForm, CategoriaForm, FiltroInventarioForm
+from mantenimiento.forms import MantenimientoForm
 
 
 def inventario(request):
     form_filtro = FiltroInventarioForm(request.GET or None)
+
+    # Variables de control de errores
     form_modal_errors = False
     modal_categoria_errors = False
     error_producto = ""
@@ -27,11 +31,11 @@ def inventario(request):
 
         # ── PRODUCTO: crear ──
         if accion == "crear_producto":
-            post_sku         = request.POST.get("codigo_sku", "")
-            post_nombre      = request.POST.get("nombre", "")
+            post_sku = request.POST.get("codigo_sku", "")
+            post_nombre = request.POST.get("nombre", "")
             post_descripcion = request.POST.get("descripcion", "")
-            post_stock       = request.POST.get("stock", "0")
-            post_categoria   = request.POST.get("categoria", "")
+            post_stock = request.POST.get("stock", "0")
+            post_categoria = request.POST.get("categoria", "")
 
             form = ProductoForm(request.POST)
             if form.is_valid():
@@ -90,7 +94,7 @@ def inventario(request):
 
         # ── CATEGORÍA: crear ──
         elif accion == "crear_categoria":
-            post_cat_nombre      = request.POST.get("cat_nombre", "").strip()
+            post_cat_nombre = request.POST.get("cat_nombre", "").strip()
             post_cat_descripcion = request.POST.get("cat_descripcion", "").strip()
 
             if post_cat_nombre:
@@ -99,7 +103,10 @@ def inventario(request):
                     modal_categoria_errors = True
                 else:
                     try:
-                        Categoria.objects.create(nombre=post_cat_nombre, descripcion=post_cat_descripcion or None)
+                        Categoria.objects.create(
+                            nombre=post_cat_nombre,
+                            descripcion=post_cat_descripcion or None
+                        )
                         messages.success(request, f'Categoría "{post_cat_nombre}" creada correctamente.')
                         return redirect("inventario:inventario")
                     except IntegrityError:
@@ -115,6 +122,7 @@ def inventario(request):
             categoria = get_object_or_404(Categoria, pk=pk)
             nombre = request.POST.get("cat_nombre", "").strip()
             descripcion = request.POST.get("cat_descripcion", "").strip()
+
             if nombre:
                 if Categoria.objects.filter(nombre__iexact=nombre).exclude(pk=pk).exists():
                     messages.error(request, f'Ya existe una categoría llamada "{nombre}". Elige un nombre diferente.')
@@ -143,9 +151,8 @@ def inventario(request):
     # ── GET: lista con filtros ──
     productos  = Producto.objects.select_related("categoria").all()
     categorias = Categoria.objects.prefetch_related("productos").all()
-
     if form_filtro.is_valid():
-        busqueda   = form_filtro.cleaned_data.get("busqueda")
+        busqueda = form_filtro.cleaned_data.get("busqueda")
         cat_filtro = form_filtro.cleaned_data.get("categoria")
         if busqueda:
             productos = productos.filter(
@@ -153,6 +160,20 @@ def inventario(request):
             )
         if cat_filtro:
             productos = productos.filter(categoria=cat_filtro)
+
+    #modal de mantenimiento
+    mant_producto_id = request.session.pop('mant_producto_id_error', None)
+    mant_sku = request.session.pop('mant_sku_error', '')
+    mant_nombre = request.session.pop('mant_nombre_error', '')
+    mant_form_saved = request.session.pop('mant_form_data', None)
+
+    if mant_form_saved:
+        mant_form = MantenimientoForm(mant_form_saved)
+        mant_form.is_valid()
+        mant_modal_errors = True
+    else:
+        mant_form = MantenimientoForm()
+        mant_modal_errors = False
 
     # ── Ordenamiento dinámico ──
     orden = request.GET.get("orden", "nombre")
@@ -199,5 +220,13 @@ def inventario(request):
         # Alertas de stock
         "alertas_stock":          alertas_stock,
         "hay_alertas":            bool(alertas_stock),
+
+        # Variables para mantenimiento
+        "mant_form":              mant_form,
+        "mant_modal_errors":      mant_modal_errors,
+        "mant_producto_id_error": mant_producto_id or '',
+        "mant_sku_error":         mant_sku,
+        "mant_nombre_error":      mant_nombre,
     }
+
     return render(request, "inventario.html", context)
