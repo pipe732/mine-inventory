@@ -14,7 +14,7 @@ from django.db.models import Q
 from django.core.exceptions import ValidationError
 
 from .models import Usuario, Rol, validar_numero_documento
-from .decorators import login_required, admin_required, usuario_required
+from common.mixins import sesion_requerida 
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{10}$'),
@@ -278,6 +278,7 @@ def nueva_contrasena_view(request, uid, token):
 # ─────────────────────────────────────────────────────────────
 #  HOME  — redirige según rol
 # ─────────────────────────────────────────────────────────────
+@sesion_requerida
 @login_required
 def home_view(request):
     rol = (request.session.get('usuario_rol') or '').strip().lower()
@@ -327,7 +328,7 @@ def lista_usuarios_view(request):
 # ─────────────────────────────────────────────────────────────
 #  DETALLE USUARIO (JSON para modal)  — solo Admin
 # ─────────────────────────────────────────────────────────────
-@admin_required
+@sesion_requerida
 def detalle_usuario_json(request, numero_documento):
     usuario = get_object_or_404(
         Usuario.objects.select_related('id_rol', 'destinado', 'solicitado'),
@@ -351,7 +352,7 @@ def detalle_usuario_json(request, numero_documento):
 # ─────────────────────────────────────────────────────────────
 #  EXPORTAR USUARIOS CSV  — solo Admin
 # ─────────────────────────────────────────────────────────────
-@admin_required
+@sesion_requerida
 def exportar_usuarios_csv(request):
     qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
 
@@ -388,11 +389,12 @@ def exportar_usuarios_csv(request):
         ])
     return response
 
-
-# ─────────────────────────────────────────────────────────────
-#  PERFIL  — cualquier usuario autenticado
-# ─────────────────────────────────────────────────────────────
-@login_required
+# usuario/views.py  — solo la función perfil_view
+# Añade esto al final del archivo views.py existente.
+# Asegúrate de tener estos imports al inicio del archivo (ya existen la mayoría):
+#   from django.contrib.auth.hashers import make_password, check_password
+#   from django.contrib import messages
+@sesion_requerida
 def perfil_view(request):
     doc     = request.session.get('usuario_documento')
     usuario = get_object_or_404(Usuario, numero_documento=doc)

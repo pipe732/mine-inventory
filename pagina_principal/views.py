@@ -3,8 +3,9 @@ from django.db.models import Sum, Max
 from inventario.models import Producto, Categoria
 from prestamo.models import Prestamo
 from devoluciones.models import Devolucion
+#from common.mixins import sesion_requerida 
 
-
+#@sesion_requerida     
 def dashboard_view(request):
     """Home del administrador — solo accesible por admins."""
     # Validar que el usuario sea administrador

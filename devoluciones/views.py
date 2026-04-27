@@ -3,8 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Devolucion
 from prestamo.models import Prestamo, ItemPrestamo
+from common.mixins import sesion_requerida   
 
 
+@sesion_requerida 
 def devoluciones_view(request):
     edit_id = None
 
