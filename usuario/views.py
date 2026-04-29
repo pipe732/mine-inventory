@@ -18,7 +18,7 @@ from .decorators import login_required, admin_required, usuario_required
 from common.mixins import sesion_requerida 
 
 DOC_RULES = {
-    'CC': re.compile(r'^\d{10}$'),
+    'CC': re.compile(r'^\d{6,10}$'),
     'CE': re.compile(r'^[A-Za-z0-9]{12}$'),
     'PP': re.compile(r'^[A-Za-z0-9]{9}$'),
     'TI': re.compile(r'^\d{10}$'),
