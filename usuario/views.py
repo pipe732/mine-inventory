@@ -80,16 +80,19 @@ def login_view(request):
             messages.error(request, 'Documento o contraseña incorrectos.')
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
-        # Guardar rol en sesión para los decoradores
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.id_rol.nombre   # 'Admin' | 'Usuario'
+        request.session['usuario_rol']            = usuario.id_rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        return redirect('home')
+        rol = usuario.id_rol.nombre.strip().lower()
+        if rol in ('administrador', 'instructor'):
+            return redirect('home')
+        else:
+            return redirect('home_usuario')
 
-    return render(request, 'login.html')
+    return render(request, 'login.html')  
 
-
+    
 # ─────────────────────────────────────────────────────────────
 #  LOGOUT
 # ─────────────────────────────────────────────────────────────
@@ -99,9 +102,11 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO  — siempre asigna rol "Usuario" automáticamente
+#  REGISTRO  — se crea el usuario con el rol asignado 
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
+    roles = Rol.objects.all()
+
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -109,15 +114,17 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
+        rol_id         = request.POST.get('rol', '').strip()
 
         ctx = {
             'username': username,
             'email': email,
             'tipo_documento': tipo_documento,
             'documento': documento,
+            'roles': roles,
         }
 
-        if not all([username, email, tipo_documento, documento, password1, password2]):
+        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
@@ -142,11 +149,10 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # Obtener el rol "Usuario" automáticamente
         try:
-            rol_usuario = Rol.objects.get(nombre='Usuario')
+            rol = Rol.objects.get(id=rol_id)
         except Rol.DoesNotExist:
-            messages.error(request, 'No existe el rol Usuario en el sistema.')
+            messages.error(request, 'El rol seleccionado no es válido.')
             return render(request, 'registro.html', ctx)
 
         usuario = Usuario(
@@ -156,7 +162,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol_usuario,
+            id_rol=rol,
         )
 
         try:
@@ -168,17 +174,19 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol_usuario.nombre
+        request.session['usuario_rol']            = rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        return redirect('home')
-
+        if rol.nombre.strip().lower() in ('administrador', 'instructor'):
+            return redirect('home')
+        else:
+            return redirect('home_usuario')
     return render(request, 'registro.html', {
         'username': '',
         'email': '',
         'tipo_documento': 'CC',
         'documento': '',
+        'roles': roles,
     })
-
 
 # ─────────────────────────────────────────────────────────────
 #  OLVIDÓ CONTRASEÑA — envía el link

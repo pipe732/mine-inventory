@@ -90,6 +90,15 @@
         </div>
         <div class="doc-hint" id="doc-hint"></div>
       </div>
+      <div class="field-wrap">
+  <span class="field-lbl">Rol</span>
+  <select name="rol" class="mine-input full" required>
+    <option value="">— Selecciona un rol —</option>
+    {% for rol in roles %}
+      <option value="{{ rol.id }}">{{ rol.nombre }}</option>
+    {% endfor %}
+  </select>
+</div>
 
       <div class="row-2 field-wrap">
         <div>
