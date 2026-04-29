@@ -1,5 +1,6 @@
 import re
 import csv
+import time
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
@@ -107,7 +108,7 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO  — siempre asigna rol "Usuario" (id=2)
+#  REGISTRO  — siempre asigna rol "Usuario" automáticamente
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
     if request.method == 'POST':

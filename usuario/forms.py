@@ -7,7 +7,6 @@ class UsuarioForm(forms.ModelForm):
         model = Usuario
         fields = [
             'numero_documento',
-            'id_rol',
             'nombre_completo',
             'correo',
             'telefono',
@@ -19,9 +18,6 @@ class UsuarioForm(forms.ModelForm):
             'numero_documento': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: 1234567890'
-            }),
-            'id_rol': forms.Select(attrs={
-                'class': 'form-control'
             }),
             'nombre_completo': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -47,7 +43,6 @@ class UsuarioForm(forms.ModelForm):
         }
         labels = {
             'numero_documento': 'Número de Documento',
-            'id_rol': 'Rol',
             'nombre_completo': 'Nombre Completo',
             'correo': 'Correo Electrónico',
             'telefono': 'Teléfono',
