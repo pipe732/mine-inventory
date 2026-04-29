@@ -26,18 +26,6 @@ def validar_numero_documento(value, tipo):
         raise ValidationError(mensaje)
 
 
-class Rol(models.Model):
-    nombre = models.CharField(max_length=100)
-
-    class Meta:
-        db_table = 'rol'
-        verbose_name = 'Rol'
-        verbose_name_plural = 'Roles'
-
-    def __str__(self):
-        return self.nombre
-
-
 class Usuario(models.Model):
     TIPO_DOCUMENTO_CHOICES = [
         ('CC', 'Cédula de Ciudadanía'),
@@ -46,13 +34,13 @@ class Usuario(models.Model):
         ('TI', 'Tarjeta de Identidad'),
     ]
 
+    ROL_CHOICES = [
+        ('Usuario', 'Usuario'),
+        ('Administrador', 'Administrador'),
+    ]
+
     numero_documento = models.CharField(max_length=20, primary_key=True)
-    id_rol = models.ForeignKey(
-        Rol,
-        on_delete=models.PROTECT,
-        db_column='id_rol',
-        related_name='usuarios'
-    )
+    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='Usuario')
     nombre_completo = models.CharField(max_length=200)
     correo          = models.EmailField(max_length=255, unique=True)
     telefono        = models.CharField(max_length=20, blank=True, default='')

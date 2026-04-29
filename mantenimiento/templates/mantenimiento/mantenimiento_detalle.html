@@ -5,10 +5,7 @@ Detalle de Mantenimiento
 {% endblock %}
 {% block content %} 
 
-{% include "mantenimiento/partials/_cabecera.html" with 
-titulo="Detalle de Mantenimiento"
-subtitulo=m.producto.nombre url_cancelar=url_cancelar
-%}
+{% include "mantenimiento/partials/_cabecera.html" with titulo="Detalle de Mantenimiento" subtitulo=m.producto.nombre url_cancelar=url_cancelar %}
 
 <div class="row g-4">
   <!-- Columna principal -->

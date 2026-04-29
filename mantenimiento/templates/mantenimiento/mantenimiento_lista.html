@@ -6,12 +6,7 @@ Todos los Mantenimientos
 
 {% block content %} 
 
-{% include "mantenimiento/partials/_cabecera.html" with
-    titulo="Todos los Mantenimientos"
-    subtitulo="Listado completo de registros de mantenimiento"
-    url_accion=url_accion
-    label_accion=label_accion
-%}
+{% include "mantenimiento/partials/_cabecera.html" with titulo="Todos los Mantenimientos" subtitulo="Listado completo de registros de mantenimiento" url_accion=url_accion label_accion=label_accion %}
 
 {% include "mantenimiento/partials/_filtros.html" with modo='mantenimiento' %}
 
@@ -116,10 +111,7 @@ Todos los Mantenimientos
           </td>
         </tr>
         {% empty %}
-          {% include "mantenimiento/partials/_tabla_empty.html" with 
-            colspan=8 
-            empty_mensaje="No hay registros de mantenimiento aún." 
-            empty_hint="Usa <strong>Nuevo Registro</strong> para agregar el primero." %}
+            {% include "mantenimiento/partials/_tabla_empty.html" with colspan=8 empty_mensaje="No hay registros de mantenimiento aún." empty_hint="Usa <strong>Nuevo Registro</strong> para agregar el primero." %}
         {% endfor %}
       </tbody>
     </table>

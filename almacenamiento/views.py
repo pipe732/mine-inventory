@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EstanteForm, AlmacenForm
 from .models import Estante, Almacen
+from common.mixins import sesion_requerida 
 
-
+@sesion_requerida  
 def vista_almacenes(request):
     almacenes = Almacen.objects.all()
     form = AlmacenForm()
@@ -35,7 +36,7 @@ def vista_almacenes(request):
         'show_modal': bool(form.errors)
     })
 
-
+@sesion_requerida  
 def vista_estantes(request):
     estantes = Estante.objects.all()
     form = EstanteForm()
@@ -69,6 +70,6 @@ def vista_estantes(request):
         'show_modal': bool(form.errors)
     })
 
-
+@sesion_requerida  
 def crear_estante(request):
     return redirect('estantes')
