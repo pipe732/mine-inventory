@@ -1013,6 +1013,9 @@
               <label class="form-label">Materiales / repuestos usados</label>
               {{ mant_form.materiales_usados }}
             </div>
+
+            {% include "mantenimiento/partials/_consumo_repuestos_formset.html" with formset=mant_repuestos_formset %}
+
             <div class="col-12">
               <label class="form-label">Notas adicionales</label>
               {{ mant_form.notas_adicionales }}
