@@ -1,0 +1,161 @@
+<div class="col-12">
+  <div class="card" style="border: 1px solid rgba(9, 77, 146, 0.14);">
+    <div class="card-body" style="padding: 1.15rem;">
+      {% include "mantenimiento/partials/_section_heading.html" with titulo="Repuestos consumidos" %}
+
+      {{ formset.management_form }}
+
+      {% if formset.non_form_errors %}
+        <div class="alert alert-danger py-2">
+          {{ formset.non_form_errors }}
+        </div>
+      {% endif %}
+
+      <div data-repuesto-autocomplete data-autocomplete-url="{% url 'inventario:producto_autocomplete' %}"></div>
+
+      <div id="{{ formset.prefix }}-forms" class="d-grid gap-3">
+        {% for repuesto_form in formset.forms %}
+          {% include "mantenimiento/partials/_repuesto_row.html" with form=repuesto_form form_index=forloop.counter0 %}
+        {% endfor %}
+      </div>
+
+      {# Template para nuevas filas #}
+      <template id="{{ formset.prefix }}-empty-form-template">
+        {% include "mantenimiento/partials/_repuesto_row.html" with form=formset.empty_form form_index="__prefix__" %}
+      </template>
+
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="button" class="btn-outline-mine" id="{{ formset.prefix }}-add-form">
+          {% include "mantenimiento/partials/_svg_icon.html" with icon="plus" %}
+          Agregar repuesto
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var prefix = '{{ formset.prefix }}';
+    var root = document.querySelector('[data-repuesto-autocomplete]');
+    var endpoint = root ? root.getAttribute('data-autocomplete-url') : '';
+    var totalForms = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+    var addButton = document.getElementById(prefix + '-add-form');
+    var formsContainer = document.getElementById(prefix + '-forms');
+    var template = document.getElementById(prefix + '-empty-form-template');
+
+    if (!totalForms || !addButton || !formsContainer || !template) {
+      return;
+    }
+
+    function getRowFromInput(input) {
+      return input.closest('[data-form-index]');
+    }
+
+    function getHiddenInput(row) {
+      return row ? row.querySelector('input[name$="-producto"]') : null;
+    }
+
+    function getMeta(row) {
+      return row ? row.querySelector('[data-repuesto-meta]') : null;
+    }
+
+    function getResultsBox(row) {
+      return row ? row.querySelector('[data-repuesto-results]') : null;
+    }
+
+    function renderResults(row, items) {
+      var box = getResultsBox(row);
+      if (!box) return;
+      box.innerHTML = '';
+      if (!items.length) {
+        box.style.display = 'block';
+        box.innerHTML = '<div style="padding:.6rem .75rem; color:var(--text-muted);">Sin resultados</div>';
+        return;
+      }
+      items.forEach(function (item) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'w-100 text-start';
+        button.style.cssText = 'border:0; background:#fff; padding:.6rem .75rem; border-bottom:1px solid rgba(9,77,146,.08);';
+        button.innerHTML = '<div style="font-weight:600">[' + item.codigo_sku + '] ' + item.nombre + '</div>' +
+          '<div style="font-size:.78rem; color:var(--text-muted)">' +
+          (item.categoria || 'Sin categoría') +
+          (item.ubicacion ? ' · ' + item.ubicacion : '') +
+          (item.stock !== null ? ' · Stock: ' + item.stock : '') +
+          '</div>';
+        button.addEventListener('click', function () {
+          var search = row.querySelector('[data-repuesto-search]');
+          var hidden = getHiddenInput(row);
+          var meta = getMeta(row);
+          if (search) search.value = '[' + item.codigo_sku + '] ' + item.nombre;
+          if (hidden) hidden.value = item.id;
+          if (meta) meta.textContent = (item.descripcion || '') + (item.unidad_medida ? ' · Unidad: ' + item.unidad_medida : '');
+          box.style.display = 'none';
+          box.innerHTML = '';
+        });
+        box.appendChild(button);
+      });
+      box.style.display = 'block';
+    }
+
+    async function buscarProductos(row, query) {
+      if (!endpoint || query.length < 2) {
+        var box = getResultsBox(row);
+        if (box) {
+          box.style.display = 'none';
+          box.innerHTML = '';
+        }
+        return;
+      }
+      var hidden = getHiddenInput(row);
+      if (hidden) hidden.value = '';
+
+      var response = await fetch(endpoint + '?q=' + encodeURIComponent(query));
+      if (!response.ok) return;
+      var data = await response.json();
+      renderResults(row, data.results || []);
+    }
+
+    formsContainer.addEventListener('input', function (event) {
+      var input = event.target.closest('[data-repuesto-search]');
+      if (!input) return;
+      var row = getRowFromInput(input);
+      var query = input.value.trim();
+      var timer = input._autocompleteTimer;
+      if (timer) clearTimeout(timer);
+      input._autocompleteTimer = setTimeout(function () {
+        buscarProductos(row, query);
+      }, 220);
+    });
+
+    formsContainer.addEventListener('focusin', function (event) {
+      var input = event.target.closest('[data-repuesto-search]');
+      if (!input) return;
+      var row = getRowFromInput(input);
+      var box = getResultsBox(row);
+      if (box && box.children.length) {
+        box.style.display = 'block';
+      }
+    });
+
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('[data-repuesto-results]')) {
+        return;
+      }
+      document.querySelectorAll('[data-repuesto-results]').forEach(function (box) {
+        box.style.display = 'none';
+      });
+    });
+
+    addButton.addEventListener('click', function () {
+      var formIndex = parseInt(totalForms.value, 10);
+      var html = template.innerHTML.replace(/__prefix__/g, formIndex);
+      var wrapper = document.createElement('div');
+      wrapper.innerHTML = html.trim();
+      formsContainer.appendChild(wrapper.firstElementChild);
+      totalForms.value = formIndex + 1;
+    });
+  });
+</script>

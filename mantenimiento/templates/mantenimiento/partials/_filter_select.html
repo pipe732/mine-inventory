@@ -1,0 +1,14 @@
+{# Componente genérico para filtro con select #}
+{# Uso: {% include "mantenimiento/partials/_filter_select.html" with label="Tipo" name="tipo" choices=tipo_choices current_value=tipo_filtro %} #}
+
+<div class="col-md-{{ col_width|default:'3' }}">
+  <label class="form-label">{{ label }}</label>
+  <select name="{{ name }}" class="form-select">
+    <option value="">{{ empty_label|default:"Todos" }}</option>
+    {% for value, label_choice in choices %}
+      <option value="{{ value }}" {% if current_value == value %}selected{% endif %}>
+        {{ label_choice }}
+      </option>
+    {% endfor %}
+  </select>
+</div>

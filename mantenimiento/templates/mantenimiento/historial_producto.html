@@ -91,6 +91,16 @@ Historial —
               {{ m.acciones_realizadas|truncatewords:8 }}
             </small>
             {% endif %}
+            {% if m.repuestos_consumidos.all %}
+            <br />
+            <small style="color: var(--navy); font-size: 0.78rem; font-weight: 600">
+              Repuestos:
+              {% for repuesto in m.repuestos_consumidos.all|slice:":2" %}
+                [{{ repuesto.producto.codigo_sku }}] {{ repuesto.producto.nombre }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+              {% if m.repuestos_consumidos.all|length > 2 %}...{% endif %}
+            </small>
+            {% endif %}
           </td>
           <td>
             {{ m.responsable.get_full_name|default:m.responsable.username }}
@@ -117,7 +127,7 @@ Historial —
           </td>
         </tr>
         {% empty %}
-          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Este activo no tiene mantenimientos registrados aún." empty_hint="Usa el botón Nuevo Mantenimiento para agregar el primero." %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Este activo no tiene mantenimientos registrados aún." empty_hint="Usa el botón <strong>Nuevo Mantenimiento</strong> para agregar el primero." %}
         {% endfor %}
       </tbody>
     </table>
