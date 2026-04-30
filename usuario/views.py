@@ -116,6 +116,7 @@ def logout_view(request):
 def registro_view(request):
     roles = Rol.objects.all()
 
+    
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
