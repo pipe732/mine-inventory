@@ -9,7 +9,7 @@ class Devolucion(models.Model):
 
     numero_orden = models.CharField(max_length=100)
     producto = models.CharField(max_length=255)
-    cantidad = models.PositiveIntegerField()
+    cantidad = models.PositiveIntegerField(default=1)
     motivo = models.TextField()
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
