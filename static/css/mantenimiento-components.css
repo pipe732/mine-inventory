@@ -1,0 +1,152 @@
+/* ─────────────────────────────────────────────────────────────── */
+/* CLASES DE ESTILO REUTILIZABLES - COMPONENTES MANTENIMIENTO    */
+/* ─────────────────────────────────────────────────────────────── */
+
+/* ───────────────────────────────────── */
+/* ETIQUETAS DE SECCIÓN                  */
+/* ───────────────────────────────────── */
+
+.style-section-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--navy);
+  border-bottom: 1px solid rgba(9, 77, 146, 0.18);
+  padding-bottom: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.style-section-label--sm {
+  margin-bottom: 0.75rem;
+}
+
+/* ───────────────────────────────────── */
+/* BORDES Y CARDS                        */
+/* ───────────────────────────────────── */
+
+.style-card-border {
+  border: 1px solid rgba(9, 77, 146, 0.14);
+}
+
+.style-card-border--subtle {
+  border: 1px solid rgba(9, 77, 146, 0.08);
+}
+
+/* ───────────────────────────────────── */
+/* BADGES Y ETIQUETAS                    */
+/* ───────────────────────────────────── */
+
+.style-badge-base {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid rgba(9, 77, 146, 0.18);
+  display: inline-block;
+}
+
+.style-badge--light {
+  background: rgba(9, 77, 146, 0.08);
+  color: var(--navy);
+}
+
+/* ───────────────────────────────────── */
+/* ICONOS                                */
+/* ───────────────────────────────────── */
+
+.style-icon-base {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(9, 77, 146, 0.07);
+  border: 1px solid rgba(9, 77, 146, 0.18);
+  color: var(--navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.style-icon-base svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ───────────────────────────────────── */
+/* ERRORES DE FORMULARIO                 */
+/* ───────────────────────────────────── */
+
+.form-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.form-text {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* ───────────────────────────────────── */
+/* AUTOCOMPLETE                          */
+/* ───────────────────────────────────── */
+
+.autocomplete-results {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid rgba(9, 77, 146, 0.18);
+  border-radius: 0.5rem;
+  max-height: 240px;
+  overflow: auto;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.autocomplete-results button {
+  border: 0;
+  background: #fff;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(9, 77, 146, 0.08);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.autocomplete-results button:hover {
+  background: rgba(9, 77, 146, 0.03);
+}
+
+.autocomplete-results button div:first-child {
+  font-weight: 600;
+}
+
+.autocomplete-results button div:last-child {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.autocomplete-results-empty {
+  padding: 0.6rem 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ───────────────────────────────────── */
+/* FILAS DE REPUESTOS                    */
+/* ───────────────────────────────────── */
+
+.repuesto-row {
+  border: 1px solid rgba(9, 77, 146, 0.14);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.repuesto-row--new {
+  background: rgba(9, 77, 146, 0.02);
+}

@@ -2,11 +2,51 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
 from django.db import IntegrityError
+from django.http import QueryDict, JsonResponse
 
 from .models import Producto, Categoria
 from .forms import ProductoForm, CategoriaForm, FiltroInventarioForm
-from mantenimiento.forms import MantenimientoForm
+from mantenimiento.forms import MantenimientoForm, ConsumoRepuestoFormSet
 from common.mixins import sesion_requerida    
+
+
+REPUESTOS_FORMSET_PREFIX = 'repuestos'
+
+
+@sesion_requerida
+def producto_autocomplete(request):
+    q = request.GET.get('q', '').strip()
+    ubicacion = request.GET.get('ubicacion', '').strip()
+
+    qs = Producto.objects.select_related('categoria').all()
+    if q:
+        qs = qs.filter(
+            Q(codigo_sku__icontains=q)
+            | Q(nombre__icontains=q)
+            | Q(descripcion__icontains=q)
+            | Q(numero_serie__icontains=q)
+            | Q(categoria__nombre__icontains=q)
+            | Q(ubicacion__icontains=q)
+        )
+    if ubicacion:
+        qs = qs.filter(ubicacion__icontains=ubicacion)
+
+    results = []
+    for producto in qs.order_by('nombre')[:10]:
+        results.append({
+            'id': producto.pk,
+            'codigo_sku': producto.codigo_sku,
+            'nombre': producto.nombre,
+            'descripcion': producto.descripcion or '',
+            'categoria': producto.categoria.nombre if producto.categoria else '',
+            'ubicacion': producto.ubicacion or '',
+            'numero_serie': producto.numero_serie or '',
+            'unidad_medida': producto.get_unidad_medida_display(),
+            'stock': producto.stock,
+            'costo_unitario': str(producto.costo_unitario) if producto.costo_unitario is not None else '',
+        })
+
+    return JsonResponse({'results': results})
 
 @sesion_requerida  
 def inventario(request):
@@ -167,6 +207,7 @@ def inventario(request):
     mant_sku = request.session.pop('mant_sku_error', '')
     mant_nombre = request.session.pop('mant_nombre_error', '')
     mant_form_saved = request.session.pop('mant_form_data', None)
+    mant_repuestos_saved = request.session.pop('mant_repuestos_formset_data', None)
 
     if mant_form_saved:
         mant_form = MantenimientoForm(mant_form_saved)
@@ -175,6 +216,19 @@ def inventario(request):
     else:
         mant_form = MantenimientoForm()
         mant_modal_errors = False
+
+    if mant_repuestos_saved:
+        repuestos_data = QueryDict('', mutable=True)
+        for key, values in mant_repuestos_saved.items():
+            repuestos_data.setlist(key, values)
+        mant_repuestos_formset = ConsumoRepuestoFormSet(
+            repuestos_data,
+            prefix=REPUESTOS_FORMSET_PREFIX,
+        )
+        mant_repuestos_formset.is_valid()
+        mant_modal_errors = True
+    else:
+        mant_repuestos_formset = ConsumoRepuestoFormSet(prefix=REPUESTOS_FORMSET_PREFIX)
 
     # ── Ordenamiento dinámico ──
     orden = request.GET.get("orden", "nombre")
@@ -224,6 +278,7 @@ def inventario(request):
 
         # Variables para mantenimiento
         "mant_form":              mant_form,
+        "mant_repuestos_formset": mant_repuestos_formset,
         "mant_modal_errors":      mant_modal_errors,
         "mant_producto_id_error": mant_producto_id or '',
         "mant_sku_error":         mant_sku,

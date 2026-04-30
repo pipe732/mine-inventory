@@ -10,12 +10,10 @@ import django
 class Prestamo(models.Model):
 
     ESTADO_CHOICES = [
-        ('pendiente',  'Pendiente de aprobación'),
-        ('activo',     'Activo'),
-        ('parcial',    'Devuelto parcialmente'),
-        ('devuelto',   'Devuelto'),
-        ('vencido',    'Vencido'),
-        ('rechazado',  'Rechazado'),
+        ('activo',   'Activo'),
+        ('parcial',  'Devuelto parcialmente'),
+        ('devuelto', 'Devuelto'),
+        ('vencido',  'Vencido'),
     ]
 
     usuario           = models.CharField(
@@ -32,20 +30,10 @@ class Prestamo(models.Model):
         blank=True,
         verbose_name='Observaciones',
     )
-    motivo_solicitud  = models.TextField(
-        blank=True,
-        default='',
-        verbose_name='Motivo de la solicitud',
-    )
-    motivo_rechazo    = models.TextField(
-        blank=True,
-        default='',
-        verbose_name='Motivo de rechazo',
-    )
     estado            = models.CharField(
         max_length=20,
         choices=ESTADO_CHOICES,
-        default='pendiente',
+        default='activo',
         db_index=True,
         verbose_name='Estado',
     )
@@ -172,13 +160,6 @@ class ItemPrestamo(models.Model):
     cantidad = models.PositiveIntegerField(
         default=1,
         verbose_name='Cantidad prestada',
-    )
-    serial_entregado = models.CharField(
-        max_length=200,
-        blank=True,
-        default='',
-        verbose_name='Serial / N° de serie entregado',
-        help_text='Número de serie de la herramienta física entregada al usuario.',
     )
     devuelto = models.BooleanField(
         default=False,

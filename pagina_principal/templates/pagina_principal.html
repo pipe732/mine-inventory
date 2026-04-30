@@ -1,275 +1,302 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+<div class="container-fluid py-4">
 
-<!-- ═══════════════════════════════════
-     CABECERA
-═══════════════════════════════════ -->
-<div class="d-flex align-items-center justify-content-between mb-4">
-  <div>
-    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
-               color:var(--text-main); letter-spacing:.03em; margin:0;">
-      Resumen general del sistema
-    </h5>
-  </div>
-</div>
+<!-- ══ ESTILOS ANIMACIONES KPI ══ -->
+<style>
+  .kpi-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .kpi-card.kpi-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .kpi-accent-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 4px 4px 0 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.65s ease 0.2s;
+  }
+  .kpi-card.kpi-visible .kpi-accent-bar {
+    transform: scaleX(1);
+  }
+</style>
 
-<!-- ═══════════════════════════════════
-     KPI CARDS
-═══════════════════════════════════ -->
-<div class="row g-3 mb-4">
+  <!-- ═══════════════════════════════════
+       KPI CARDS
+  ═══════════════════════════════════ -->
+  <div class="row g-3 mb-4">
 
-  <div class="col-6 col-md-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Total herramientas</p>
-        <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--text-main);">{{ total_productos }}</h2>
-        <small style="color:var(--text-muted);">{{ total_categorias }} categoría{{ total_categorias|pluralize:",s" }}</small>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-6 col-md-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Préstamos activos</p>
-        <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--navy);">{{ prestamos_activos_count }}</h2>
-        <small style="color:var(--text-muted);">en este momento</small>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-6 col-md-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Vencidos</p>
-        <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--rust);">{{ prestamos_vencidos_count }}</h2>
-        <small style="color:var(--text-muted);">requieren atención</small>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-6 col-md-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Devoluciones pend.</p>
-        <h2 class="fw-bold mb-0" style="font-family:var(--font-mono); color:var(--sage);">{{ devoluciones_pendientes_count }}</h2>
-        <small style="color:var(--text-muted);">por resolver</small>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ═══════════════════════════════════
-     FILA PRINCIPAL
-═══════════════════════════════════ -->
-<div class="row g-3 mb-4">
-
-  <!-- TABLA PRÉSTAMOS -->
-  <div class="col-lg-8">
-    <div class="card table-card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="card-title"><i class="bi bi-clipboard-check"></i> Préstamos recientes</span>
-        <a href="{% url 'prestamo' %}" class="btn-ghost">Ver todos</a>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-app mb-0" id="tbl-prestamos">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Producto</th>
-                <th>Usuario</th>
-                <th>Cant.</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in prestamos_recientes %}
-              <tr>
-                <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">#{{ p.id }}</td>
-                <td>
-                  {% for item in p.items.all %}
-                    <strong>{{ item.producto.nombre }}</strong>{% if not forloop.last %}, {% endif %}
-                  {% empty %}—{% endfor %}
-                </td>
-                <td>{{ p.usuario }}</td>
-                <td style="font-family:var(--font-mono);">
-                  {% for item in p.items.all %}{{ item.cantidad }}{% if not forloop.last %}+{% endif %}{% endfor %}
-                </td>
-                <td>
-                  {% if p.estado == 'activo' %}
-                    <span class="badge-state badge-aprobada">Activo</span>
-                  {% elif p.estado == 'vencido' %}
-                    <span class="badge-state badge-rechazada">Vencido</span>
-                  {% elif p.estado == 'parcial' %}
-                    <span class="badge-state badge-pendiente">Parcial</span>
-                  {% else %}
-                    <span class="badge-state badge-pendiente">Devuelto</span>
-                  {% endif %}
-                </td>
-                <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">
-                  {{ p.fecha_prestamo|date:"d M Y" }}
-                </td>
-                <td>
-                  <a href="{% url 'prestamo' %}" class="btn-ghost">Ver</a>
-                </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="7" class="text-center py-4" style="color:var(--text-muted);">
-                  No hay préstamos registrados aún.
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" data-kpi-delay="0">
+        <div class="kpi-accent-bar" style="background:#378ADD;"></div>
+        <div class="card-body">
+          <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Total herramientas</p>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--text-main);" data-target="{{ total_productos }}">0</h2>
+          <small style="color:var(--text-muted);">{{ total_categorias }} categoría{{ total_categorias|pluralize:",s" }}</small>
         </div>
       </div>
     </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" data-kpi-delay="130">
+        <div class="kpi-accent-bar" style="background:#9f86c0;"></div>
+        <div class="card-body">
+          <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Préstamos activos</p>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--navy);" data-target="{{ prestamos_activos_count }}">0</h2>
+          <small style="color:var(--text-muted);">en este momento</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" data-kpi-delay="260">
+        <div class="kpi-accent-bar" style="background:#E24B4A;"></div>
+        <div class="card-body">
+          <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Vencidos</p>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--rust);" data-target="{{ prestamos_vencidos_count }}">0</h2>
+          <small style="color:var(--text-muted);">requieren atención</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" data-kpi-delay="390">
+        <div class="kpi-accent-bar" style="background:#1D9E75;"></div>
+        <div class="card-body">
+          <p class="text-uppercase small mb-1" style="color:var(--text-muted); font-family:var(--font-mono); letter-spacing:.1em;">Devoluciones pend.</p>
+          <h2 class="fw-bold mb-0 kpi-number" style="font-family:var(--font-mono); color:var(--sage);" data-target="{{ devoluciones_pendientes_count }}">0</h2>
+          <small style="color:var(--text-muted);">por resolver</small>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- SIDEBAR DERECHO -->
-  <div class="col-lg-4 d-flex flex-column gap-3">
+  <!-- ═══════════════════════════════════
+       FILA PRINCIPAL
+  ═══════════════════════════════════ -->
+  <div class="row g-3 mb-4">
 
-    <!-- DEVOLUCIONES RECIENTES -->
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="card-title"><i class="bi bi-arrow-return-left"></i> Devoluciones</span>
-        <a href="{% url 'devoluciones' %}" class="btn-ghost">Ver todas</a>
-      </div>
-      <div class="card-body p-0">
-        {% for d in devoluciones_recientes %}
-        <div class="d-flex align-items-start gap-3 px-3 py-2"
-             style="border-bottom:1px solid var(--border-color);">
-          <div class="flex-grow-1" style="min-width:0;">
-            <div class="fw-semibold text-truncate" style="font-size:.88rem;">
-              Préstamo #{{ d.prestamo.id }} — {{ d.prestamo.usuario }}
-            </div>
-            <div style="font-size:.75rem; color:var(--text-muted); font-family:var(--font-mono);">
-              {{ d.fecha_creacion|date:"d M Y" }} · {% if d.devolucion_total %}Total{% else %}Parcial{% endif %}
-            </div>
+    <!-- TABLA PRÉSTAMOS -->
+    <div class="col-lg-8">
+      <div class="card table-card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="card-title"><i class="bi bi-clipboard-check"></i> Préstamos recientes</span>
+          <a href="{% url 'prestamo' %}" class="btn-ghost">Ver todos</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-app mb-0" id="tbl-prestamos">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Producto</th>
+                  <th>Usuario</th>
+                  <th>Cant.</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in prestamos_recientes %}
+                <tr>
+                  <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">#{{ p.id }}</td>
+                  <td>
+                    {% for item in p.items.all %}
+                      <strong>{{ item.producto.nombre }}</strong>{% if not forloop.last %}, {% endif %}
+                    {% empty %}—{% endfor %}
+                  </td>
+                  <td>{{ p.usuario }}</td>
+                  <td style="font-family:var(--font-mono);">
+                    {% for item in p.items.all %}{{ item.cantidad }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                  </td>
+                  <td>
+                    {% if p.estado == 'activo' %}
+                      <span class="badge-state badge-aprobada">Activo</span>
+                    {% elif p.estado == 'vencido' %}
+                      <span class="badge-state badge-rechazada">Vencido</span>
+                    {% elif p.estado == 'parcial' %}
+                      <span class="badge-state badge-pendiente">Parcial</span>
+                    {% else %}
+                      <span class="badge-state badge-pendiente">Devuelto</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">
+                    {{ p.fecha_prestamo|date:"d M Y" }}
+                  </td>
+                  <td>
+                    <a href="{% url 'prestamo' %}" class="btn-ghost">Ver</a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center py-4" style="color:var(--text-muted);">
+                    No hay préstamos registrados aún.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
-          <span class="badge-state flex-shrink-0
-            {% if d.estado == 'pendiente' %}badge-pendiente
-            {% elif d.estado == 'aprobada' %}badge-aprobada
-            {% else %}badge-rechazada{% endif %}">
-            {{ d.get_estado_display }}
-          </span>
         </div>
-        {% empty %}
-        <div class="px-3 py-4 text-center" style="color:var(--text-muted); font-size:.88rem;">
-          Sin devoluciones recientes.
-        </div>
-        {% endfor %}
       </div>
     </div>
 
-    <!-- STOCK POR CATEGORÍA -->
-    <div class="card flex-grow-1">
-      <div class="card-header">
-        <span class="card-title"><i class="bi bi-tags"></i> Stock por categoría</span>
-      </div>
-      <div class="card-body">
-        {% for cat in stock_por_categoria %}
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span style="font-size:.83rem; width:105px; overflow:hidden; text-overflow:ellipsis;
-                       white-space:nowrap; color:var(--text-main);">{{ cat.nombre }}</span>
-          <div class="flex-grow-1" style="height:5px; background:var(--border-color); border-radius:3px; overflow:hidden;">
-            <div style="width:{% widthratio cat.total_stock max_stock 100 %}%;
-                        height:100%; background:var(--navy); border-radius:3px;"></div>
+    <!-- SIDEBAR DERECHO -->
+    <div class="col-lg-4 d-flex flex-column gap-3">
+
+      <!-- DEVOLUCIONES RECIENTES -->
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="card-title"><i class="bi bi-arrow-return-left"></i> Devoluciones</span>
+          <a href="{% url 'devoluciones' %}" class="btn-ghost">Ver todas</a>
+        </div>
+        <div class="card-body p-0">
+          {% for d in devoluciones_recientes %}
+          <div class="d-flex align-items-start gap-3 px-3 py-2"
+               style="border-bottom:1px solid var(--border-color);">
+            <div class="flex-grow-1" style="min-width:0;">
+              <div class="fw-semibold text-truncate" style="font-size:.88rem;">
+                Préstamo #{{ d.prestamo.id }} — {{ d.prestamo.usuario }}
+              </div>
+              <div style="font-size:.75rem; color:var(--text-muted); font-family:var(--font-mono);">
+                {{ d.fecha_creacion|date:"d M Y" }} · {% if d.devolucion_total %}Total{% else %}Parcial{% endif %}
+              </div>
+            </div>
+            <span class="badge-state flex-shrink-0
+              {% if d.estado == 'pendiente' %}badge-pendiente
+              {% elif d.estado == 'aprobada' %}badge-aprobada
+              {% else %}badge-rechazada{% endif %}">
+              {{ d.get_estado_display }}
+            </span>
           </div>
-          <span style="font-size:.75rem; color:var(--text-muted); font-family:var(--font-mono);
-                       width:28px; text-align:right;">{{ cat.total_stock }}</span>
-        </div>
-        {% empty %}
-        <p style="color:var(--text-muted); font-size:.88rem;">Sin categorías registradas.</p>
-        {% endfor %}
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════
-     INVENTARIO RECIENTE
-═══════════════════════════════════ -->
-<div class="card table-card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <span class="card-title"><i class="bi bi-boxes"></i> Inventario — últimas herramientas</span>
-    <a href="{% url 'inventario:inventario' %}" class="btn-ghost">Ver inventario completo</a>
-  </div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-app mb-0">
-        <thead>
-          <tr>
-            <th>SKU</th>
-            <th>Nombre</th>
-            <th>Categoría</th>
-            <th>Stock</th>
-            <th>Actualizado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for prod in productos_recientes %}
-          <tr>
-            <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">
-              {{ prod.codigo_sku }}
-            </td>
-            <td>
-              <strong>{{ prod.nombre }}</strong>
-              {% if prod.descripcion %}
-              <br><small style="color:var(--text-muted);">{{ prod.descripcion|truncatechars:50 }}</small>
-              {% endif %}
-            </td>
-            <td>
-              {% if prod.categoria %}
-                <span class="badge-state badge-pendiente">{{ prod.categoria.nombre }}</span>
-              {% else %}
-                <span style="color:var(--text-muted); font-size:.82rem;">—</span>
-              {% endif %}
-            </td>
-            <td>
-              <span style="font-family:var(--font-mono); font-weight:700;
-                {% if prod.stock == 0 %}color:var(--rust);
-                {% elif prod.stock < 3 %}color:#c4900a;
-                {% else %}color:var(--sage);{% endif %}">
-                {{ prod.stock }}
-              </span>
-            </td>
-            <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">
-              {{ prod.actualizado_en|date:"d M Y" }}
-            </td>
-            <td>
-              <button class="btn-ghost"
-                      onclick="verProducto(
-                        '{{ prod.codigo_sku|escapejs }}',
-                        '{{ prod.nombre|escapejs }}',
-                        '{{ prod.descripcion|default:''|escapejs }}',
-                        {{ prod.stock }},
-                        '{% if prod.categoria %}{{ prod.categoria.nombre|escapejs }}{% endif %}'
-                      )">
-                Ver
-              </button>
-            </td>
-          </tr>
           {% empty %}
-          <tr>
-            <td colspan="6" class="text-center py-4" style="color:var(--text-muted);">
-              No hay productos registrados.
-            </td>
-          </tr>
+          <div class="px-3 py-4 text-center" style="color:var(--text-muted); font-size:.88rem;">
+            Sin devoluciones recientes.
+          </div>
           {% endfor %}
-        </tbody>
-      </table>
+        </div>
+      </div>
+
+      <!-- STOCK POR CATEGORÍA -->
+      <div class="card flex-grow-1">
+        <div class="card-header">
+          <span class="card-title"><i class="bi bi-tags"></i> Stock por categoría</span>
+        </div>
+        <div class="card-body">
+          {% for cat in stock_por_categoria %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span style="font-size:.83rem; width:105px; overflow:hidden; text-overflow:ellipsis;
+                         white-space:nowrap; color:var(--text-main);">{{ cat.nombre }}</span>
+            <div class="flex-grow-1" style="height:5px; background:var(--border-color); border-radius:3px; overflow:hidden;">
+              <div style="width:{% widthratio cat.total_stock max_stock 100 %}%;
+                          height:100%; background:var(--navy); border-radius:3px;"></div>
+            </div>
+            <span style="font-size:.75rem; color:var(--text-muted); font-family:var(--font-mono);
+                         width:28px; text-align:right;">{{ cat.total_stock }}</span>
+          </div>
+          {% empty %}
+          <p style="color:var(--text-muted); font-size:.88rem;">Sin categorías registradas.</p>
+          {% endfor %}
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
+
+  <!-- ═══════════════════════════════════
+       INVENTARIO RECIENTE
+  ═══════════════════════════════════ -->
+  <div class="card table-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="card-title"><i class="bi bi-boxes"></i> Inventario — últimas herramientas</span>
+      <a href="{% url 'inventario:inventario' %}" class="btn-ghost">Ver inventario completo</a>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-app mb-0">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+              <th>Actualizado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prod in productos_recientes %}
+            <tr>
+              <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">
+                {{ prod.codigo_sku }}
+              </td>
+              <td>
+                <strong>{{ prod.nombre }}</strong>
+                {% if prod.descripcion %}
+                <br><small style="color:var(--text-muted);">{{ prod.descripcion|truncatechars:50 }}</small>
+                {% endif %}
+              </td>
+              <td>
+                {% if prod.categoria %}
+                  <span class="badge-state badge-pendiente">{{ prod.categoria.nombre }}</span>
+                {% else %}
+                  <span style="color:var(--text-muted); font-size:.82rem;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-family:var(--font-mono); font-weight:700;
+                  {% if prod.stock == 0 %}color:var(--rust);
+                  {% elif prod.stock < 3 %}color:#c4900a;
+                  {% else %}color:var(--sage);{% endif %}">
+                  {{ prod.stock }}
+                </span>
+              </td>
+              <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--text-muted);">
+                {{ prod.actualizado_en|date:"d M Y" }}
+              </td>
+              <td>
+                <button class="btn-ghost"
+                        onclick="verProducto(
+                          '{{ prod.codigo_sku|escapejs }}',
+                          '{{ prod.nombre|escapejs }}',
+                          '{{ prod.descripcion|default:''|escapejs }}',
+                          {{ prod.stock }},
+                          '{% if prod.categoria %}{{ prod.categoria.nombre|escapejs }}{% endif %}'
+                        )">
+                  Ver
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-4" style="color:var(--text-muted);">
+                No hay productos registrados.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container-fluid -->
 
 <!-- ── MODAL: Ver Producto (solo lectura) ── -->
 <div class="modal fade" id="modalVerProducto" tabindex="-1"
@@ -310,8 +337,8 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cerrar</button>
-        <a id="vpd-link" href="{% url 'inventario:inventario' %}" class="btn-primary-mine">
-          <i class="bi bi-pencil"></i> Ver en inventario
+        <a id="vpd-link" href="#" class="btn-primary-mine">
+          <i class="bi bi-pencil"></i> Editar
         </a>
       </div>
     </div>
@@ -319,7 +346,31 @@
 </div>
 
 {% endblock content %}
-
-{% block js %}
+{% block extra_js %}
+<script>
+  /* ══ ANIMACIÓN 1: entrada escalonada + ANIMACIÓN 2: contador ══ */
+  document.addEventListener('DOMContentLoaded', function () {
+    function animarContador(el, target, duracion) {
+      var inicio = performance.now();
+      function paso(ahora) {
+        var p = Math.min((ahora - inicio) / duracion, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(paso);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(paso);
+    }
+    document.querySelectorAll('.kpi-card').forEach(function (card) {
+      var delay = parseInt(card.getAttribute('data-kpi-delay')) || 0;
+      setTimeout(function () {
+        card.classList.add('kpi-visible');
+        card.querySelectorAll('.kpi-number').forEach(function (num) {
+          animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 950);
+        });
+      }, delay + 150);
+    });
+  });
+</script>
 <script src="{% static 'js/pagina_principal.js' %}"></script>
-{% endblock js %}
+{% endblock extra_js %}

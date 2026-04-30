@@ -1,48 +1,21 @@
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
-    <h5
-      style="
-        font-family: var(--font-ui);
-        font-weight: 700;
-        font-size: 1rem;
-        color: var(--text-main);
-        letter-spacing: 0.03em;
-        margin: 0;
-      "
-    >
+    <h5 style="font-family: var(--font-ui); font-weight: 700; font-size: 1rem; color: var(--text-main); letter-spacing: 0.03em; margin: 0;">
       {{ titulo }}
     </h5>
     {% if subtitulo %}
-    <p
-      style="
-        font-family: var(--font-ui);
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        margin: 0;
-      "
-    >
-      {{ subtitulo }}
-    </p>
+      <p style="font-family: var(--font-ui); font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+        {{ subtitulo }}
+      </p>
     {% endif %}
   </div>
 
   {% if url_accion %}
-  <a href="{{ url_accion }}" class="btn-primary-mine">
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="16" />
-      <line x1="8" y1="12" x2="16" y2="12" />
-    </svg>
-    {{ label_accion }}
-  </a>
+    <a href="{{ url_accion }}" class="btn-primary-mine">
+      {% include "mantenimiento/partials/_svg_icon.html" with icon="plus" %}
+      {{ label_accion }}
+    </a>
   {% elif url_cancelar %}
-  <a href="{{ url_cancelar }}" class="btn-outline-mine">Cancelar</a>
+    <a href="{{ url_cancelar }}" class="btn-outline-mine">Cancelar</a>
   {% endif %}
 </div>
