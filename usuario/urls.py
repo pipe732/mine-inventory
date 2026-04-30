@@ -1,25 +1,16 @@
-"""
-URL configuration for core project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# usuario/urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('registro/', views.registro, name='registro'),
-    path('login/', views.iniciar_sesion, name='login'),
-    path('olvido-contrasena/', views.olvido_contrasena, name='olvido_contrasena'),
-    path('', views.iniciar_sesion, name='home'),
+    path('',                                        views.login_view,            name='login'),
+    path('logout/',                                 views.logout_view,           name='logout'),
+    path('registro/',                               views.registro_view,         name='registro'),
+    path('olvido/',                                 views.olvido_contrasena_view,name='olvido_contrasena'),
+    path('nueva-contrasena/<uid>/<token>/',         views.nueva_contrasena_view, name='nueva_contrasena'),
+    # Gestión de usuarios
+    path('usuarios/',                               views.lista_usuarios_view,   name='lista_usuarios'),
+    path('usuarios/<str:numero_documento>/json/',   views.detalle_usuario_json,  name='detalle_usuario_json'),
+    # Perfil propio
+    path('perfil/',                                 views.perfil_view,           name='perfil'),
 ]

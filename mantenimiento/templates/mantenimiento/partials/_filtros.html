@@ -1,0 +1,159 @@
+<div class="card mb-4">
+  <div class="card-body" style="padding: 1.25rem">
+    <form method="get" class="row g-3 align-items-end">
+      {% if modo == 'mantenimiento' %}
+        <div class="col-md-5">
+          <label class="form-label">Buscar</label>
+          <input
+            type="text"
+            name="q"
+            class="form-control"
+            placeholder="Buscar por item o descripcion..."
+            value="{{ q }}"
+          />
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Tipo</label>
+          <select name="tipo" class="form-select">
+            <option value="">Todos los tipos</option>
+            {% for value, label in tipo_choices %}
+            <option value="{{ value }}" {% if tipo_filtro == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Estado del registro</label>
+          <select name="estado_registro" class="form-select">
+            <option value="">Todos los estados</option>
+            {% for value, label in estado_choices %}
+            <option value="{{ value }}" {% if estado_filtro == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="submit" class="btn-primary-mine flex-grow-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Filtrar
+          </button>
+        </div>
+
+      {% elif modo == 'historial' %}
+        <div class="col-md-3">
+          <label class="form-label">Buscar</label>
+          <input
+            type="text"
+            name="q"
+            class="form-control"
+            placeholder="Buscar en descripcion..."
+            value="{{ q }}"
+          />
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Tipo</label>
+          <select name="tipo" class="form-control form-select">
+            <option value="">Todos los tipos</option>
+            {% for value, label in tipo_choices %}
+            <option value="{{ value }}" {% if tipo_filtro == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Estado registro</label>
+          <select name="estado_registro" class="form-control form-select">
+            <option value="">Todos</option>
+            {% for value, label in estado_choices %}
+            <option value="{{ value }}" {% if estado_filtro == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Desde</label>
+          <input
+            type="date"
+            name="fecha_desde"
+            class="form-control"
+            value="{{ fecha_desde }}"
+          />
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Hasta</label>
+          <input
+            type="date"
+            name="fecha_hasta"
+            class="form-control"
+            value="{{ fecha_hasta }}"
+          />
+        </div>
+
+        <div class="col-md-1 d-flex gap-2">
+          <button type="submit" class="btn-primary-mine flex-grow-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+        </div>
+
+      {% elif modo == 'estado_actual' %}
+        <div class="col-md-6">
+          <label class="form-label">Buscar item</label>
+          <input
+            type="text"
+            name="q"
+            class="form-control"
+            placeholder="Codigo, nombre, serie o ubicacion..."
+            value="{{ q }}"
+          />
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Disponibilidad</label>
+          <select name="disponible" class="form-control form-select">
+            <option value="">Todos</option>
+            <option value="si" {% if disponible_filtro == 'si' %}selected{% endif %}>
+              Solo disponibles
+            </option>
+            <option value="no" {% if disponible_filtro == 'no' %}selected{% endif %}>
+              Solo no disponibles
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+          <button type="submit" class="btn-primary-mine flex-grow-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Filtrar
+          </button>
+          <a
+            href="{% url 'mantenimiento:estado_actual_lista' %}"
+            class="btn-outline-mine flex-grow-1"
+            style="text-align: center"
+          >
+            Limpiar
+          </a>
+        </div>
+      {% endif %}
+    </form>
+  </div>
+</div>

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %} 
+{% block title %}
+{{ titulo }}
+{%endblock %} 
+{% block content %}
+
+{% include "mantenimiento/partials/_cabecera.html" with titulo=titulo subtitulo=subtitulo url_accion=url_accion label_accion=label_accion %}
+
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59
+                 8.59a2 2 0 0 1 0 2.82z"
+        />
+        <line x1="7" y1="7" x2="7.01" y2="7" />
+      </svg>
+      Estados registrados
+    </span>
+    {% include "mantenimiento/partials/_count_badge.html" with total=estados|length singular="registro" plural_suffix=",s" %}
+  </div>
+
+  <div class="table-responsive">
+    <table
+      class="table-app"
+      style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
+    >
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Impacto disponibilidad</th>
+          <th style="text-align: center">Color</th>
+          <th style="text-align: center">Activo</th>
+          <th style="text-align: center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for estado in estados %}
+        <tr>
+          <td>
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.78rem;
+                color: var(--text-muted);
+              "
+            >
+              {{ estado.codigo }}
+            </span>
+          </td>
+          <td style="font-weight: 600">{{ estado.nombre }}</td>
+          <td>{{ estado.get_categoria_display|default:"—" }}</td>
+          <td style="font-size: 0.85rem; color: var(--text-muted)">
+            {{ estado.get_impacto_disponibilidad_display|default:"—" }}
+          </td>
+          <td style="text-align: center">
+            {% if estado.color %}
+            <span
+              style="display:inline-block; width:20px; height:20px;
+                           border-radius:4px; background:{{ estado.color }};
+                           border:1px solid rgba(0,0,0,.12);
+                           vertical-align:middle;"
+              title="{{ estado.color }}"
+            ></span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="text-align: center">
+            {% if estado.activo %}
+            <span class="badge-state badge-aprobada">Activo</span>
+            {% else %}
+            <span class="badge-state badge-rechazada">Inactivo</span>
+            {% endif %}
+          </td>
+          <td style="text-align: center">
+            {% url 'mantenimiento:tipo_estado_editar' estado.pk as editar_url %}
+            {% include "mantenimiento/partials/_action_icon_button.html" with href=editar_url title="Editar" icon="edit" %}
+          </td>
+        </tr>
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Aún no hay tipos de estado registrados." empty_hint="Usa Nuevo Tipo de Estado para agregar uno." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

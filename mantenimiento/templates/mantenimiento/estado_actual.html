@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Estado Actual de Herramientas{% endblock %}
+
+{% block content %}
+
+{% include "mantenimiento/partials/_cabecera.html" with titulo="Estado Actual de Herramientas" subtitulo="Disponibilidad y ultimo estado registrado de cada item" %}
+
+<!-- Totales -->
+<div class="d-flex gap-3 mb-4">
+  <span
+    style="
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    "
+  >
+    Total:
+    <strong style="color: var(--text-main)">{{ productos|length }}</strong>
+  </span>
+  <span class="badge-state badge-aprobada"
+    >Disponibles: {{ total_disponibles }}</span
+  >
+  <span class="badge-state badge-rechazada"
+    >No disponibles: {{ total_no_disponibles }}</span
+  >
+</div>
+
+{% include "mantenimiento/partials/_filtros.html" with modo='estado_actual' %}
+
+<!-- Tabla -->
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+      Ítems registrados
+    </span>
+    {% include "mantenimiento/partials/_count_badge.html" with total=productos|length singular="item" plural_suffix=",s" %}
+  </div>
+
+  <div class="table-responsive">
+    <table
+      class="table-app"
+      style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
+    >
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Ubicación</th>
+          <th style="text-align: center">Disponible</th>
+          <th>Último mantenimiento</th>
+          <th>Estado actual</th>
+          <th style="text-align: center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        <tr>
+          <td>
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.78rem;
+                color: var(--text-muted);
+              "
+            >
+              {{ p.codigo_sku }}
+            </span>
+          </td>
+          <td style="font-weight: 600">{{ p.nombre }}</td>
+          <td style="color: var(--text-muted); font-size: 0.85rem">
+            {{ p.ubicacion|default:"—" }}
+          </td>
+          <td style="text-align: center">
+            {% if p.disponible %}
+            <span class="badge-state badge-aprobada">Disponible</span>
+            {% else %}
+            <span class="badge-state badge-rechazada">No disponible</span>
+            {% endif %}
+          </td>
+          <td>
+            {% with ultimo=p.mantenimientos.all|first %}
+              {% if ultimo %}
+                <span style="font-family: var(--font-mono); font-size: 0.78rem">
+                  {{ ultimo.fecha_reporte|date:"d/m/Y" }}
+                </span>
+                <small style="color: var(--text-muted)">
+                  ({{ ultimo.get_tipo_mantenimiento_display }})
+                </small>
+              {% else %}
+                <span style="color: var(--text-muted)">Sin mantenimiento</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <!-- === BLOQUE CORREGIDO === -->
+          <td>
+            {% with ultimo=p.mantenimientos.all|first %}
+              {% if ultimo and ultimo.tipo_estado %}
+                <span
+                  class="badge-state"
+                  style="background:{{ ultimo.tipo_estado.color|default:'#6c757d' }}; color:#fff; border:none;"
+                >
+                  {{ ultimo.tipo_estado.nombre }}
+                </span>
+              {% else %}
+                <span class="badge-state badge-pendiente">Sin estado</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <!-- ======================== -->
+          {% url 'mantenimiento:historial_producto' p.pk as historial_url %}
+          <td style="text-align: center">
+            {% include "mantenimiento/partials/_action_icon_button.html" with href=historial_url title="Ver historial" icon="history" %}
+          </td>
+        </tr>
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="No se encontraron herramientas con los filtros aplicados." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
