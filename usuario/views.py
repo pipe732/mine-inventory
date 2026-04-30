@@ -20,7 +20,7 @@ from .models import Usuario, validar_numero_documento
 from common.mixins import sesion_requerida 
 
 DOC_RULES = {
-    'CC': re.compile(r'^\d{10}$'),
+    'CC': re.compile(r'^\d{6,10}$'),
     'CE': re.compile(r'^[A-Za-z0-9]{12}$'),
     'PP': re.compile(r'^[A-Za-z0-9]{9}$'),
     'TI': re.compile(r'^\d{10}$'),
@@ -89,16 +89,19 @@ def login_view(request):
             messages.error(request, 'Documento o contraseña incorrectos.')
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
-        # Guardar rol en sesión para los decoradores
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.rol   # 'Administrador' | 'Usuario'
+        request.session['usuario_rol']            = usuario.id_rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        return redirect('home')
+        rol = usuario.id_rol.nombre.strip().lower()
+        if rol in ('administrador', 'instructor'):
+            return redirect('home')
+        else:
+            return redirect('home_usuario')
 
-    return render(request, 'login.html')
+    return render(request, 'login.html')  
 
-
+    
 # ─────────────────────────────────────────────────────────────
 #  LOGOUT
 # ─────────────────────────────────────────────────────────────
@@ -121,30 +124,18 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
-        rol            = request.POST.get('rol', 'Usuario').strip()
+        rol_id         = request.POST.get('rol', '').strip()
 
         ctx = {
             'username': username,
             'email': email,
             'tipo_documento': tipo_documento,
             'documento': documento,
-            'roles': [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES],
-            'rol_seleccionado': rol,
+            'roles': roles,
         }
 
-        campos_requeridos = {
-            'Nombre completo': username,
-            'Correo electrónico': email,
-            'Tipo de documento': tipo_documento,
-            'Número de documento': documento,
-            'Contraseña': password1,
-            'Confirmación de contraseña': password2,
-            'Rol': rol
-        }
-        faltantes = [nombre for nombre, valor in campos_requeridos.items() if not valor]
-        if faltantes:
-            mensaje = f"Faltan completar los siguientes campos: {', '.join(faltantes)}." if len(faltantes) > 1 else f"Falta completar el campo: {faltantes[0]}."
-            messages.error(request, mensaje)
+        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
+            messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
         error_doc = _validar_documento(tipo_documento, documento)
@@ -168,7 +159,9 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        if rol not in dict(Usuario.ROL_CHOICES):
+        try:
+            rol = Rol.objects.get(id=rol_id)
+        except Rol.DoesNotExist:
             messages.error(request, 'El rol seleccionado no es válido.')
             return render(request, 'registro.html', ctx)
 
@@ -179,7 +172,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            rol=rol,
+            id_rol=rol,
         )
 
         try:
@@ -191,19 +184,19 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.rol
+        request.session['usuario_rol']            = rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        return redirect('home')
-
+        if rol.nombre.strip().lower() in ('administrador', 'instructor'):
+            return redirect('home')
+        else:
+            return redirect('home_usuario')
     return render(request, 'registro.html', {
         'username': '',
         'email': '',
         'tipo_documento': 'CC',
         'documento': '',
-        'roles': [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES],
-        'rol_seleccionado': 'Usuario',
+        'roles': roles,
     })
-
 
 # ─────────────────────────────────────────────────────────────
 #  OLVIDÓ CONTRASEÑA — envía el link
