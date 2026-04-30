@@ -1,8 +1,0 @@
-{# Componente reutilizable para renderizar errores de campo #}
-{# Uso: {% include "mantenimiento/partials/_field_error.html" with field=form.mi_campo %} #}
-
-{% if field.errors %}
-  {% for error in field.errors %}
-    <div class="form-error">{{ error }}</div>
-  {% endfor %}
-{% endif %}
