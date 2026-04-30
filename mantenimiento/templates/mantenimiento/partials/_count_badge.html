@@ -1,3 +1,13 @@
-<span class="style-badge-base style-badge--light">
+<span
+  style="
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    background: {{ bg|default:'rgba(9, 77, 146, 0.08)' }};
+    color: {{ color|default:'var(--navy)' }};
+    padding: 0.18rem 0.6rem;
+    border-radius: 20px;
+    border: 1px solid {{ border|default:'rgba(9, 77, 146, 0.18)' }};
+  "
+>
   {{ total }} {{ singular|default:'registro' }}{{ total|pluralize:plural_suffix }}
 </span>

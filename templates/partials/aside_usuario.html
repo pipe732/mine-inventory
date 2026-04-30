@@ -1,0 +1,117 @@
+<aside>
+  <div class="aside-header">
+    <i class="bi bi-cloud-haze2-fill" style="font-size: 1rem; opacity: 0.6"></i>
+    <span class="aside-brand-name">Mine</span>
+    <span class="aside-brand-sub">inventory</span>
+  </div>
+
+  <nav class="aside-nav">
+
+    <!-- GENERAL -->
+    <div class="d-flex align-items-center gap-2 px-3 pt-3 pb-1">
+      <span class="text-uppercase fw-semibold"
+            style="font-size:.6rem; letter-spacing:.13em; color:rgba(255,255,255,.25);">
+        General
+      </span>
+      <hr class="flex-grow-1 my-0 opacity-10" />
+    </div>
+
+    <!-- Principal → Mis Préstamos (es la página principal del usuario) -->
+    <a href="{% url 'home_usuario' %}"
+       class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium
+              {% if request.resolver_match.url_name == 'home_usuario' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}"
+       style="font-size:.88rem;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      Principal
+    </a>
+
+    <!-- Mis Préstamos -->
+    <a href="{% url 'prestamo_usuario' %}"
+       class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium
+              {% if request.resolver_match.url_name == 'prestamo_usuario' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}"
+       style="font-size:.88rem;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <polyline points="9 10 4 15 9 20"/>
+        <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+      </svg>
+      Mis Préstamos
+    </a>
+
+    <!-- SESIÓN — solo visible si NO hay sesión activa -->
+    {% if not request.session.usuario_nombre %}
+    <div class="d-flex align-items-center gap-2 px-3 pt-3 pb-1">
+      <span class="text-uppercase fw-semibold"
+            style="font-size:.6rem; letter-spacing:.13em; color:rgba(255,255,255,.25);">
+        Sesión
+      </span>
+      <hr class="flex-grow-1 my-0 opacity-10" />
+    </div>
+
+    <a href="{% url 'login' %}"
+       class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded mx-2 fw-medium
+              {% if request.resolver_match.url_name == 'login' %}bg-white bg-opacity-10 text-white border-start border-danger border-3{% else %}text-white-50{% endif %}"
+       style="font-size:.88rem;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Inicio de sesión
+    </a>
+    {% endif %}
+
+  </nav>
+
+  <!-- ── Usuario + logout al fondo ── -->
+  <div class="nav-bottom">
+    <hr class="opacity-10 mx-3 my-2">
+
+    <div class="dropup px-2 pb-2">
+      <button type="button"
+              class="btn w-100 d-flex align-items-center gap-2 px-3 py-2 dropdown-toggle"
+              style="background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07);
+                     border-radius:.5rem; color:rgba(239,236,202,.85); font-size:.88rem;"
+              data-bs-toggle="dropdown"
+              data-bs-display="static"
+              aria-expanded="false">
+
+        {% with nombre=request.session.usuario_nombre|default:"Invitado" %}
+        <div class="d-flex align-items-center justify-content-center rounded-circle bg-danger flex-shrink-0 fw-bold text-white"
+             style="width:28px; height:28px; font-size:.65rem; letter-spacing:.03em;">
+          {{ nombre|slice:":2"|upper }}
+        </div>
+        {% with partes=nombre.split %}
+        <span class="flex-grow-1 text-start">{{ partes.0 }} {% if partes|length > 2 %}{{ partes.2 }}{% endif %}</span>
+        {% endwith %}
+        {% endwith %}
+
+        <i class="bi bi-chevron-down opacity-25" style="font-size:.7rem;"></i>
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:190px;">
+        <li>
+          <span class="dropdown-item-text small text-muted">
+            <i class="bi bi-shield-check me-1"></i>
+            {{ request.session.usuario_rol|default:"Sin rol" }}
+          </span>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'perfil' %}">
+            <i class="bi bi-person"></i> Mi perfil
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'logout' %}">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</aside>

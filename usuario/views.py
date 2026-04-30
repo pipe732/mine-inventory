@@ -111,12 +111,9 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO  — siempre asigna rol "Usuario" (id=2)
+#  REGISTRO  — siempre asigna rol "Usuario" automáticamente
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
-    # Todos los roles disponibles para el registro
-    roles_disponibles = Rol.objects.all()
-
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -298,12 +295,12 @@ def home_view(request):
         return redirect('home')
     # Usuario normal → su página principal
     return redirect('home_usuario')
+ 
 
 
 # ─────────────────────────────────────────────────────────────
 #  LISTA DE USUARIOS  — solo Admin
 # ─────────────────────────────────────────────────────────────
-@sesion_requerida
 @admin_required
 def lista_usuarios_view(request):
     """Lista y fichas de usuarios con búsqueda y filtros."""
@@ -340,7 +337,6 @@ def lista_usuarios_view(request):
 #  DETALLE USUARIO (JSON para modal)  — solo Admin
 # ─────────────────────────────────────────────────────────────
 @sesion_requerida
-@admin_required
 def detalle_usuario_json(request, numero_documento):
     usuario = get_object_or_404(
         Usuario.objects.select_related('destinado', 'solicitado'),
@@ -365,7 +361,6 @@ def detalle_usuario_json(request, numero_documento):
 #  EXPORTAR USUARIOS CSV  — solo Admin
 # ─────────────────────────────────────────────────────────────
 @sesion_requerida
-@admin_required
 def exportar_usuarios_csv(request):
     qs = Usuario.objects.order_by('nombre_completo')
 
@@ -402,11 +397,12 @@ def exportar_usuarios_csv(request):
         ])
     return response
 
-# ─────────────────────────────────────────────────────────────
-#  PERFIL  — cualquier usuario autenticado
-# ─────────────────────────────────────────────────────────────
+# usuario/views.py  — solo la función perfil_view
+# Añade esto al final del archivo views.py existente.
+# Asegúrate de tener estos imports al inicio del archivo (ya existen la mayoría):
+#   from django.contrib.auth.hashers import make_password, check_password
+#   from django.contrib import messages
 @sesion_requerida
-@login_required
 def perfil_view(request):
     doc     = request.session.get('usuario_documento')
     usuario = get_object_or_404(Usuario, numero_documento=doc)
