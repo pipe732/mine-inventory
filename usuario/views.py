@@ -13,12 +13,14 @@ from django.utils.encoding import force_bytes, force_str
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
 from django.core.exceptions import ValidationError
-from .models import Usuario, Rol, validar_numero_documento
-from .decorators import login_required, admin_required, usuario_required
+
+from usuario.decorators import admin_required, login_required
+
+from .models import Usuario, validar_numero_documento
 from common.mixins import sesion_requerida 
 
 DOC_RULES = {
-    'CC': re.compile(r'^\d{10}$'),
+    'CC': re.compile(r'^\d{6,10}$'),
     'CE': re.compile(r'^[A-Za-z0-9]{12}$'),
     'PP': re.compile(r'^[A-Za-z0-9]{9}$'),
     'TI': re.compile(r'^\d{10}$'),
@@ -58,8 +60,15 @@ def login_view(request):
         documento      = request.POST.get('documento', '').strip()
         password       = request.POST.get('password', '')
 
-        if not all([tipo_documento, documento, password]):
-            messages.error(request, 'Completa todos los campos.')
+        campos_requeridos = {
+            'Tipo de documento': tipo_documento,
+            'Número de documento': documento,
+            'Contraseña': password
+        }
+        faltantes = [nombre for nombre, valor in campos_requeridos.items() if not valor]
+        if faltantes:
+            mensaje = f"Faltan completar los siguientes campos: {', '.join(faltantes)}." if len(faltantes) > 1 else f"Falta completar el campo: {faltantes[0]}."
+            messages.error(request, mensaje)
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
         error_doc = _validar_documento(tipo_documento, documento)
@@ -68,7 +77,7 @@ def login_view(request):
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
         try:
-            usuario = Usuario.objects.select_related('id_rol').get(
+            usuario = Usuario.objects.get(
                 numero_documento=documento,
                 tipo_documento=tipo_documento,
             )
@@ -80,16 +89,19 @@ def login_view(request):
             messages.error(request, 'Documento o contraseña incorrectos.')
             return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
 
-        # Guardar rol en sesión para los decoradores
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.id_rol.nombre   # 'Admin' | 'Usuario'
+        request.session['usuario_rol']            = usuario.id_rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        return redirect('home')
+        rol = usuario.id_rol.nombre.strip().lower()
+        if rol in ('administrador', 'instructor'):
+            return redirect('home')
+        else:
+            return redirect('home_usuario')
 
-    return render(request, 'login.html')
+    return render(request, 'login.html')  
 
-
+    
 # ─────────────────────────────────────────────────────────────
 #  LOGOUT
 # ─────────────────────────────────────────────────────────────
@@ -99,9 +111,10 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO  — siempre asigna rol "Usuario" automáticamente
+#  REGISTRO  — se crea el usuario con el rol asignado 
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
+    
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -109,15 +122,17 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
+        rol_id         = request.POST.get('rol', '').strip()
 
         ctx = {
             'username': username,
             'email': email,
             'tipo_documento': tipo_documento,
             'documento': documento,
+            'roles': roles,
         }
 
-        if not all([username, email, tipo_documento, documento, password1, password2]):
+        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
@@ -142,11 +157,10 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # Obtener el rol "Usuario" automáticamente
         try:
-            rol_usuario = Rol.objects.get(nombre='Usuario')
+            rol = Rol.objects.get(id=rol_id)
         except Rol.DoesNotExist:
-            messages.error(request, 'No existe el rol Usuario en el sistema.')
+            messages.error(request, 'El rol seleccionado no es válido.')
             return render(request, 'registro.html', ctx)
 
         usuario = Usuario(
@@ -156,7 +170,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol_usuario,
+            id_rol=rol,
         )
 
         try:
@@ -168,17 +182,19 @@ def registro_view(request):
         usuario.save()
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol_usuario.nombre
+        request.session['usuario_rol']            = rol.nombre
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        return redirect('home')
-
+        if rol.nombre.strip().lower() in ('administrador', 'instructor'):
+            return redirect('home')
+        else:
+            return redirect('home_usuario')
     return render(request, 'registro.html', {
         'username': '',
         'email': '',
         'tipo_documento': 'CC',
         'documento': '',
+        'roles': roles,
     })
-
 
 # ─────────────────────────────────────────────────────────────
 #  OLVIDÓ CONTRASEÑA — envía el link
@@ -289,10 +305,10 @@ def home_view(request):
 @admin_required
 def lista_usuarios_view(request):
     """Lista y fichas de usuarios con búsqueda y filtros."""
-    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+    qs = Usuario.objects.order_by('nombre_completo')
 
     q        = request.GET.get('q', '').strip()
-    rol_id   = request.GET.get('rol', '')
+    rol      = request.GET.get('rol', '')
     tipo_doc = request.GET.get('tipo_doc', '')
 
     if q:
@@ -301,17 +317,17 @@ def lista_usuarios_view(request):
             Q(numero_documento__icontains=q) |
             Q(correo__icontains=q)
         )
-    if rol_id:
-        qs = qs.filter(id_rol__id=rol_id)
+    if rol:
+        qs = qs.filter(rol=rol)
     if tipo_doc:
         qs = qs.filter(tipo_documento=tipo_doc)
 
     ctx = {
         'usuarios':  qs,
-        'roles':     Rol.objects.all(),
+        'roles':     [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES],
         'tipos_doc': Usuario.TIPO_DOCUMENTO_CHOICES,
         'q':         q,
-        'rol_id':    rol_id,
+        'rol_id':    rol,
         'tipo_doc':  tipo_doc,
         'total':     qs.count(),
     }
@@ -324,7 +340,7 @@ def lista_usuarios_view(request):
 @sesion_requerida
 def detalle_usuario_json(request, numero_documento):
     usuario = get_object_or_404(
-        Usuario.objects.select_related('id_rol', 'destinado', 'solicitado'),
+        Usuario.objects.select_related('destinado', 'solicitado'),
         numero_documento=numero_documento,
     )
     data = {
@@ -333,7 +349,7 @@ def detalle_usuario_json(request, numero_documento):
         'correo':                 usuario.correo,
         'telefono':               usuario.telefono,
         'tipo_documento_display': usuario.get_tipo_documento_display(),
-        'rol':                    usuario.id_rol.nombre,
+        'rol':                    usuario.rol,
         'destinado':      usuario.destinado.nombre_completo if usuario.destinado else None,
         'destinado_doc':  usuario.destinado.numero_documento if usuario.destinado else None,
         'solicitado':     usuario.solicitado.nombre_completo if usuario.solicitado else None,
@@ -347,10 +363,10 @@ def detalle_usuario_json(request, numero_documento):
 # ─────────────────────────────────────────────────────────────
 @sesion_requerida
 def exportar_usuarios_csv(request):
-    qs = Usuario.objects.select_related('id_rol').order_by('nombre_completo')
+    qs = Usuario.objects.order_by('nombre_completo')
 
     q        = request.GET.get('q', '').strip()
-    rol_id   = request.GET.get('rol', '')
+    rol      = request.GET.get('rol', '')
     tipo_doc = request.GET.get('tipo_doc', '')
 
     if q:
@@ -359,8 +375,8 @@ def exportar_usuarios_csv(request):
             Q(numero_documento__icontains=q) |
             Q(correo__icontains=q)
         )
-    if rol_id:
-        qs = qs.filter(id_rol__id=rol_id)
+    if rol:
+        qs = qs.filter(rol=rol)
     if tipo_doc:
         qs = qs.filter(tipo_documento=tipo_doc)
 
@@ -378,7 +394,7 @@ def exportar_usuarios_csv(request):
             u.nombre_completo,
             u.correo,
             u.telefono,
-            u.id_rol.nombre,
+            u.rol,
         ])
     return response
 
