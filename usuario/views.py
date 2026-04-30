@@ -114,8 +114,7 @@ def logout_view(request):
 #  REGISTRO  — se crea el usuario con el rol asignado 
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
-    roles = Rol.objects.all()
-
+    
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
