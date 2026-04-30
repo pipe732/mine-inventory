@@ -49,33 +49,6 @@ class Producto(models.Model):
         verbose_name="Almacén / Estante"
     )
 
-    UNIDAD_MEDIDA_CHOICES = [
-        ('unidad', 'Unidad'),
-        ('kg', 'Kilogramo'),
-        ('m', 'Metro'),
-        ('m2', 'Metro cuadrado'),
-        ('ml', 'Mililitro'),
-        ('l', 'Litro'),
-        ('paquete', 'Paquete'),
-        ('hora', 'Hora'),
-        ('dia', 'Día'),
-    ]
-
-    unidad_medida = models.CharField(
-        max_length=20,
-        choices=UNIDAD_MEDIDA_CHOICES,
-        default='unidad',
-        verbose_name="Unidad de medida"
-    )
-
-    costo_unitario = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Costo unitario (para autocomplete)"
-    )
-
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

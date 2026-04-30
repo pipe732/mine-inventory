@@ -1,16 +1,9 @@
 # mantenimiento/forms.py
-from decimal import Decimal
-
 from django import forms
 from django.core.exceptions import ValidationError
-from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
 
-from .models import (
-    TipoEstado, Mantenimiento, MantenimientoCambio, ConsumoRepuesto,
-    MOTIVO_CAMBIO_CHOICES
-)
-from inventario.models import Producto
+from .models import TipoEstado, Mantenimiento, MantenimientoCambio
 
 #tipo estado formulario
 class TipoEstadoForm(forms.ModelForm):
@@ -164,7 +157,7 @@ class MantenimientoForm(forms.ModelForm):
 
 
 class MantenimientoUpdateForm(MantenimientoForm):
-    MOTIVOS = MOTIVO_CAMBIO_CHOICES
+    MOTIVOS = MantenimientoCambio.MOTIVO_CHOICES
 
     CAMPOS_TECNICO_EDITABLES = {
         'acciones_realizadas',
@@ -264,103 +257,3 @@ class MantenimientoUpdateForm(MantenimientoForm):
 
         self._changed_fields_cache = cambios
         return cambios
-
-
-class ConsumoRepuestoForm(forms.ModelForm):
-
-    producto_busqueda = forms.CharField(
-        required=False,
-        label='Repuesto',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Buscar por código, nombre, descripción o categoría...',
-            'autocomplete': 'off',
-        }),
-    )
-
-    class Meta:
-        model = ConsumoRepuesto
-        fields = [
-            'producto',
-            'cantidad',
-            'costo_unitario',
-            'lote',
-            'almacen_origen',
-        ]
-        widgets = {
-            'producto': forms.HiddenInput(),
-            'cantidad': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': '1',
-                'step': '1',
-                'min': '1',
-            }),
-            'costo_unitario': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': '0.00',
-                'step': '0.01',
-                'min': '0',
-            }),
-            'lote': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Lote o serie',
-            }),
-            'almacen_origen': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Almacén / ubicación de salida',
-            }),
-        }
-        labels = {
-            'cantidad': 'Cantidad utilizada',
-            'costo_unitario': 'Costo unitario',
-            'lote': 'Lote / Serie',
-            'almacen_origen': 'Almacén / Ubicación de origen',
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['producto'].required = True
-        self.fields['producto'].widget = forms.HiddenInput()
-        self.fields['producto_busqueda'].widget = forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Buscar por código, nombre, descripción o categoría...',
-            'autocomplete': 'off',
-            'data-repuesto-search': '1',
-        })
-
-        if self.instance.pk and self.instance.producto_id:
-            producto = self.instance.producto
-            self.fields['producto_busqueda'].initial = f'[{producto.codigo_sku}] {producto.nombre}'
-
-    def clean_producto(self):
-        producto = self.cleaned_data.get('producto')
-        if not producto:
-            raise ValidationError('Debes seleccionar un repuesto válido.')
-        return producto
-
-    def clean_cantidad(self):
-        cantidad = self.cleaned_data.get('cantidad')
-        if cantidad is None:
-            raise ValidationError('La cantidad es obligatoria.')
-        if cantidad <= Decimal('0'):
-            raise ValidationError('La cantidad debe ser mayor que cero.')
-        if cantidad != cantidad.to_integral_value():
-            raise ValidationError('Por ahora la cantidad debe ser un número entero.')
-        return cantidad
-
-    def clean_costo_unitario(self):
-        costo_unitario = self.cleaned_data.get('costo_unitario')
-        if costo_unitario is None:
-            raise ValidationError('El costo unitario es obligatorio.')
-        if costo_unitario < Decimal('0'):
-            raise ValidationError('El costo unitario no puede ser negativo.')
-        return costo_unitario
-
-
-ConsumoRepuestoFormSet = inlineformset_factory(
-    Mantenimiento,
-    ConsumoRepuesto,
-    form=ConsumoRepuestoForm,
-    extra=1,
-    can_delete=True,
-)

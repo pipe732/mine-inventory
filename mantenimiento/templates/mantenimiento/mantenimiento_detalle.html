@@ -8,6 +8,7 @@ Detalle de Mantenimiento
 {% include "mantenimiento/partials/_cabecera.html" with titulo="Detalle de Mantenimiento" subtitulo=m.producto.nombre url_cancelar=url_cancelar %}
 
 <div class="row g-4">
+  <!-- Columna principal -->
   <div class="col-md-8">
     <div class="card mb-3">
       <div class="card-body" style="padding: 1.25rem">
@@ -69,64 +70,6 @@ Detalle de Mantenimiento
         {% endif %}
         {% if m.evidencia_adicional %}
           <a href="{{ m.evidencia_adicional.url }}" target="_blank" class="btn-outline-mine">Ver evidencia adjunta</a>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    {% if m.repuestos_consumidos.all or m.estado_registro != 'cancelado' %}
-    <div class="card mb-3">
-      <div class="card-body" style="padding: 1.25rem">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h5 style="margin: 0; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.5px; color: var(--text-primary);">REPUESTOS CONSUMIDOS</h5>
-          <div>
-            {% if puede_editar %}
-              <a href="{% url 'mantenimiento:mantenimiento_editar' m.pk %}#consumo-repuestos" class="btn-secondary-mine" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
-                {% if m.repuestos_consumidos.all %}
-                  ✎ Editar
-                {% else %}
-                  ➕ Registrar
-                {% endif %}
-              </a>
-            {% else %}
-              <a href="javascript:void(0)" class="btn-secondary-mine disabled" style="font-size: 0.8rem; padding: 0.4rem 0.8rem; opacity: 0.6; pointer-events: none;" title="No tienes permisos para editar este registro">Registrar repuestos</a>
-            {% endif %}
-          </div>
-        </div>
-        
-        {% if m.repuestos_consumidos.all %}
-        <div class="table-responsive">
-          <table class="table-app" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
-            <thead>
-              <tr>
-                <th>Repuesto</th>
-                <th>Cantidad</th>
-                <th>Costo unitario</th>
-                <th>Subtotal</th>
-                <th>Origen</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for repuesto in m.repuestos_consumidos.all %}
-              <tr>
-                <td>
-                  <strong>[{{ repuesto.producto.codigo_sku }}]</strong> {{ repuesto.producto.nombre }}
-                </td>
-                <td>{{ repuesto.cantidad }}</td>
-                <td>${{ repuesto.costo_unitario }}</td>
-                <td>${{ repuesto.subtotal }}</td>
-                <td>{{ repuesto.almacen_origen|default:"—" }}</td>
-                <td style="font-family: var(--font-mono);">{{ repuesto.fecha_consumo|date:"d/m/Y H:i" }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.5rem 0;">
-          Sin repuestos registrados aún
-        </p>
         {% endif %}
       </div>
     </div>
@@ -208,7 +151,11 @@ Detalle de Mantenimiento
 
           <div class="d-flex justify-content-between align-items-center">
             <span style="color: var(--text-muted)">Responsable</span>
-            <span style="font-weight: 600">{{ m.responsable.get_full_name|default:m.responsable.username|default:"—" }}</span>
+            <span style="font-weight: 600">
+              {{
+              m.responsable.get_full_name|default:m.responsable.username|default:"—"
+              }}
+            </span>
           </div>
         </div>
       </div>
@@ -261,7 +208,8 @@ Detalle de Mantenimiento
           <div class="d-flex justify-content-between">
             <span style="color: var(--text-muted)">Estimado</span>
             <span style="font-family: var(--font-mono)">
-              {% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{% endif %}
+              {% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{%
+              endif %}
             </span>
           </div>
           <div class="d-flex justify-content-between">
@@ -284,7 +232,11 @@ Detalle de Mantenimiento
         >
           <div class="d-flex justify-content-between">
             <span>Registrado por</span>
-            <span>{{ m.creado_por.get_full_name|default:m.creado_por.username|default:"—" }}</span>
+            <span
+              >{{
+              m.creado_por.get_full_name|default:m.creado_por.username|default:"—"
+              }}</span
+            >
           </div>
           <div class="d-flex justify-content-between">
             <span>Creado el</span>

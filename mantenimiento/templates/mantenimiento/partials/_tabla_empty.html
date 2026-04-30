@@ -1,9 +1,16 @@
 <tr>
   <td colspan="{{ colspan }}" style="text-align: center; padding: 3.5rem 1rem">
-    <p style="font-family: var(--font-ui); color: var(--text-muted); font-size: 0.88rem; margin: 0;">
-      {{ empty_mensaje|default:'No se encontraron registros.' }}<br />
+    <p
+      style="
+        font-family: var(--font-ui);
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        margin: 0;
+      "
+    >
+      {{ empty_mensaje|default:"No se encontraron registros." }}<br />
       {% if empty_hint %}
-        <span style="font-size: 0.8rem">{{ empty_hint }}</span>
+      <span style="font-size: 0.8rem">{{ empty_hint }}</span>
       {% endif %}
     </p>
   </td>

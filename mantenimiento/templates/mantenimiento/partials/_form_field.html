@@ -1,8 +1,0 @@
-{# Componente genérico para campos de formulario #}
-{# Uso: {% include "mantenimiento/partials/_form_field.html" with field=form.mi_campo label="Mi campo" col_class="col-md-6" %} #}
-
-<div class="{{ col_class|default:'col-md-6' }}">
-  <label class="form-label">{{ label|default:field.label }}</label>
-  {{ field }}
-  {% include "mantenimiento/partials/_field_error.html" with field=field %}
-</div>
