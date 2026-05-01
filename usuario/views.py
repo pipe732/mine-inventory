@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from usuario.decorators import admin_required, login_required
 
 from .models import Usuario, validar_numero_documento
-from common.mixins import sesion_requerida 
+from common.mixins import sesion_requerida
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
@@ -35,9 +35,12 @@ DOC_HINTS = {
     'CC': 'La Cédula de Ciudadanía debe tener entre 10 dígitos.',
     'CE': 'La Cédula de Extranjería debe tener entre 12 caracteres alfanuméricos.',
     'PP': 'El Pasaporte debe tener entre 9 caracteres alfanuméricos.',
-    'TI': 'La Tarjeta de Identidad debe tener 10  dígitos.',
+    'TI': 'La Tarjeta de Identidad debe tener 10 dígitos.',
 }
 TIPOS_VALIDOS = set(DOC_RULES.keys())
+
+# Roles disponibles según ROL_CHOICES del modelo
+ROLES = [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES]
 
 
 def _validar_documento(tipo, numero):
@@ -63,18 +66,28 @@ def login_view(request):
         campos_requeridos = {
             'Tipo de documento': tipo_documento,
             'Número de documento': documento,
-            'Contraseña': password
+            'Contraseña': password,
         }
         faltantes = [nombre for nombre, valor in campos_requeridos.items() if not valor]
         if faltantes:
-            mensaje = f"Faltan completar los siguientes campos: {', '.join(faltantes)}." if len(faltantes) > 1 else f"Falta completar el campo: {faltantes[0]}."
+            mensaje = (
+                f"Faltan completar los siguientes campos: {', '.join(faltantes)}."
+                if len(faltantes) > 1
+                else f"Falta completar el campo: {faltantes[0]}."
+            )
             messages.error(request, mensaje)
-            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
+            return render(request, 'login.html', {
+                'tipo_documento': tipo_documento,
+                'documento': documento,
+            })
 
         error_doc = _validar_documento(tipo_documento, documento)
         if error_doc:
             messages.error(request, error_doc)
-            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
+            return render(request, 'login.html', {
+                'tipo_documento': tipo_documento,
+                'documento': documento,
+            })
 
         try:
             usuario = Usuario.objects.get(
@@ -83,25 +96,31 @@ def login_view(request):
             )
         except Usuario.DoesNotExist:
             messages.error(request, 'Documento o contraseña incorrectos.')
-            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
+            return render(request, 'login.html', {
+                'tipo_documento': tipo_documento,
+                'documento': documento,
+            })
 
         if not check_password(password, usuario.password):
             messages.error(request, 'Documento o contraseña incorrectos.')
-            return render(request, 'login.html', {'tipo_documento': tipo_documento, 'documento': documento})
+            return render(request, 'login.html', {
+                'tipo_documento': tipo_documento,
+                'documento': documento,
+            })
 
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = usuario.id_rol.nombre
+        request.session['usuario_rol']            = usuario.rol
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        rol = usuario.id_rol.nombre.strip().lower()
+
+        rol = usuario.rol.strip().lower()
         if rol in ('administrador', 'instructor'):
             return redirect('home')
-        else:
-            return redirect('home_usuario')
+        return redirect('home_usuario')
 
-    return render(request, 'login.html')  
+    return render(request, 'login.html')
 
-    
+
 # ─────────────────────────────────────────────────────────────
 #  LOGOUT
 # ─────────────────────────────────────────────────────────────
@@ -111,10 +130,18 @@ def logout_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  REGISTRO  — se crea el usuario con el rol asignado 
+#  REGISTRO
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
-    
+    # ROLES siempre disponible para el template
+    ctx_base = {
+        'roles':          ROLES,
+        'tipo_documento': 'CC',
+        'username':       '',
+        'email':          '',
+        'documento':      '',
+    }
+
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()
@@ -125,22 +152,31 @@ def registro_view(request):
         rol_id         = request.POST.get('rol', '').strip()
 
         ctx = {
-            'username': username,
-            'email': email,
+            **ctx_base,
+            'username':       username,
+            'email':          email,
             'tipo_documento': tipo_documento,
-            'documento': documento,
-            'roles': roles,
+            'documento':      documento,
         }
 
+        # Validar campos obligatorios
         if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
+        # Validar rol
+        roles_validos = {r['id'] for r in ROLES}
+        if rol_id not in roles_validos:
+            messages.error(request, 'El rol seleccionado no es válido.')
+            return render(request, 'registro.html', ctx)
+
+        # Validar documento
         error_doc = _validar_documento(tipo_documento, documento)
         if error_doc:
             messages.error(request, error_doc)
             return render(request, 'registro.html', ctx)
 
+        # Validar contraseña
         if len(password1) < 8:
             messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
             return render(request, 'registro.html', ctx)
@@ -149,6 +185,7 @@ def registro_view(request):
             messages.error(request, 'Las contraseñas no coinciden.')
             return render(request, 'registro.html', ctx)
 
+        # Verificar duplicados
         if Usuario.objects.filter(numero_documento=documento).exists():
             messages.error(request, 'Ya existe un usuario con ese número de documento.')
             return render(request, 'registro.html', ctx)
@@ -157,12 +194,7 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        try:
-            rol = Rol.objects.get(id=rol_id)
-        except Rol.DoesNotExist:
-            messages.error(request, 'El rol seleccionado no es válido.')
-            return render(request, 'registro.html', ctx)
-
+        # Crear usuario
         usuario = Usuario(
             numero_documento=documento,
             nombre_completo=username,
@@ -170,7 +202,7 @@ def registro_view(request):
             telefono='',
             tipo_documento=tipo_documento,
             password=make_password(password1),
-            id_rol=rol,
+            rol=rol_id,
         )
 
         try:
@@ -180,24 +212,21 @@ def registro_view(request):
             return render(request, 'registro.html', ctx)
 
         usuario.save()
+
         request.session['usuario_documento']      = usuario.numero_documento
         request.session['usuario_nombre']         = usuario.nombre_completo
-        request.session['usuario_rol']            = rol.nombre
+        request.session['usuario_rol']            = usuario.rol
         request.session['usuario_tipo_documento'] = usuario.tipo_documento
-        if rol.nombre.strip().lower() in ('administrador', 'instructor'):
+
+        if usuario.rol.strip().lower() in ('administrador', 'instructor'):
             return redirect('home')
-        else:
-            return redirect('home_usuario')
-    return render(request, 'registro.html', {
-        'username': '',
-        'email': '',
-        'tipo_documento': 'CC',
-        'documento': '',
-        'roles': roles,
-    })
+        return redirect('home_usuario')
+
+    return render(request, 'registro.html', ctx_base)
+
 
 # ─────────────────────────────────────────────────────────────
-#  OLVIDÓ CONTRASEÑA — envía el link
+#  OLVIDÓ CONTRASEÑA
 # ─────────────────────────────────────────────────────────────
 def olvido_contrasena_view(request):
     if request.method == 'POST':
@@ -215,8 +244,8 @@ def olvido_contrasena_view(request):
 
         token = get_random_string(40)
         request.session[f'reset_token_{usuario.numero_documento}'] = {
-            'token': token,
-            'expira': time.time() + 900
+            'token':  token,
+            'expira': time.time() + 900,
         }
 
         uid  = urlsafe_base64_encode(force_bytes(usuario.numero_documento))
@@ -246,7 +275,7 @@ def olvido_contrasena_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  NUEVA CONTRASEÑA — formulario desde el link
+#  NUEVA CONTRASEÑA
 # ─────────────────────────────────────────────────────────────
 def nueva_contrasena_view(request, uid, token):
     try:
@@ -277,7 +306,6 @@ def nueva_contrasena_view(request, uid, token):
         usuario.save(update_fields=['password'])
 
         del request.session[f'reset_token_{documento}']
-
         messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
         return redirect('login')
 
@@ -285,18 +313,15 @@ def nueva_contrasena_view(request, uid, token):
 
 
 # ─────────────────────────────────────────────────────────────
-#  HOME  — redirige según rol
+#  HOME
 # ─────────────────────────────────────────────────────────────
 @sesion_requerida
 @login_required
 def home_view(request):
     rol = (request.session.get('usuario_rol') or '').strip().lower()
-    # Administrador → dashboard completo
     if rol in ('administrador', 'admin'):
         return redirect('home')
-    # Usuario normal → su página principal
     return redirect('home_usuario')
- 
 
 
 # ─────────────────────────────────────────────────────────────
@@ -304,7 +329,6 @@ def home_view(request):
 # ─────────────────────────────────────────────────────────────
 @admin_required
 def lista_usuarios_view(request):
-    """Lista y fichas de usuarios con búsqueda y filtros."""
     qs = Usuario.objects.order_by('nombre_completo')
 
     q        = request.GET.get('q', '').strip()
@@ -324,7 +348,7 @@ def lista_usuarios_view(request):
 
     ctx = {
         'usuarios':  qs,
-        'roles':     [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES],
+        'roles':     ROLES,
         'tipos_doc': Usuario.TIPO_DOCUMENTO_CHOICES,
         'q':         q,
         'rol_id':    rol,
@@ -335,7 +359,7 @@ def lista_usuarios_view(request):
 
 
 # ─────────────────────────────────────────────────────────────
-#  DETALLE USUARIO (JSON para modal)  — solo Admin
+#  DETALLE USUARIO (JSON para modal)
 # ─────────────────────────────────────────────────────────────
 @sesion_requerida
 def detalle_usuario_json(request, numero_documento):
@@ -359,7 +383,7 @@ def detalle_usuario_json(request, numero_documento):
 
 
 # ─────────────────────────────────────────────────────────────
-#  EXPORTAR USUARIOS CSV  — solo Admin
+#  EXPORTAR USUARIOS CSV
 # ─────────────────────────────────────────────────────────────
 @sesion_requerida
 def exportar_usuarios_csv(request):
@@ -398,11 +422,10 @@ def exportar_usuarios_csv(request):
         ])
     return response
 
-# usuario/views.py  — solo la función perfil_view
-# Añade esto al final del archivo views.py existente.
-# Asegúrate de tener estos imports al inicio del archivo (ya existen la mayoría):
-#   from django.contrib.auth.hashers import make_password, check_password
-#   from django.contrib import messages
+
+# ─────────────────────────────────────────────────────────────
+#  PERFIL
+# ─────────────────────────────────────────────────────────────
 @sesion_requerida
 def perfil_view(request):
     doc     = request.session.get('usuario_documento')
@@ -480,11 +503,11 @@ def perfil_view(request):
         ],
         'notificaciones_lista': [
             ('notif_prestamos',    'Nuevos préstamos asignados',
-             'Recibir alerta cuando se te asigne un préstamo.',    cfg_notif_prestamos),
+             'Recibir alerta cuando se te asigne un préstamo.',      cfg_notif_prestamos),
             ('notif_vencimientos', 'Próximos a vencer',
              'Alerta 3 días antes de que venza un préstamo activo.', cfg_notif_vencimientos),
             ('notif_devoluciones', 'Devoluciones pendientes',
-             'Recordatorio de devoluciones en estado pendiente.',  cfg_notif_devoluciones),
+             'Recordatorio de devoluciones en estado pendiente.',    cfg_notif_devoluciones),
         ],
         'cfg_notif_prestamos':    cfg_notif_prestamos,
         'cfg_notif_vencimientos': cfg_notif_vencimientos,
