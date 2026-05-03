@@ -39,7 +39,6 @@ DOC_HINTS = {
 }
 TIPOS_VALIDOS = set(DOC_RULES.keys())
 
-# Roles disponibles según ROL_CHOICES del modelo
 ROLES = [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES]
 
 
@@ -133,10 +132,6 @@ def logout_view(request):
 #  REGISTRO
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
-    roles = Rol.objects.all()
-
-    
-    # ROLES siempre disponible para el template
     ctx_base = {
         'roles':          ROLES,
         'tipo_documento': 'CC',
@@ -162,24 +157,20 @@ def registro_view(request):
             'documento':      documento,
         }
 
-        # Validar campos obligatorios
         if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
             messages.error(request, 'Completa todos los campos.')
             return render(request, 'registro.html', ctx)
 
-        # Validar rol
         roles_validos = {r['id'] for r in ROLES}
         if rol_id not in roles_validos:
             messages.error(request, 'El rol seleccionado no es válido.')
             return render(request, 'registro.html', ctx)
 
-        # Validar documento
         error_doc = _validar_documento(tipo_documento, documento)
         if error_doc:
             messages.error(request, error_doc)
             return render(request, 'registro.html', ctx)
 
-        # Validar contraseña
         if len(password1) < 8:
             messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
             return render(request, 'registro.html', ctx)
@@ -188,7 +179,6 @@ def registro_view(request):
             messages.error(request, 'Las contraseñas no coinciden.')
             return render(request, 'registro.html', ctx)
 
-        # Verificar duplicados
         if Usuario.objects.filter(numero_documento=documento).exists():
             messages.error(request, 'Ya existe un usuario con ese número de documento.')
             return render(request, 'registro.html', ctx)
@@ -197,7 +187,6 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # Crear usuario
         usuario = Usuario(
             numero_documento=documento,
             nombre_completo=username,
@@ -409,7 +398,7 @@ def exportar_usuarios_csv(request):
 
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="usuarios.csv"'
-    response.write('\ufeff')  # BOM para Excel
+    response.write('\ufeff')
 
     writer = csv.writer(response)
     writer.writerow(['Número de Documento', 'Tipo de Documento', 'Nombre Completo',
@@ -439,7 +428,6 @@ def perfil_view(request):
     if request.method == 'POST':
         accion_activa = request.POST.get('accion', '')
 
-        # ── Editar datos personales ──────────────────────────────────
         if accion_activa == 'editar_perfil':
             nombre   = request.POST.get('nombre_completo', '').strip()
             correo   = request.POST.get('correo', '').strip().lower()
@@ -464,7 +452,6 @@ def perfil_view(request):
                 messages.success(request, 'Perfil actualizado correctamente.')
                 return redirect('perfil')
 
-        # ── Cambiar contraseña ───────────────────────────────────────
         elif accion_activa == 'cambiar_password':
             actual   = request.POST.get('password_actual', '')
             nueva    = request.POST.get('password_nueva', '')
@@ -483,7 +470,6 @@ def perfil_view(request):
                 messages.success(request, 'Contraseña actualizada correctamente.')
                 return redirect('perfil')
 
-        # ── Guardar configuración de notificaciones ──────────────────
         elif accion_activa == 'guardar_config':
             request.session['cfg_notif_prestamos']    = 'notif_prestamos'    in request.POST
             request.session['cfg_notif_vencimientos'] = 'notif_vencimientos' in request.POST
