@@ -20,7 +20,6 @@ from inventario.models import Producto
 
 ROLES_ADMIN_EDICION = {'supervisor', 'administrador', 'admin'}
 ESTADOS_EDITABLES = {'abierto', 'en_proceso', 'pendiente', 'cerrado_parcial', 'cerrado'}
-REPUESTOS_FORMSET_PREFIX = 'repuestos'
 
 
 def _get_usuario_sesion(request):
@@ -71,14 +70,6 @@ def _puede_editar_mantenimiento(request, mantenimiento):
 def _es_cambio_significativo(cambios):
     campos_clave = {'estado_registro', 'costo_real', 'costo_estimado', 'responsable'}
     return any(campo in cambios for campo in campos_clave)
-
-
-def _construir_formset_repuestos(*, data=None, instance=None):
-    return ConsumoRepuestoFormSet(
-        data=data,
-        instance=instance,
-        prefix=REPUESTOS_FORMSET_PREFIX,
-    )
 
 
 # ══════════════════════════════════════════════
@@ -337,7 +328,7 @@ class MantenimientoDetailView(SesionRequeridaMixin, DetailView):
     def get_queryset(self):
         return Mantenimiento.objects.select_related(
             'producto', 'tipo_estado', 'responsable', 'creado_por', 'actualizado_por'
-        ).prefetch_related('cambios_auditoria__editado_por', 'repuestos_consumidos__producto')
+        ).prefetch_related('cambios_auditoria__editado_por')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -366,50 +357,29 @@ class MantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
             return HttpResponseForbidden('Acceso denegado para editar este mantenimiento.')
         return super().dispatch(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if not _puede_editar_mantenimiento(request, self.object):
-            messages.error(
-                request,
-                'No tienes permisos para editar este registro o su estado no permite edición.'
-            )
-            return HttpResponseForbidden('Acceso denegado para editar este mantenimiento.')
-
-        form = self.get_form()
-        formset = _construir_formset_repuestos(data=request.POST, instance=self.object)
-
-        if form.is_valid() and formset.is_valid():
-            return self.form_valid(form, formset)
-        return self.form_invalid(form, formset)
-
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['rol_usuario'] = _get_rol_sesion(self.request)
         kwargs['usuario_documento'] = self.request.session.get('usuario_documento')
         return kwargs
 
-    def form_valid(self, form, formset=None):
+    def form_valid(self, form):
         cambios = form.get_changed_fields()
         motivo = form.cleaned_data.get('motivo_edicion')
         detalle = form.cleaned_data.get('detalle_motivo', '')
 
-        with transaction.atomic():
-            mantenimiento = form.save(commit=False)
-            mantenimiento.actualizado_por = _get_usuario_sesion(self.request)
-            mantenimiento.save()
+        mantenimiento = form.save(commit=False)
+        mantenimiento.actualizado_por = _get_usuario_sesion(self.request)
+        mantenimiento.save()
 
-            if formset is not None:
-                formset.instance = mantenimiento
-                formset.save()
+        mantenimiento.registrar_cambio(
+            editado_por=mantenimiento.actualizado_por,
+            motivo_edicion=motivo,
+            cambios=cambios,
+            detalle_motivo=detalle,
+        )
 
-            mantenimiento.registrar_cambio(
-                editado_por=mantenimiento.actualizado_por,
-                motivo_edicion=motivo,
-                cambios=cambios,
-                detalle_motivo=detalle,
-            )
-
-        messages.success(self.request, 'La orden de mantenimiento y sus repuestos se actualizaron correctamente.')
+        messages.success(self.request, 'La orden de mantenimiento se actualizó correctamente.')
         if _es_cambio_significativo(cambios):
             messages.info(
                 self.request,
@@ -417,16 +387,10 @@ class MantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
             )
         return redirect('mantenimiento:mantenimiento_detalle', pk=mantenimiento.pk)
 
-    def form_invalid(self, form, formset=None):
-        return self.render_to_response(
-            self.get_context_data(form=form, consumo_formset=formset)
-        )
-
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['mantenimiento'] = self.object
         ctx['solo_campos_tecnico'] = _es_rol_tecnico(_get_rol_sesion(self.request))
-        ctx['consumo_formset'] = kwargs.get('consumo_formset') or _construir_formset_repuestos(instance=self.object)
         return ctx
 
 
@@ -472,7 +436,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
     context_object_name = 'mantenimientos'
 
     def get_queryset(self):
-
+        #mensaje por si falla
         self.producto = get_object_or_404(Producto, pk=self.kwargs['producto_id'])
 
         qs = Mantenimiento.objects.filter(
@@ -545,9 +509,8 @@ def registrar_desde_inventario(request):
     post_data['producto'] = producto_id
 
     form = MantenimientoForm(post_data, request.FILES)
-    formset = _construir_formset_repuestos(data=post_data, instance=form.instance)
 
-    if form.is_valid() and formset.is_valid():
+    if form.is_valid():
         mantenimiento = form.save(commit=False)
 
         # Auditoría: asignar creado_por desde la sesión propia
@@ -560,24 +523,19 @@ def registrar_desde_inventario(request):
             except User.DoesNotExist:
                 pass
 
-        with transaction.atomic():
-            mantenimiento.save()
-            formset.instance = mantenimiento
-            formset.save()
-
+        mantenimiento.save()
         messages.success(
             request,
             f'Mantenimiento registrado para '
-            f'[{producto.codigo_sku}] {producto.nombre} con sus repuestos.'
+            f'[{producto.codigo_sku}] {producto.nombre}.'
         )
         return redirect('inventario:inventario')
 
     # Form inválido: guardamos en sesión para que inventario reabra el modal
     request.session['mant_form_data']        = post_data.dict()
-    request.session['mant_repuestos_formset_data'] = {key: values for key, values in post_data.lists()}
     request.session['mant_producto_id_error'] = producto_id
     request.session['mant_sku_error']         = producto.codigo_sku
     request.session['mant_nombre_error']      = producto.nombre
 
-    messages.error(request, 'Revisa los errores del formulario de mantenimiento y repuestos.')
+    messages.error(request, 'Revisa los errores del formulario de mantenimiento.')
     return redirect('inventario:inventario')

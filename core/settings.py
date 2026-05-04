@@ -145,3 +145,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Permite que JS lea la cookie CSRF
 CSRF_COOKIE_HTTPONLY = False
+# Silencia el warning Cross-Origin-Opener-Policy en desarrollo HTTP
+# (en producción con HTTPS esto no es necesario)
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+ 
+# Permite que JS lea la cookie CSRF (ya estaba, confirmar que existe)
+CSRF_COOKIE_HTTPONLY = False
+ 
