@@ -149,7 +149,8 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
-        rol_id         = request.POST.get('rol', '').strip()
+        # El rol siempre es 'Usuario' al registrarse; no lo elige el usuario
+        rol_id = 'Usuario'
 
         ctx = {
             **ctx_base,
@@ -159,15 +160,9 @@ def registro_view(request):
             'documento':      documento,
         }
 
-        # Validar campos obligatorios
-        if not all([username, email, tipo_documento, documento, password1, password2, rol_id]):
+        # Validar campos obligatorios (rol ya está fijo, no se valida del POST)
+        if not all([username, email, tipo_documento, documento, password1, password2]):
             messages.error(request, 'Completa todos los campos.')
-            return render(request, 'registro.html', ctx)
-
-        # Validar rol
-        roles_validos = {r['id'] for r in ROLES}
-        if rol_id not in roles_validos:
-            messages.error(request, 'El rol seleccionado no es válido.')
             return render(request, 'registro.html', ctx)
 
         # Validar documento
