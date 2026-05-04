@@ -9,19 +9,20 @@ import datetime
 from .forms import PrestamoForm
 from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
-from common.mixins import sesion_requerida   
+from common.mixins import sesion_requerida
 
-@sesion_requerida   
-def _marcar_vencidos(request):
+
+# ── Helper: marcar vencidos (sin decorador, sin request) ──────────────────
+def _marcar_vencidos():
     hoy = timezone.localdate()
-    return Prestamo.objects.filter(
+    Prestamo.objects.filter(
         estado__in=['activo', 'parcial'],
         fecha_vencimiento__lt=hoy,
     ).update(estado='vencido')
 
-@sesion_requerida   
 
 # ── Vista portal de usuario ────────────────────────────────────────────────
+@sesion_requerida
 def prestamo_usuario_view(request):
     """Portal personal: el usuario ve sus propios préstamos y puede solicitar."""
     doc = request.session.get('usuario_documento')
@@ -68,6 +69,7 @@ def prestamo_usuario_view(request):
 
 
 # ── Vista de aprobación de solicitudes (Admin) ─────────────────────────────
+@sesion_requerida
 def aprobar_prestamo_view(request, pk):
     """Admin aprueba un préstamo pendiente y registra el serial de cada herramienta."""
     doc = request.session.get('usuario_documento')
@@ -128,10 +130,7 @@ def aprobar_prestamo_view(request, pk):
                 prestamo.motivo_rechazo = motivo_rechazo
                 prestamo.estado = 'rechazado'
                 prestamo.save(update_fields=['estado', 'motivo_rechazo', 'fecha_actualizacion'])
-                messages.warning(
-                    request,
-                    f'Solicitud #{prestamo.pk} rechazada.'
-                )
+                messages.warning(request, f'Solicitud #{prestamo.pk} rechazada.')
                 return redirect('prestamo')
 
     items = prestamo.items.select_related('producto').all()
@@ -141,8 +140,10 @@ def aprobar_prestamo_view(request, pk):
     })
 
 
+# ── Vista principal de préstamos (Admin) ───────────────────────────────────
+@sesion_requerida
 def prestamos_view(request):
-    _marcar_vencidos(request)
+    _marcar_vencidos()
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
@@ -423,9 +424,9 @@ def prestamos_view(request):
         'filtro_vencidos':      vencidos_f,
     })
 
-@sesion_requerida   
 
 # ── Vista para solicitud de préstamo desde el portal de usuario ────────────
+@sesion_requerida
 def usuario_solicitar_prestamo(request):
     """Permite a un usuario autenticado solicitar un préstamo — queda en estado 'pendiente'."""
     if request.method != 'POST':
@@ -518,10 +519,9 @@ def usuario_solicitar_prestamo(request):
     return redirect('prestamo_usuario')
 
 
+# ── API JSON de un préstamo ────────────────────────────────────────────────
 def prestamo_api(request, pk):
     try:
-        # 1. Asegúrate de usar el modelo 'Prestamo'
-        # 2. Usamos prefetch_related para traer los productos de una vez y optimizar
         p = Prestamo.objects.prefetch_related('items__producto').get(pk=pk)
     except Prestamo.DoesNotExist:
         return JsonResponse({'error': 'Préstamo no encontrado'}, status=404)
@@ -544,11 +544,12 @@ def prestamo_api(request, pk):
                 'cantidad':         item.cantidad,
                 'serial_entregado': item.serial_entregado,
                 'producto': {
-                    'id':     item.producto.pk,
-                    'nombre': item.producto.nombre,
-                    'categoria': item.producto.categoria.nombre if hasattr(item.producto, 'categoria') else "Sin categoría"
+                    'id':        item.producto.pk,
+                    'nombre':    item.producto.nombre,
+                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
                 }
-            } for item in p.items.all() # Ahora 'p' es un Prestamo, esto funcionará.
+            }
+            for item in p.items.all()
         ]
     }
     return JsonResponse(data)

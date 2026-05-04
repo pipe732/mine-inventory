@@ -147,7 +147,8 @@ def registro_view(request):
         documento      = request.POST.get('documento', '').strip()
         password1      = request.POST.get('password1', '')
         password2      = request.POST.get('password2', '')
-        rol_id         = request.POST.get('rol', '').strip()
+        # El rol siempre es 'Usuario' al registrarse; no lo elige el usuario
+        rol_id = 'Usuario'
 
         ctx = {
             **ctx_base,
