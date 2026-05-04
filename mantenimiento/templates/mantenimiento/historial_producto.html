@@ -1,0 +1,136 @@
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %}
+Historial — 
+{{producto.nombre }}
+{% endblock %} 
+{% block content %}
+
+{% include "mantenimiento/partials/_cabecera.html" with titulo="Historial de Mantenimientos" subtitulo=producto.nombre url_accion=url_accion label_accion=label_accion %}
+
+{% include "mantenimiento/partials/_filtros.html" with modo='historial' %}
+
+<!-- Tabla -->
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12
+                 a2 2 0 0 0 2-2V8z"
+        />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+      Registros de mantenimiento
+    </span>
+    {% include "mantenimiento/partials/_count_badge.html" with total=total_registros singular="registro" plural_suffix=",s" %}
+  </div>
+
+  <div class="table-responsive">
+    <table
+      class="table-app"
+      style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
+    >
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Descripción</th>
+          <th>Técnico</th>
+          <th>Estado registro</th>
+          <th>Costo real</th>
+          <th style="text-align: center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in mantenimientos %}
+        <tr>
+          <td>
+            <span
+              style="
+                font-family: var(--font-mono);
+                font-size: 0.78rem;
+                color: var(--text-muted);
+              "
+            >
+              {{ m.fecha_reporte|date:"d/m/Y" }}
+            </span>
+          </td>
+          <td>
+            {% if m.tipo_mantenimiento == 'correctivo' %}
+            <span class="badge-state badge-rechazada"
+              >{{ m.get_tipo_mantenimiento_display }}</span
+            >
+            {% elif m.tipo_mantenimiento == 'preventivo' %}
+            <span class="badge-state badge-aprobada"
+              >{{ m.get_tipo_mantenimiento_display }}</span
+            >
+            {% else %}
+            <span class="badge-state badge-pendiente"
+              >{{ m.get_tipo_mantenimiento_display }}</span
+            >
+            {% endif %}
+          </td>
+          <td style="max-width: 260px">
+            <span style="font-weight: 600; font-size: 0.88rem">
+              {{ m.descripcion_problema|truncatewords:12 }}
+            </span>
+            {% if m.acciones_realizadas %}
+            <br />
+            <small style="color: var(--text-muted); font-size: 0.78rem">
+              {{ m.acciones_realizadas|truncatewords:8 }}
+            </small>
+            {% endif %}
+          </td>
+          <td>
+            {{ m.responsable.get_full_name|default:m.responsable.username }}
+          </td>
+          <td>
+            {% include "mantenimiento/partials/_badge_estado_registro.html" with estado=m.estado_registro etiqueta=m.get_estado_registro_display %}
+          </td>
+          <td>
+            {% if m.costo_real %}
+            <span style="font-family: var(--font-mono); font-size: 0.82rem">
+              ${{ m.costo_real }}
+            </span>
+            {% else %}
+            <span style="color: var(--text-muted)">—</span>
+            {% endif %}
+          </td>
+          {% url 'mantenimiento:mantenimiento_detalle' m.pk as detalle_url %}
+          {% url 'mantenimiento:mantenimiento_editar' m.pk as editar_url %}
+          <td style="text-align: center">
+            {% if m.pk in editable_ids %}
+              {% include "mantenimiento/partials/_action_icon_button.html" with href=editar_url title="Editar" icon="edit" %}
+            {% endif %}
+            {% include "mantenimiento/partials/_action_icon_button.html" with href=detalle_url title="Ver detalle" icon="view" %}
+          </td>
+        </tr>
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=7 empty_mensaje="Este activo no tiene mantenimientos registrados aún." empty_hint="Usa el botón Nuevo Mantenimiento para agregar el primero." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- Boton volver -->
+<div class="mt-3">
+  <a
+    href="{% url 'mantenimiento:mantenimiento_lista' %}"
+    class="btn-outline-mine"
+  >
+    ← Volver a todos los mantenimientos
+  </a>
+</div>
+
+{% endblock %}

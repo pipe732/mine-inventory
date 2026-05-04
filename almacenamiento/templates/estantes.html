@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+<style>
+  /* ── Variables modo claro ── */
+  :root {
+    --card-bg:        #f5f0eb;
+    --card-border:    #e0d8cf;
+    --card-radius:    14px;
+    --header-bg:      #ece6df;
+    --header-color:   #3a3530;
+    --badge-bg:       #f5f0eb;
+    --badge-border:   #c8a98a;
+    --badge-color:    #7a4f2e;
+    --th-color:       #8a7f74;
+    --td-color:       #3a3530;
+    --td-muted:       #a09080;
+    --row-hover:      #ede7e0;
+    --row-border:     #e0d8cf;
+    --btn-edit-bg:    #f5f0eb;
+    --btn-edit-border:#c8b8a8;
+    --btn-edit-color: #3a3530;
+    --btn-edit-hover: #ece6df;
+    --btn-del-bg:     #f5f0eb;
+    --btn-del-border: #e8b8b0;
+    --btn-del-color:  #c0392b;
+    --btn-del-hover:  #fbeae8;
+    --stock-bg:       #e8f5e9;
+    --stock-color:    #2e7d32;
+    --stock-dot:      #43a047;
+  }
+ 
+  /* ── Variables modo oscuro ── */
+  [data-bs-theme="dark"],
+  .dark-mode {
+    --card-bg:        #1e2230;
+    --card-border:    #2a3045;
+    --header-bg:      #191d2a;
+    --header-color:   #d0cfc8;
+    --badge-bg:       #1e2230;
+    --badge-border:   #c0392b;
+    --badge-color:    #e07060;
+    --th-color:       #6b7280;
+    --td-color:       #c8c5bc;
+    --td-muted:       #6b7280;
+    --row-hover:      #232840;
+    --row-border:     #2a3045;
+    --btn-edit-bg:    #1e2230;
+    --btn-edit-border:#3a4055;
+    --btn-edit-color: #c8c5bc;
+    --btn-edit-hover: #2a3045;
+    --btn-del-bg:     #1e2230;
+    --btn-del-border: #7a2a22;
+    --btn-del-color:  #e07060;
+    --btn-del-hover:  #2a1f1e;
+    --stock-bg:       #1e2230;
+    --stock-color:    #6b7280;
+    --stock-dot:      #6b7280;
+  }
+ 
+  .reg-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .reg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .reg-header-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--header-color);
+  }
+  .reg-header-left svg {
+    width: 18px; height: 18px;
+    stroke: var(--header-color);
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .reg-badge {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--badge-bg);
+    border: 1px solid var(--badge-border);
+    color: var(--badge-color);
+  }
+  .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .reg-table thead th {
+    padding: 10px 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--th-color);
+    border-bottom: 1px solid var(--row-border);
+    background: transparent;
+  }
+  .reg-table tbody td {
+    padding: 13px 20px;
+    font-size: 13px;
+    color: var(--td-color);
+    border-bottom: 1px solid var(--row-border);
+    vertical-align: middle;
+  }
+  .reg-table tbody tr:last-child td { border-bottom: none; }
+  .reg-table tbody tr:hover td { background: var(--row-hover); }
+  .td-muted  { color: var(--td-muted) !important; font-style: italic; }
+  .td-bold   { font-weight: 600; }
+  .stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--stock-bg);
+    color: var(--stock-color);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--row-border);
+  }
+  .stock-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--stock-dot);
+  }
+  .btn-reg-edit,
+  .btn-reg-del {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    text-decoration: none;
+  }
+  .btn-reg-edit {
+    background: var(--btn-edit-bg);
+    border: 1px solid var(--btn-edit-border);
+    color: var(--btn-edit-color);
+  }
+  .btn-reg-edit:hover { background: var(--btn-edit-hover); }
+  .btn-reg-del {
+    background: var(--btn-del-bg);
+    border: 1px solid var(--btn-del-border);
+    color: var(--btn-del-color);
+  }
+  .btn-reg-del:hover { background: var(--btn-del-hover); }
+  .reg-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--td-muted);
+    font-size: 13px;
+  }
+</style>
+ 
+<div class="container mt-4">
+ 
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="mb-0">Estantes</h4>
+      <small class="text-muted">Gestión de estantes por almacén</small>
+    </div>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalEstante">
+      ➕ Nuevo Estante
+    </button>
+  </div>
+ 
+  <div class="reg-card">
+    <div class="reg-header">
+      <div class="reg-header-left">
+        <svg viewBox="0 0 24 24">
+          <rect x="2" y="3" width="20" height="4" rx="1"/>
+          <rect x="2" y="10" width="20" height="4" rx="1"/>
+          <rect x="2" y="17" width="20" height="4" rx="1"/>
+          <line x1="6" y1="7" x2="6" y2="10"/>
+          <line x1="18" y1="7" x2="18" y2="10"/>
+          <line x1="6" y1="14" x2="6" y2="17"/>
+          <line x1="18" y1="14" x2="18" y2="17"/>
+        </svg>
+        Estantes registrados
+      </div>
+      <span class="reg-badge">{{ estantes|length }} registro{{ estantes|length|pluralize }}</span>
+    </div>
+ 
+    <table class="reg-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Almacén</th>
+          <th>Código</th>
+          <th>Detalles</th>
+          <th>Capacidad</th>
+          <th>Fecha Creación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for estante in estantes %}
+        <tr>
+          <td>{{ estante.id }}</td>
+          <td>{{ estante.almacen }}</td>
+          <td class="td-bold">{{ estante.codigo }}</td>
+          <td>{{ estante.detalles|default:"—" }}</td>
+          <td>
+            {% if estante.capacidad %}
+              <span class="stock-badge">
+                <span class="stock-dot"></span>
+                {{ estante.capacidad }}
+              </span>
+            {% else %}
+              <span class="td-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ estante.fecha_creacion|date:"d/m/Y H:i" }}</td>
+          <td style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn-reg-edit"
+                    onclick="abrirEditarEstante('{{ estante.pk }}','{{ estante.almacen.pk }}','{{ estante.codigo|escapejs }}','{{ estante.detalles|default:''|escapejs }}','{{ estante.capacidad|default:'' }}')">
+               Editar
+            </button>
+            <button class="btn-reg-del"
+                    onclick="abrirEliminarEstante('{{ estante.pk }}','{{ estante.codigo|escapejs }}')">
+               Eliminar
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="reg-empty">
+            No hay estantes registrados aún.<br>
+            <small>Usa <strong>Nuevo Estante</strong> para agregar uno.</small>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+ 
+</div>
+ 
+<!-- Modal Crear -->
+<div class="modal fade" id="modalEstante" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">➕ Nuevo Estante</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'estantes' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="crear">
+        <div class="modal-body">
+          <p class="text-primary fw-semibold small mb-3">DATOS DEL ESTANTE</p>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">ALMACÉN *</label>
+              {{ form.almacen }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CÓDIGO *</label>
+              {{ form.codigo }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            {{ form.detalles }}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CAPACIDAD</label>
+              {{ form.capacidad }}
+            </div>
+          </div>
+          {% if form.errors %}
+            <div class="alert alert-danger mt-3">{{ form.errors }}</div>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger"> Guardar Estante</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+ 
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditarEstante" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title"> Editar Estante</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'estantes' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="editar">
+        <input type="hidden" name="estante_id" id="edit_estante_id">
+        <div class="modal-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">ALMACÉN *</label>
+              <select name="almacen" id="edit_estante_almacen" class="form-control">
+                {% for almacen in almacenes %}
+                  <option value="{{ almacen.pk }}">{{ almacen.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CÓDIGO *</label>
+              <input type="text" name="codigo" id="edit_estante_codigo" class="form-control" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">DETALLES</label>
+            <textarea name="detalles" id="edit_estante_detalles" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">CAPACIDAD</label>
+              <input type="number" name="capacidad" id="edit_estante_capacidad" class="form-control" min="0">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger"> Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+ 
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminarEstante" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title"> Eliminar Estante</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>¿Estás seguro de eliminar el estante</p>
+        <p id="eliminar_estante_codigo" class="fw-bold text-danger"></p>
+        <p class="text-muted small">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <form method="POST" action="{% url 'estantes' %}">
+          {% csrf_token %}
+          <input type="hidden" name="accion" value="eliminar">
+          <input type="hidden" name="estante_id" id="eliminar_estante_id">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+{% if show_modal %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('modalEstante')).show();
+  });
+</script>
+{% endif %}
+ 
+<script>
+  function abrirEditarEstante(pk, almacenPk, codigo, detalles, capacidad) {
+    document.getElementById('edit_estante_id').value        = pk;
+    document.getElementById('edit_estante_codigo').value    = codigo;
+    document.getElementById('edit_estante_detalles').value  = detalles;
+    document.getElementById('edit_estante_capacidad').value = capacidad;
+    const sel = document.getElementById('edit_estante_almacen');
+    for (let opt of sel.options) { opt.selected = opt.value == almacenPk; }
+    new bootstrap.Modal(document.getElementById('modalEditarEstante')).show();
+  }
+ 
+  function abrirEliminarEstante(pk, codigo) {
+    document.getElementById('eliminar_estante_id').value           = pk;
+    document.getElementById('eliminar_estante_codigo').textContent = '"' + codigo + '"';
+    new bootstrap.Modal(document.getElementById('modalEliminarEstante')).show();
+  }
+</script>
+ 
+{% endblock %}
