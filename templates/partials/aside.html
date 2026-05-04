@@ -306,7 +306,7 @@
 
       <!-- Contenido del menú -->
       <div
-        class="collapse {% if request.resolver_match.url_name in 'estado_actual_lista,tipo_estado_nuevo,tipo_estado_lista,tipo_estado_editar,mantenimiento_lista,mantenimiento_detalle' %}show{% endif %}"
+        class="collapse {% if request.resolver_match.url_name in 'estado_actual_lista,tipo_estado_nuevo,tipo_estado_lista,tipo_estado_editar,tipo_mantenimiento_lista,tipo_mantenimiento_crear,tipo_mantenimiento_editar,mantenimiento_lista,mantenimiento_detalle' %}show{% endif %}"
         id="menuMantenimiento"
       >
         <ul class="list-unstyled ps-4 mb-0">
@@ -329,6 +329,17 @@
             >
               <i class="bi bi-tags"></i>
               Tipos de Estado
+            </a>
+          </li>
+
+          <li class="mb-1">
+            <a
+              href="{% url 'mantenimiento:tipo_mantenimiento_lista' %}"
+              class="d-flex align-items-center gap-2 px-3 py-2 rounded fw-medium {% if request.resolver_match.url_name == 'tipo_mantenimiento_lista' or request.resolver_match.url_name == 'tipo_mantenimiento_crear' or request.resolver_match.url_name == 'tipo_mantenimiento_editar' %}text-white bg-white bg-opacity-10{% else %}text-white-50{% endif %}"
+              style="font-size: 0.85rem"
+            >
+              <i class="bi bi-tag"></i>
+              Tipos de Mantenimiento
             </a>
           </li>
 
