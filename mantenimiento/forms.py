@@ -7,10 +7,59 @@ from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
 
 from .models import (
-    TipoEstado, Mantenimiento, MantenimientoCambio, ConsumoRepuesto,
+    TipoEstado, TipoMantenimiento, Mantenimiento, MantenimientoCambio, ConsumoRepuesto,
     MOTIVO_CAMBIO_CHOICES
 )
 from inventario.models import Producto
+
+# ─────────────────────────────────────────────────────────────
+# TIPO MANTENIMIENTO
+# ─────────────────────────────────────────────────────────────
+
+class TipoMantenimientoForm(forms.ModelForm):
+    """Formulario para crear y editar tipos de mantenimiento."""
+
+    class Meta:
+        model = TipoMantenimiento
+        fields = ['nombre', 'descripcion', 'color', 'activo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Correctivo, Preventivo...',
+                'maxlength': '50',
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción del tipo de mantenimiento (opcional)',
+            }),
+            'color': forms.TextInput(attrs={
+                'type': 'color',
+                'class': 'form-control form-control-color',
+                'style': 'max-width: 100px;',
+            }),
+            'activo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+        }
+        labels = {
+            'nombre': 'Nombre del tipo',
+            'descripcion': 'Descripción',
+            'color': 'Color (opcional)',
+            'activo': 'Activo',
+        }
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if nombre:
+            # Validar unicidad
+            qs = TipoMantenimiento.objects.filter(nombre__iexact=nombre)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError("Ya existe un tipo de mantenimiento con este nombre.")
+        return nombre
+
 
 #tipo estado formulario
 class TipoEstadoForm(forms.ModelForm):
@@ -115,6 +164,9 @@ class MantenimientoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields['tipo_mantenimiento'].queryset = TipoMantenimiento.objects.filter(
+            activo=True
+        ).order_by('nombre')
         self.fields['tipo_estado'].queryset = TipoEstado.objects.filter(activo=True)
         self.fields['responsable'].queryset = (
             User.objects.filter(is_active=True).order_by('first_name', 'username')

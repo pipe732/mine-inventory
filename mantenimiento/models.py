@@ -2,6 +2,7 @@
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from inventario.models import Producto
+from usuario.models import Usuario
 
 
 # ─────────────────────────────────────────────────────────────
@@ -56,6 +57,67 @@ MOTIVO_CAMBIO_CHOICES = [
 # Constantes para disponibilidad
 ESTADOS_MANTENIMIENTO_ACTIVOS = {'abierto', 'en_proceso'}
 IMPACTO_NO_DISPONIBLE = 'no_disponible'
+
+# ─────────────────────────────────────────────────────────────
+# TIPOS DE MANTENIMIENTO
+# ─────────────────────────────────────────────────────────────
+
+class TipoMantenimiento(models.Model):
+    """
+    Catálogo dinámico de tipos de mantenimiento.
+    Reemplaza los choices hardcodeados para mayor flexibilidad.
+    """
+
+    nombre = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name="Nombre del tipo"
+    )
+    descripcion = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Descripción"
+    )
+    color = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        verbose_name="Color (hex)"
+    )
+    activo = models.BooleanField(
+        default=True,
+        verbose_name="Activo"
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    creado_por = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tipos_mantenimiento_creados',
+        verbose_name="Creado por"
+    )
+
+    class Meta:
+        verbose_name = "Tipo de Mantenimiento"
+        verbose_name_plural = "Tipos de Mantenimiento"
+        ordering = ['nombre']
+        db_table = 'mantenimiento_tipomantenimiento'
+
+    def __str__(self):
+        return self.nombre
+
+    def puede_eliminarse(self):
+        """Verifica si el tipo puede ser eliminado (nunca fue usado)."""
+        return not self.mantenimientos.exists()
+
+    def puede_inactivarse(self):
+        """Verifica si puede inactivarse (sin órdenes abiertas)."""
+        from django.db.models import Q
+        return not self.mantenimientos.filter(
+            Q(estado_registro='abierto') | Q(estado_registro='en_proceso')
+        ).exists()
+
 
 # ─────────────────────────────────────────────────────────────
 # TIPOS DE ESTADO
@@ -136,6 +198,12 @@ class Mantenimiento(models.Model):
         related_name='mantenimientos',
         verbose_name="Ítem / Herramienta"
     )
+    tipo_mantenimiento = models.ForeignKey(
+        TipoMantenimiento,
+        on_delete=models.PROTECT,
+        related_name='mantenimientos',
+        verbose_name="Tipo de mantenimiento"
+    )
     tipo_estado = models.ForeignKey(
         TipoEstado,
         on_delete=models.PROTECT,
@@ -166,11 +234,6 @@ class Mantenimiento(models.Model):
     )
 
     # ── Campos de clasificación ───────────────────────────────────
-    tipo_mantenimiento = models.CharField(
-        max_length=30,
-        choices=TIPO_MANTENIMIENTO_CHOICES,
-        verbose_name="Tipo de mantenimiento"
-    )
     estado_registro = models.CharField(
         max_length=20,
         choices=ESTADO_REGISTRO_CHOICES,
