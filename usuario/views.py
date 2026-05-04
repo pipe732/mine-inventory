@@ -112,8 +112,10 @@ def logout_view(request):
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
     # Todos los roles disponibles para el registro
+    """
+    linea comentada temporal
     roles_disponibles = Rol.objects.all()
-
+    """
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()

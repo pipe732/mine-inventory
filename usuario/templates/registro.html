@@ -52,6 +52,9 @@
           </div>
         {% endfor %}
       {% endif %}
+      
+      <!--Linea temporal-->
+      <div id="msg-area"></div>
 
       <form method="POST" action="{% url 'registro' %}" id="regForm" autocomplete="off" novalidate>
         {% csrf_token %}
@@ -103,9 +106,14 @@
             <input type="password" id="password2" name="password2" class="form-control" placeholder="••••••••" required />
           </div>
         </div>
-
+        <!--Codigo a revisar
         <button type="submit" class="btn btn-success w-100 fw-bold py-2">
           {% csrf_token %}
+          Registrarse <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+        -->
+        <!--Codigo temporal-->
+        <button type="submit" class="btn btn-success w-100 fw-bold py-2">
           Registrarse <i class="bi bi-arrow-right ms-1"></i>
         </button>
       </form>
