@@ -5,6 +5,27 @@ from . import views
 app_name = 'mantenimiento'
 
 urlpatterns = [
+    # TIPO DE MANTENIMIENTO
+    path('tipos-mantenimiento/',
+         views.TipoMantenimientoListView.as_view(),
+         name='tipo_mantenimiento_lista'),
+    
+    path('tipos-mantenimiento/crear/',
+         views.TipoMantenimientoCreateView.as_view(),
+         name='tipo_mantenimiento_crear'),
+    
+    path('tipos-mantenimiento/<int:pk>/editar/',
+         views.TipoMantenimientoUpdateView.as_view(),
+         name='tipo_mantenimiento_editar'),
+    
+    path('tipos-mantenimiento/<int:pk>/inactivar/',
+         views.tipo_mantenimiento_inactivar,
+         name='tipo_mantenimiento_inactivar'),
+    
+    path('tipos-mantenimiento/<int:pk>/eliminar/',
+         views.tipo_mantenimiento_eliminar,
+         name='tipo_mantenimiento_eliminar'),
+    
     # TIPO DE ESTADO
     path('tipo-estado/',
          views.TipoEstadoListView.as_view(),
