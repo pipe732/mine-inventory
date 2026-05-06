@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EstanteForm, AlmacenForm
 from .models import Estante, Almacen
-from common.mixins import sesion_requerida 
+from common.mixins import sesion_requerida
 
-@sesion_requerida  
+@sesion_requerida
 def vista_almacenes(request):
     almacenes = Almacen.objects.all()
     form = AlmacenForm()
+    form_editar = None          # ← para devolver errores al modal editar
+    show_modal_editar = False   # ← para reabrir el modal editar
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
@@ -16,6 +18,7 @@ def vista_almacenes(request):
             if form.is_valid():
                 form.save()
                 return redirect('almacenes')
+            # si hay errores, show_modal=True abre el modal crear
 
         elif accion == 'editar':
             pk = request.POST.get('almacen_id')
@@ -24,6 +27,8 @@ def vista_almacenes(request):
             if form_editar.is_valid():
                 form_editar.save()
                 return redirect('almacenes')
+            # si hay errores, se devuelve form_editar con mensajes
+            show_modal_editar = True
 
         elif accion == 'eliminar':
             pk = request.POST.get('almacen_id')
@@ -33,13 +38,18 @@ def vista_almacenes(request):
     return render(request, 'almacenes.html', {
         'almacenes': almacenes,
         'form': form,
-        'show_modal': bool(form.errors)
+        'form_editar': form_editar,
+        'show_modal': bool(form.errors),
+        'show_modal_editar': show_modal_editar,   # ← nuevo
     })
 
-@sesion_requerida  
+
+@sesion_requerida
 def vista_estantes(request):
     estantes = Estante.objects.all()
     form = EstanteForm()
+    form_editar = None          # ← para devolver errores al modal editar
+    show_modal_editar = False
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
@@ -57,6 +67,7 @@ def vista_estantes(request):
             if form_editar.is_valid():
                 form_editar.save()
                 return redirect('estantes')
+            show_modal_editar = True
 
         elif accion == 'eliminar':
             pk = request.POST.get('estante_id')
@@ -67,9 +78,12 @@ def vista_estantes(request):
         'estantes': estantes,
         'almacenes': Almacen.objects.all(),
         'form': form,
-        'show_modal': bool(form.errors)
+        'form_editar': form_editar,
+        'show_modal': bool(form.errors),
+        'show_modal_editar': show_modal_editar,   # ← nuevo
     })
 
-@sesion_requerida  
+
+@sesion_requerida
 def crear_estante(request):
     return redirect('estantes')
