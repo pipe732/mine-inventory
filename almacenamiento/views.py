@@ -3,6 +3,7 @@ from .forms import EstanteForm, AlmacenForm
 from .models import Estante, Almacen
 from common.mixins import sesion_requerida
 
+
 @sesion_requerida
 def vista_almacenes(request):
     almacenes = Almacen.objects.all()
@@ -87,3 +88,11 @@ def vista_estantes(request):
 @sesion_requerida
 def crear_estante(request):
     return redirect('estantes')
+
+def detalle_almacen(request, pk):
+    almacen = get_object_or_404(Almacen, pk=pk)
+    estantes = Estante.objects.filter(almacen=almacen)
+    return render(request, 'detalle_almacen.html', {
+        'almacen': almacen,
+        'estantes': estantes,
+    })
