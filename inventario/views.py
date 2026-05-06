@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
 from django.db import IntegrityError
-
+from almacenamiento.models import Almacen, Estante
 from .models import Producto, Categoria
 from .forms import ProductoForm, CategoriaForm, FiltroInventarioForm
 from mantenimiento.forms import MantenimientoForm
@@ -197,6 +197,8 @@ def inventario(request):
     context = {
         "productos":              productos,
         "categorias":             categorias,
+        "almacenes": Almacen.objects.all(),
+        "estantes":  Estante.objects.all(),
         "form_filtro":            form_filtro,
         "form_modal_errors":      form_modal_errors,
         "modal_categoria_errors": modal_categoria_errors,
