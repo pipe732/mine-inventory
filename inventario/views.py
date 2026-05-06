@@ -197,8 +197,8 @@ def inventario(request):
     context = {
         "productos":              productos,
         "categorias":             categorias,
-        "almacenes": Almacen.objects.all(),
-        "estantes":  Estante.objects.all(),
+        "almacenes_lista": Almacen.objects.all(),
+        "estantes":        Estante.objects.all(),
         "form_filtro":            form_filtro,
         "form_modal_errors":      form_modal_errors,
         "modal_categoria_errors": modal_categoria_errors,
