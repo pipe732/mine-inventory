@@ -575,9 +575,11 @@
             </div>
             <div class="col-md-6">
               <label class="form-label">Estante</label>
-              <select name="estante" class="form-select" id="crear_estante_selector">
-                <option value="">— Selecciona un almacén primero —</option>
-              </select>
+              <select name="estante" class="form-select">
+              {% for e in estantes %}
+              <option value="{{ e.id }}">{{ e.nombre }}</option>
+              {% endfor %}
+            </select>
             </div>
             <div class="col-12">
               <div style="font-size:.72rem; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
