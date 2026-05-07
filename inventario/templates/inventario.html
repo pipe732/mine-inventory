@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
-
+ 
 {% block content %}
-
+ 
 <!-- ══ ALERTAS DE SISTEMA (mensajes Django) ══ -->
 {% if messages %}
   {% for message in messages %}
@@ -26,8 +26,8 @@
     </div>
   {% endfor %}
 {% endif %}
-
-
+ 
+ 
 <!-- ══ ALERTA DE STOCK BAJO / SIN STOCK ══ -->
 {% if hay_alertas %}
 <div class="alert alert-dismissible fade show d-flex align-items-start gap-2 mb-3"
@@ -58,8 +58,8 @@
           style="filter:opacity(.4); flex-shrink:0;"></button>
 </div>
 {% endif %}
-
-
+ 
+ 
 <!-- ══ CABECERA ══ -->
 <div class="d-flex align-items-center justify-content-between mb-3">
   <div>
@@ -104,8 +104,8 @@
     </button>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══ ESTILOS ANIMACIONES KPI ══ -->
 <style>
   .kpi-card {
@@ -136,7 +136,6 @@
   .kpi-card.kpi-visible .kpi-accent-bar {
     transform: scaleX(1);
   }
-  /* ── Badge ubicación ── */
   .badge-ubicacion {
     display: inline-flex;
     align-items: center;
@@ -156,7 +155,7 @@
     opacity: .7;
   }
 </style>
-
+ 
 <!-- ══ TARJETAS KPI ══ -->
 <div class="row g-3 mb-3">
   <div class="col-6 col-md-3">
@@ -241,8 +240,8 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══ FILTROS ══ -->
 <div class="card mb-3">
   <div class="card-body" style="padding:.9rem 1.2rem;">
@@ -275,8 +274,8 @@
     </form>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══ TABLA INVENTARIO ══ -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
@@ -296,7 +295,7 @@
       {{ total }} registro{{ total|pluralize }}
     </span>
   </div>
-
+ 
   <div class="table-responsive">
     <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
       <thead>
@@ -338,7 +337,6 @@
               {% endif %}
             </a>
           </th>
-          <!-- ── NUEVA COLUMNA UBICACIÓN ── -->
           <th>Ubicación</th>
           <th>
             <a href="{% url 'inventario:inventario' %}?orden=stock&dir={% if orden_activo == 'stock' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
@@ -376,7 +374,6 @@
               <span style="color:var(--text-muted); font-size:.82rem;">Sin categoría</span>
             {% endif %}
           </td>
-          <!-- ── CELDA UBICACIÓN ── -->
           <td>
             {% if producto.estante %}
               <span class="badge-ubicacion">
@@ -405,7 +402,6 @@
             {% endif %}
           </td>
           <td>
-            <!-- ── Botón editar — se agregan estante.almacen.pk y estante.pk ── -->
             <button type="button" class="btn-ghost" title="Editar"
                     style="margin-right:.3rem;"
                     onclick="abrirEditar(
@@ -471,8 +467,8 @@
     </table>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
      MODAL — Nueva Herramienta
 ══════════════════════════════════════ -->
@@ -495,7 +491,7 @@
         {% csrf_token %}
         <input type="hidden" name="accion" value="crear_producto">
         <div class="modal-body" style="padding:1.5rem;">
-
+ 
           {% if form_modal_errors %}
           <div class="d-flex align-items-center gap-2 mb-3"
                style="background:rgba(0,0,0,0.08); border:1px solid rgba(192,57,43,.3);
@@ -509,7 +505,7 @@
             {{ error_producto }}
           </div>
           {% endif %}
-
+ 
           <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
                       text-transform:uppercase; color:var(--navy);
                       border-bottom:1px solid rgba(9,77,146,.18);
@@ -555,8 +551,8 @@
               </select>
             </div>
           </div>
-
-          <!-- ── UBICACIÓN: selector encadenado ── -->
+ 
+          <!-- ── UBICACIÓN: selector encadenado CREAR ── -->
           <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
                       text-transform:uppercase; color:var(--navy);
                       border-bottom:1px solid rgba(9,77,146,.18);
@@ -566,7 +562,8 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Almacén</label>
-              <select name="almacen" id="crear_almacen_selector">
+              <!-- FIX: clase form-select agregada, sin loop estático -->
+              <select name="almacen_display" class="form-select" id="crear_almacen_selector">
                 <option value="">— Sin almacén —</option>
                 {% for almacen in almacenes_lista %}
                   <option value="{{ almacen.pk }}">{{ almacen.nombre }}</option>
@@ -575,11 +572,10 @@
             </div>
             <div class="col-md-6">
               <label class="form-label">Estante</label>
-              <select name="estante" class="form-select">
-              {% for e in estantes %}
-              <option value="{{ e.id }}">{{ e.nombre }}</option>
-              {% endfor %}
-            </select>
+              <!-- FIX: id correcto, sin loop estático, el JS lo puebla -->
+              <select name="estante" class="form-select" id="crear_estante_selector">
+                <option value="">— Sin estante —</option>
+              </select>
             </div>
             <div class="col-12">
               <div style="font-size:.72rem; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
@@ -593,7 +589,7 @@
               </div>
             </div>
           </div>
-
+ 
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
@@ -611,8 +607,8 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
      MODAL — Editar Herramienta
 ══════════════════════════════════════ -->
@@ -672,7 +668,7 @@
               </select>
             </div>
           </div>
-
+ 
           <!-- ── UBICACIÓN editar ── -->
           <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
                       text-transform:uppercase; color:var(--navy);
@@ -683,6 +679,7 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Almacén</label>
+              <!-- FIX: sin name (solo controla el selector de estantes, no se envía al backend) -->
               <select class="form-select" id="edit_almacen_selector">
                 <option value="">— Sin almacén —</option>
                 {% for almacen in almacenes_lista %}
@@ -692,12 +689,13 @@
             </div>
             <div class="col-md-6">
               <label class="form-label">Estante</label>
+              <!-- FIX: name="estante" correcto, el JS lo puebla con llenarEstantes() -->
               <select name="estante" class="form-select" id="edit_estante_selector">
                 <option value="">— Sin estante —</option>
               </select>
             </div>
           </div>
-
+ 
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
@@ -715,8 +713,8 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
      MODAL — Confirmar Eliminar
 ══════════════════════════════════════ -->
@@ -768,10 +766,10 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
-     MODAL — Categorías  (sin cambios)
+     MODAL — Categorías
 ══════════════════════════════════════ -->
 <div class="modal fade" id="modalCategorias" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -882,10 +880,10 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
-     MODAL — Editar Categoría  (sin cambios)
+     MODAL — Editar Categoría
 ══════════════════════════════════════ -->
 <div class="modal fade" id="modalEditarCategoria" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -932,10 +930,10 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
-     MODAL — Eliminar Categoría  (sin cambios)
+     MODAL — Eliminar Categoría
 ══════════════════════════════════════ -->
 <div class="modal fade" id="modalEliminarCategoria" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -983,10 +981,10 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══════════════════════════════════════
-     MODAL — Mantenimiento  (sin cambios)
+     MODAL — Mantenimiento
 ══════════════════════════════════════ -->
 <div class="modal fade" id="modalMantenimiento" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
@@ -1062,10 +1060,10 @@
     </div>
   </div>
 </div>
-
+ 
 {% endblock %}
-
-
+ 
+ 
 {% block js %}
 <script>
   // ── Datos estantes por almacén (para selector encadenado) ──
@@ -1078,36 +1076,64 @@
     ],
     {% endfor %}
   };
-
-  function llenarEstantes(almacenPk, selectorEstante, estanteSeleccionado = null) {
+ 
+  // FIX: puebla el selector de estantes según almacén seleccionado
+  function llenarEstantes(almacenPk, selectorEstante, estanteSeleccionado) {
     selectorEstante.innerHTML = '<option value="">— Sin estante —</option>';
     if (!almacenPk || !estantesPorAlmacen[almacenPk]) return;
     estantesPorAlmacen[almacenPk].forEach(function(e) {
       const opt = document.createElement('option');
       opt.value = e.pk;
       opt.textContent = e.codigo;
-      if (estanteSeleccionado && String(e.pk) === String(estanteSeleccionado)) opt.selected = true;
+      if (estanteSeleccionado && String(e.pk) === String(estanteSeleccionado)) {
+        opt.selected = true;
+      }
       selectorEstante.appendChild(opt);
     });
   }
-
+ 
   // Selector encadenado — modal CREAR
   document.getElementById('crear_almacen_selector').addEventListener('change', function() {
     llenarEstantes(this.value, document.getElementById('crear_estante_selector'));
   });
-
+ 
   // Selector encadenado — modal EDITAR
   document.getElementById('edit_almacen_selector').addEventListener('change', function() {
+    // Al cambiar almacén manualmente, limpia el estante seleccionado
     llenarEstantes(this.value, document.getElementById('edit_estante_selector'));
   });
-
+ 
+  // ── Abrir modal editar con datos precargados ──
+  function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId, almacenPk, estantePk) {
+    document.getElementById('edit_producto_id').value = pk;
+    document.getElementById('edit_codigo_sku').value  = sku;
+    document.getElementById('edit_nombre').value      = nombre;
+    document.getElementById('edit_descripcion').value = descripcion;
+    document.getElementById('edit_stock').value       = stock;
+ 
+    // Categoría
+    const selCat = document.getElementById('edit_categoria');
+    for (let opt of selCat.options) {
+      opt.selected = opt.value == categoriaId;
+    }
+ 
+    // FIX: seleccionar almacén y luego poblar estantes con el estante actual preseleccionado
+    const selAlm = document.getElementById('edit_almacen_selector');
+    for (let opt of selAlm.options) {
+      opt.selected = opt.value == almacenPk;
+    }
+    llenarEstantes(almacenPk, document.getElementById('edit_estante_selector'), estantePk);
+ 
+    new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
+  }
+ 
   // ── Mantenimiento ──
   function abrirMantenimiento(pk, sku, nombre) {
     document.getElementById('mant_producto_id').value = pk;
     document.getElementById('mant_titulo_producto').textContent = '[' + sku + '] ' + nombre;
     new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
   }
-
+ 
   {% if mant_modal_errors %}
   document.addEventListener("DOMContentLoaded", function () {
     var pk     = "{{ mant_producto_id_error }}";
@@ -1118,7 +1144,7 @@
     new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
   });
   {% endif %}
-
+ 
   // ── Animación KPI ──
   document.addEventListener('DOMContentLoaded', function () {
     function animarContador(el, target, duracion) {
@@ -1142,30 +1168,14 @@
       }, delay + 150);
     });
   });
-
-  // ── Editar producto — ahora recibe almacenPk y estantePk ──
-  function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId, almacenPk, estantePk) {
-    document.getElementById('edit_producto_id').value  = pk;
-    document.getElementById('edit_codigo_sku').value   = sku;
-    document.getElementById('edit_nombre').value       = nombre;
-    document.getElementById('edit_descripcion').value  = descripcion;
-    document.getElementById('edit_stock').value        = stock;
-    const selCat = document.getElementById('edit_categoria');
-    for (let opt of selCat.options) { opt.selected = opt.value == categoriaId; }
-    // Repoblar ubicación
-    const selAlm = document.getElementById('edit_almacen_selector');
-    for (let opt of selAlm.options) { opt.selected = opt.value == almacenPk; }
-    llenarEstantes(almacenPk, document.getElementById('edit_estante_selector'), estantePk);
-    new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
-  }
-
+ 
   // ── Eliminar producto ──
   function abrirEliminar(pk, nombre) {
     document.getElementById('eliminar_producto_id').value           = pk;
     document.getElementById('eliminar_nombre_producto').textContent = '"' + nombre + '"';
     new bootstrap.Modal(document.getElementById('modalEliminar')).show();
   }
-
+ 
   // ── Editar categoría ──
   function abrirEditarCategoria(pk, nombre, descripcion) {
     document.getElementById('editcat_id').value          = pk;
@@ -1173,28 +1183,28 @@
     document.getElementById('editcat_descripcion').value = descripcion;
     new bootstrap.Modal(document.getElementById('modalEditarCategoria')).show();
   }
-
+ 
   // ── Eliminar categoría ──
   function abrirEliminarCategoria(pk, nombre) {
     document.getElementById('eliminarcat_id').value           = pk;
     document.getElementById('eliminarcat_nombre').textContent = '"' + nombre + '"';
     new bootstrap.Modal(document.getElementById('modalEliminarCategoria')).show();
   }
-
+ 
   // ── Reabrir modales tras error ──
   {% if form_modal_errors %}
   document.addEventListener("DOMContentLoaded", function () {
     new bootstrap.Modal(document.getElementById('modalNuevaHerramienta')).show();
   });
   {% endif %}
-
+ 
   {% if modal_categoria_errors %}
   document.addEventListener("DOMContentLoaded", function () {
     new bootstrap.Modal(document.getElementById('modalCategorias')).show();
   });
   {% endif %}
 </script>
-
+ 
 <!-- ══ VISOR 3D ══ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
