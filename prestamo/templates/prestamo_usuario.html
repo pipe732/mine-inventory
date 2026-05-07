@@ -168,7 +168,7 @@
     <span style="font-family:var(--font-mono); font-size:.72rem; background:rgba(9,77,146,.08);
                  color:var(--navy); padding:.18rem .6rem; border-radius:20px;
                  border:1px solid rgba(9,77,146,.18);">
-      {{ total_prestamos }} registro{{ total_prestamos|pluralize ",s" }}
+      {{ total_prestamos }} registro{{ total_prestamos|pluralize:",s" }}
     </span>
   </div>
 
@@ -426,9 +426,9 @@
 </button>
 
 
-{# ══════════════════════════════════════════════════════
+{% comment %} {# ══════════════════════════════════════════════════════
    MODAL — SOLICITAR PRÉSTAMO (Wizard 2 pasos)
-══════════════════════════════════════════════════════ #}
+══════════════════════════════════════════════════════ #} {% endcomment %}
 <div class="modal fade" id="modalSolicitar" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content">
