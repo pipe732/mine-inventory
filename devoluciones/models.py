@@ -10,8 +10,8 @@ class Devolucion(models.Model):
         ('rechazada', 'Rechazada'),
     ]
 
-    numero_orden = models.CharField(max_length=100)
-    producto = models.CharField(max_length=255)
+    numero_orden = models.CharField(max_length=100, default='', blank=True)
+    producto = models.CharField(max_length=255, default='', blank=True)
     cantidad = models.PositiveIntegerField(default=1)
     prestamo = models.ForeignKey(
         Prestamo,
