@@ -67,9 +67,9 @@ def _es_cambio_significativo(cambios):
     return any(campo in cambios for campo in campos_clave)
 
 
-# ══════════════════════════════════════════════
+
 # TIPO DE ESTADO
-# ══════════════════════════════════════════════
+
 
 class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     model               = TipoEstado
@@ -120,9 +120,8 @@ class TipoEstadoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
         return response
 
 
-# ══════════════════════════════════════════════
 # MANTENIMIENTO
-# ══════════════════════════════════════════════
+
 
 class MantenimientoListView(SesionRequeridaMixin, ListView):
     model               = Mantenimiento
