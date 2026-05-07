@@ -2,13 +2,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
 from django.db import IntegrityError
-
+from almacenamiento.models import Almacen, Estante
 from .models import Producto, Categoria
 from .forms import ProductoForm, CategoriaForm, FiltroInventarioForm
 from mantenimiento.forms import MantenimientoForm
 from common.mixins import sesion_requerida    
 
-@sesion_requerida  
+@sesion_requerida
 def inventario(request):
     form_filtro = FiltroInventarioForm(request.GET or None)
 
@@ -18,7 +18,7 @@ def inventario(request):
     error_producto = ""
     error_categoria = ""
 
-    # Valores para repoblar los campos tras un error
+    # Valores para repoblar
     post_sku = ""
     post_nombre = ""
     post_descripcion = ""
@@ -39,50 +39,79 @@ def inventario(request):
             post_categoria = request.POST.get("categoria", "")
 
             form = ProductoForm(request.POST)
+
             if form.is_valid():
                 sku = form.cleaned_data.get("codigo_sku", "")
+
                 if Producto.objects.filter(codigo_sku__iexact=sku).exists():
-                    error_producto = f'El código / SKU "{sku}" ya está registrado. Usa uno diferente.'
+                    error_producto = f'El código / SKU "{sku}" ya está registrado.'
                     form_modal_errors = True
                 else:
                     try:
                         p = form.save(commit=False)
-                        p.stock = 1
+
+                        estante_id = request.POST.get("estante")
+                        if estante_id:
+                            try:
+                                p.estante = Estante.objects.get(pk=estante_id)
+                                p.almacen = p.estante.almacen
+                            except Estante.DoesNotExist:
+                                pass
+
+                        # usar el stock del formulario
+                        p.stock = form.cleaned_data.get("stock", 0)
+
                         p.save()
+
                         messages.success(request, f'Herramienta "{p.nombre}" creada correctamente.')
                         return redirect("inventario:inventario")
+
                     except IntegrityError:
-                        error_producto = f'El código / SKU "{sku}" ya está registrado. Usa uno diferente.'
+                        error_producto = f'El código / SKU "{sku}" ya está registrado.'
                         form_modal_errors = True
+
             else:
                 if "codigo_sku" in form.errors:
-                    error_producto = f'El código / SKU "{post_sku}" ya está registrado. Usa uno diferente.'
+                    error_producto = f'El código / SKU "{post_sku}" ya está registrado.'
                 else:
-                    error_producto = "Error al guardar. Revisa los campos."
+                    error_producto = "Error al guardar."
+
                 form_modal_errors = True
 
         # ── PRODUCTO: editar ──
         elif accion == "editar_producto":
             pk = request.POST.get("producto_id")
             producto = get_object_or_404(Producto, pk=pk)
+
             form = ProductoForm(request.POST, instance=producto)
+
             if form.is_valid():
                 sku = form.cleaned_data.get("codigo_sku", "")
+
                 if Producto.objects.filter(codigo_sku__iexact=sku).exclude(pk=pk).exists():
-                    messages.error(request, f'El código / SKU "{sku}" ya está en uso por otra herramienta.')
+                    messages.error(request, f'El código / SKU "{sku}" ya está en uso.')
                 else:
                     try:
-                        form.save()
-                        messages.success(request, f'Herramienta "{producto.nombre}" actualizada correctamente.')
+                        p = form.save(commit=False)
+
+                        estante_id = request.POST.get("estante")
+                        if estante_id:
+                            try:
+                                p.estante = Estante.objects.get(pk=estante_id)
+                                p.almacen = p.estante.almacen
+                            except Estante.DoesNotExist:
+                                pass
+
+                        p.save()
+
+                        messages.success(request, f'Herramienta "{producto.nombre}" actualizada.')
                         return redirect("inventario:inventario")
+
                     except IntegrityError:
-                        messages.error(request, f'El código / SKU "{sku}" ya está en uso por otra herramienta.')
+                        messages.error(request, f'El código / SKU "{sku}" ya está en uso.')
+
             else:
-                if "codigo_sku" in form.errors:
-                    sku = request.POST.get("codigo_sku", "")
-                    messages.error(request, f'El código / SKU "{sku}" ya está en uso por otra herramienta.')
-                else:
-                    messages.error(request, "Error al guardar. Revisa los campos.")
+                messages.error(request, "Error al guardar.")
 
         # ── PRODUCTO: eliminar ──
         elif accion == "eliminar_producto":
@@ -100,45 +129,38 @@ def inventario(request):
 
             if post_cat_nombre:
                 if Categoria.objects.filter(nombre__iexact=post_cat_nombre).exists():
-                    error_categoria = f'La categoría "{post_cat_nombre}" ya existe. Elige un nombre diferente.'
+                    error_categoria = f'La categoría "{post_cat_nombre}" ya existe.'
                     modal_categoria_errors = True
                 else:
-                    try:
-                        Categoria.objects.create(
-                            nombre=post_cat_nombre,
-                            descripcion=post_cat_descripcion or None
-                        )
-                        messages.success(request, f'Categoría "{post_cat_nombre}" creada correctamente.')
-                        return redirect("inventario:inventario")
-                    except IntegrityError:
-                        error_categoria = f'La categoría "{post_cat_nombre}" ya existe. Elige un nombre diferente.'
-                        modal_categoria_errors = True
+                    Categoria.objects.create(
+                        nombre=post_cat_nombre,
+                        descripcion=post_cat_descripcion or None
+                    )
+                    messages.success(request, f'Categoría "{post_cat_nombre}" creada.')
+                    return redirect("inventario:inventario")
             else:
-                error_categoria = "El nombre de la categoría es obligatorio."
+                error_categoria = "El nombre es obligatorio."
                 modal_categoria_errors = True
 
         # ── CATEGORÍA: editar ──
         elif accion == "editar_categoria":
             pk = request.POST.get("categoria_id")
             categoria = get_object_or_404(Categoria, pk=pk)
+
             nombre = request.POST.get("cat_nombre", "").strip()
             descripcion = request.POST.get("cat_descripcion", "").strip()
 
             if nombre:
                 if Categoria.objects.filter(nombre__iexact=nombre).exclude(pk=pk).exists():
-                    messages.error(request, f'Ya existe una categoría llamada "{nombre}". Elige un nombre diferente.')
+                    messages.error(request, "Categoría ya existe.")
                 else:
-                    try:
-                        categoria.nombre = nombre
-                        categoria.descripcion = descripcion or None
-                        categoria.save()
-                        messages.success(request, f'Categoría "{nombre}" actualizada.')
-                        return redirect("inventario:inventario")
-                    except IntegrityError:
-                        messages.error(request, f'Ya existe una categoría llamada "{nombre}". Elige un nombre diferente.')
+                    categoria.nombre = nombre
+                    categoria.descripcion = descripcion or None
+                    categoria.save()
+                    messages.success(request, "Categoría actualizada.")
+                    return redirect("inventario:inventario")
             else:
-                messages.error(request, "El nombre de la categoría es obligatorio.")
-            return redirect("inventario:inventario")
+                messages.error(request, "Nombre obligatorio.")
 
         # ── CATEGORÍA: eliminar ──
         elif accion == "eliminar_categoria":
@@ -149,20 +171,24 @@ def inventario(request):
             messages.success(request, f'Categoría "{nombre}" eliminada.')
             return redirect("inventario:inventario")
 
-    # ── GET: lista con filtros ──
-    productos  = Producto.objects.select_related("categoria").all()
+    # ── GET ──
+    productos = Producto.objects.select_related("categoria").all()
     categorias = Categoria.objects.prefetch_related("productos").all()
+
     if form_filtro.is_valid():
         busqueda = form_filtro.cleaned_data.get("busqueda")
         cat_filtro = form_filtro.cleaned_data.get("categoria")
+
         if busqueda:
             productos = productos.filter(
-                Q(nombre__icontains=busqueda) | Q(codigo_sku__icontains=busqueda)
+                Q(nombre__icontains=busqueda) |
+                Q(codigo_sku__icontains=busqueda)
             )
+
         if cat_filtro:
             productos = productos.filter(categoria=cat_filtro)
 
-    #modal de mantenimiento
+    # mantenimiento
     mant_producto_id = request.session.pop('mant_producto_id_error', None)
     mant_sku = request.session.pop('mant_sku_error', '')
     mant_nombre = request.session.pop('mant_nombre_error', '')
@@ -176,58 +202,38 @@ def inventario(request):
         mant_form = MantenimientoForm()
         mant_modal_errors = False
 
-    # ── Ordenamiento dinámico ──
-    orden = request.GET.get("orden", "nombre")
-    direccion = request.GET.get("dir", "asc")
-    campos_validos = {"nombre", "codigo_sku", "stock", "categoria__nombre"}
-    if orden not in campos_validos:
-        orden = "nombre"
-    orden_db = f"-{orden}" if direccion == "desc" else orden
-    productos = productos.order_by(orden_db)
-
-    # ── KPIs ──
+    # KPIs
     total_productos = productos.count()
-    total_stock     = productos.aggregate(s=Sum("stock"))["s"] or 0
-    sin_stock       = productos.filter(stock=0).count()
-    stock_bajo      = productos.filter(stock__gt=0, stock__lte=5).count()
-
-    # Alertas de stock bajo
-    alertas_stock = Producto.objects.filter(stock__lte=5).order_by("stock").values_list("nombre", "stock")[:5]
+    total_stock = productos.aggregate(s=Sum("stock"))["s"] or 0
+    sin_stock = productos.filter(stock=0).count()
+    stock_bajo = productos.filter(stock__lte=5).count()
 
     context = {
-        "productos":              productos,
-        "categorias":             categorias,
-        "form_filtro":            form_filtro,
-        "form_modal_errors":      form_modal_errors,
+        "productos": productos,
+        "categorias": categorias,
+        "almacenes_lista": Almacen.objects.all(),
+        "estantes": Estante.objects.all(),
+        "form_filtro": form_filtro,
+        "form_modal_errors": form_modal_errors,
         "modal_categoria_errors": modal_categoria_errors,
-        "error_producto":         error_producto,
-        "error_categoria":        error_categoria,
-        "post_sku":               post_sku,
-        "post_nombre":            post_nombre,
-        "post_descripcion":       post_descripcion,
-        "post_stock":             post_stock,
-        "post_categoria":         post_categoria,
-        "post_cat_nombre":        post_cat_nombre,
-        "post_cat_descripcion":   post_cat_descripcion,
-        "total":                  total_productos,
-        # KPIs
-        "kpi_total_productos":    total_productos,
-        "kpi_total_stock":        total_stock,
-        "kpi_sin_stock":          sin_stock,
-        "kpi_stock_bajo":         stock_bajo,
-        # Ordenamiento activo
-        "orden_activo":           orden,
-        "dir_activo":             direccion,
-        # Alertas de stock
-        "alertas_stock":          alertas_stock,
-        "hay_alertas":            bool(alertas_stock),
-
-        # Variables para mantenimiento
-        "mant_form":              mant_form,
-        "mant_modal_errors":      mant_modal_errors,
+        "error_producto": error_producto,
+        "error_categoria": error_categoria,
+        "post_sku": post_sku,
+        "post_nombre": post_nombre,
+        "post_descripcion": post_descripcion,
+        "post_stock": post_stock,
+        "post_categoria": post_categoria,
+        "post_cat_nombre": post_cat_nombre,
+        "post_cat_descripcion": post_cat_descripcion,
+        "kpi_total_productos": total_productos,
+        "kpi_total_stock": total_stock,
+        "kpi_sin_stock": sin_stock,
+        "kpi_stock_bajo": stock_bajo,
+        "mant_form": mant_form,
+        "mant_modal_errors": mant_modal_errors,
         "mant_producto_id_error": mant_producto_id or '',
-        "mant_sku_error":         mant_sku,
-        "mant_nombre_error":      mant_nombre,
+        "mant_sku_error": mant_sku,
+        "mant_nombre_error": mant_nombre,
     }
 
     return render(request, "inventario.html", context)

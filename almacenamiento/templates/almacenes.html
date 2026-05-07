@@ -58,7 +58,6 @@
     --stock-dot:      #6b7280;
   }
  
-  /* ── Card contenedor ── */
   .reg-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
@@ -66,8 +65,6 @@
     overflow: hidden;
     margin-bottom: 1.5rem;
   }
- 
-  /* ── Header ── */
   .reg-header {
     display: flex;
     align-items: center;
@@ -101,8 +98,6 @@
     border: 1px solid var(--badge-border);
     color: var(--badge-color);
   }
- 
-  /* ── Tabla ── */
   .reg-table {
     width: 100%;
     border-collapse: collapse;
@@ -124,21 +119,10 @@
     border-bottom: 1px solid var(--row-border);
     vertical-align: middle;
   }
-  .reg-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-  .reg-table tbody tr:hover td {
-    background: var(--row-hover);
-  }
-  .reg-table .td-muted {
-    color: var(--td-muted);
-    font-style: italic;
-  }
-  .reg-table .td-bold {
-    font-weight: 600;
-  }
- 
-  /* ── Stock badge ── */
+  .reg-table tbody tr:last-child td { border-bottom: none; }
+  .reg-table tbody tr:hover td { background: var(--row-hover); }
+  .reg-table .td-muted { color: var(--td-muted); font-style: italic; }
+  .reg-table .td-bold  { font-weight: 600; }
   .stock-badge {
     display: inline-flex;
     align-items: center;
@@ -156,8 +140,6 @@
     border-radius: 50%;
     background: var(--stock-dot);
   }
- 
-  /* ── Botones acción ── */
   .btn-reg-edit,
   .btn-reg-del {
     display: inline-flex;
@@ -177,15 +159,12 @@
     color: var(--btn-edit-color);
   }
   .btn-reg-edit:hover { background: var(--btn-edit-hover); }
- 
   .btn-reg-del {
     background: var(--btn-del-bg);
     border: 1px solid var(--btn-del-border);
     color: var(--btn-del-color);
   }
   .btn-reg-del:hover { background: var(--btn-del-hover); }
- 
-  /* ── Empty state ── */
   .reg-empty {
     text-align: center;
     padding: 48px 20px;
@@ -195,7 +174,6 @@
 </style>
  
 <div class="container mt-4">
- 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="mb-0">Almacenes</h4>
@@ -207,7 +185,6 @@
   </div>
  
   <div class="reg-card">
-    <!-- Header -->
     <div class="reg-header">
       <div class="reg-header-left">
         <svg viewBox="0 0 24 24">
@@ -220,7 +197,6 @@
       <span class="reg-badge">{{ almacenes|length }} registro{{ almacenes|length|pluralize }}</span>
     </div>
  
-    <!-- Tabla -->
     <table class="reg-table">
       <thead>
         <tr>
@@ -236,7 +212,17 @@
         {% for almacen in almacenes %}
         <tr>
           <td>{{ almacen.id }}</td>
-          <td class="td-bold">{{ almacen.nombre }}</td>
+          <td class="td-bold">
+  <a href="{% url 'detalle_almacen' almacen.pk %}" 
+     style="color:inherit; text-decoration:none; display:flex; align-items:center; gap:6px;">
+    {{ almacen.nombre }}
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+  </a>
+</td>
           <td>{{ almacen.detalles|default:"—" }}</td>
           <td>
             {% if almacen.capacidad %}
@@ -252,11 +238,11 @@
           <td style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="btn-reg-edit"
                     onclick="abrirEditarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}','{{ almacen.detalles|default:''|escapejs }}','{{ almacen.capacidad|default:'' }}')">
-               Editar
+              ✏️ Editar
             </button>
             <button class="btn-reg-del"
                     onclick="abrirEliminarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}')">
-               Eliminar
+              🗑️ Eliminar
             </button>
           </td>
         </tr>
@@ -271,10 +257,9 @@
       </tbody>
     </table>
   </div>
- 
 </div>
  
-<!-- Modal Crear -->
+<!-- ── Modal Crear ── -->
 <div class="modal fade" id="modalAlmacen" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -298,8 +283,15 @@
             <label class="form-label fw-semibold small">CAPACIDAD</label>
             {{ form.capacidad }}
           </div>
+          <!-- ── Errores al crear ── -->
           {% if form.errors %}
-            <div class="alert alert-danger">{{ form.errors }}</div>
+            <div class="alert alert-danger py-2 small mb-0">
+              {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                  <div>⚠️ {{ error }}</div>
+                {% endfor %}
+              {% endfor %}
+            </div>
           {% endif %}
         </div>
         <div class="modal-footer">
@@ -311,7 +303,7 @@
   </div>
 </div>
  
-<!-- Modal Editar -->
+<!-- ── Modal Editar ── -->
 <div class="modal fade" id="modalEditarAlmacen" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -324,6 +316,16 @@
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="almacen_id" id="edit_almacen_id">
         <div class="modal-body">
+          <!-- ── Errores al editar ── -->
+          {% if form_editar.errors %}
+            <div class="alert alert-danger py-2 small">
+              {% for field, errors in form_editar.errors.items %}
+                {% for error in errors %}
+                  <div>⚠️ {{ error }}</div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="mb-3">
             <label class="form-label fw-semibold small">NOMBRE *</label>
             <input type="text" name="nombre" id="edit_almacen_nombre" class="form-control" required>
@@ -346,7 +348,7 @@
   </div>
 </div>
  
-<!-- Modal Eliminar -->
+<!-- ── Modal Eliminar ── -->
 <div class="modal fade" id="modalEliminarAlmacen" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -372,10 +374,23 @@
   </div>
 </div>
  
+<!-- ── Scripts ── -->
 {% if show_modal %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     new bootstrap.Modal(document.getElementById('modalAlmacen')).show();
+  });
+</script>
+{% endif %}
+ 
+{% if show_modal_editar %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('edit_almacen_id').value        = '{{ request.POST.almacen_id }}';
+    document.getElementById('edit_almacen_nombre').value    = '{{ request.POST.nombre|escapejs }}';
+    document.getElementById('edit_almacen_detalles').value  = '{{ request.POST.detalles|escapejs }}';
+    document.getElementById('edit_almacen_capacidad').value = '{{ request.POST.capacidad }}';
+    new bootstrap.Modal(document.getElementById('modalEditarAlmacen')).show();
   });
 </script>
 {% endif %}
