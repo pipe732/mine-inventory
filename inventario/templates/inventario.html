@@ -566,7 +566,7 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Almacén</label>
-              <select class="form-select" id="crear_almacen_selector">
+              <select name="almacen" id="crear_almacen_selector">
                 <option value="">— Sin almacén —</option>
                 {% for almacen in almacenes_lista %}
                   <option value="{{ almacen.pk }}">{{ almacen.nombre }}</option>

@@ -58,7 +58,7 @@ def inventario(request):
                             except Estante.DoesNotExist:
                                 pass
 
-                        # ✅ usar el stock del formulario
+                        # usar el stock del formulario
                         p.stock = form.cleaned_data.get("stock", 0)
 
                         p.save()
