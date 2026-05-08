@@ -4,7 +4,7 @@ from . import views
 app_name = 'mantenimiento'
 
 urlpatterns = [
-    # ── Tipos de Estado ──────────────────────────────────────────
+    # Tipos de Estado 
     path('tipos-estado/',
          views.TipoEstadoListView.as_view(),
          name='tipo_estado_lista'),
@@ -17,7 +17,7 @@ urlpatterns = [
          views.TipoEstadoUpdateView.as_view(),
          name='tipo_estado_editar'),
 
-    # ── Mantenimientos ───────────────────────────────────────────
+    # Mantenimientos 
     path('',
          views.MantenimientoListView.as_view(),
          name='mantenimiento_lista'),
@@ -34,7 +34,7 @@ urlpatterns = [
          views.registrar_desde_inventario,
          name='registrar_desde_inventario'),
 
-    # ── Estado actual y historial ────────────────────────────────
+    # Estado actual y historial
     path('estado-actual/',
          views.EstadoActualListView.as_view(),
          name='estado_actual_lista'),
