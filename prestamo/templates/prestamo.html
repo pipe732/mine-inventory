@@ -313,24 +313,10 @@
               <button type="button" class="btn-ghost" style="font-size:.78rem;"
                       data-bs-toggle="modal" data-bs-target="#modalEditarPrestamo"
                       data-pk="{{ p.pk }}"
-                      data-usuario="{{ p.usuario }}"
-                      data-observaciones="{{ p.observaciones|escapejs }}"
-                      data-estado="{{ p.estado }}">
+                      data-observaciones="{{ p.observaciones|escapejs }}">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-
-              {# ── ELIMINAR ── #}
-              <button type="button" class="btn-ghost"
-                      style="color:var(--rust); font-size:.78rem;"
-                      data-bs-toggle="modal" data-bs-target="#modalEliminarPrestamo"
-                      data-pk="{{ p.pk }}"
-                      data-usuario="{{ p.nombre_usuario|default:p.usuario|escapejs }}">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                 </svg>
               </button>
 
@@ -620,7 +606,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-primary-mine" data-bs-dismiss="modal">Entendido</button>
+        <button type="button" class="btn-primary-mine" onclick="abrirDevoluciones()">Entendido</button>
       </div>
     </div>
   </div>
@@ -631,7 +617,7 @@
    MODAL — EDITAR PRÉSTAMO 
 ══════════════════════════════════════════════════════ #} {% endcomment %}
 <div class="modal fade" id="modalEditarPrestamo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Editar préstamo</h5>
@@ -642,33 +628,9 @@
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="prestamo_pk" id="edit_pk">
         <div class="modal-body" style="padding:1.5rem;">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Estado</label>
-              <select name="estado" id="edit_estado" class="form-select">
-                <option value="pendiente">Pendiente</option>
-                <option value="activo">Activo</option>
-                <option value="parcial">Parcial</option>
-                <option value="devuelto">Devuelto</option>
-                <option value="vencido">Vencido</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Usuario (documento)</label>
-              <select name="usuario" id="edit_usuario" class="form-select">
-                {% for u in usuarios_sistema %}
-                <option value="{{ u.numero_documento }}">
-                  {{ u.nombre_completo }} — {{ u.numero_documento }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Observaciones</label>
-              <textarea name="observaciones" id="edit_observaciones"
-                        class="form-control" rows="3"></textarea>
-            </div>
-          </div>
+          <label class="form-label">Observaciones</label>
+          <textarea name="observaciones" id="edit_observaciones"
+                    class="form-control" rows="4" placeholder="Notas sobre el préstamo..."></textarea>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
@@ -680,41 +642,6 @@
 </div>
 
 
-{% comment %} {# ══════════════════════════════════════════════════════
-   MODAL — ELIMINAR PRÉSTAMO
-══════════════════════════════════════════════════════ #} {% endcomment %}
-<div class="modal fade" id="modalEliminarPrestamo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Eliminar préstamo</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:1.5rem; text-align:center;">
-        <p style="font-family:var(--font-ui); font-size:.95rem; color:var(--text-main); margin-bottom:.35rem;">
-          ¿Eliminar el préstamo de
-        </p>
-        <p id="eliminar_usuario_label"
-           style="font-family:var(--font-ui); font-size:1rem; font-weight:700;
-                  color:var(--rust); margin-bottom:.5rem;"></p>
-        <p style="font-size:.8rem; color:var(--text-muted); margin:0;">
-          El stock de los ítems no devueltos se repondrá automáticamente.
-        </p>
-      </div>
-      <form method="post" action="{% url 'prestamo' %}">
-        {% csrf_token %}
-        <input type="hidden" name="accion" value="eliminar">
-        <input type="hidden" name="prestamo_pk" id="eliminar_pk">
-        <div class="modal-footer">
-          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-primary-mine" style="background:var(--rust);">
-            Sí, eliminar
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
 {% comment %} 
 {# ══════════════════════════════════════════════════════
@@ -851,18 +778,12 @@
             </div>
 
             <div style="display:flex; flex-direction:column; gap:0.7rem;">
-              {# Fecha y hora de vencimiento #}
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
-                <div>
-                  <label class="form-label" style="margin-bottom:0.25rem;">Fecha de vencimiento</label>
-                  <input type="date" name="fecha_vencimiento" class="form-control" style="font-size:0.9rem;">
-                  <div style="font-size:.65rem; color:var(--text-muted); margin-top:0.1rem;">
-                    Opcional — Plazo para devolver
-                  </div>
-                </div>
-                <div>
-                  <label class="form-label" style="margin-bottom:0.25rem;">Hora de vencimiento</label>
-                  <input type="time" name="hora_vencimiento" class="form-control" style="font-size:0.9rem;">
+              {# Fecha de vencimiento #}
+              <div>
+                <label class="form-label" style="margin-bottom:0.25rem;">Fecha de vencimiento</label>
+                <input type="date" name="fecha_vencimiento" class="form-control" style="font-size:0.9rem;">
+                <div style="font-size:.65rem; color:var(--text-muted); margin-top:0.1rem;">
+                  Opcional — Plazo para devolver
                 </div>
               </div>
 
@@ -1131,25 +1052,22 @@ function abrirDevolver(pk, usuario) {
 }
 
 /* ═══════════════════════════════════════════════
+   ABRIR DEVOLUCIONES — redirige a devoluciones.html con prestamo preseleccionado
+═══════════════════════════════════════════════ */
+function abrirDevoluciones() {
+  var pk = document.getElementById('dev-pk').textContent;
+  if (pk) {
+    window.location.href = '/devoluciones/?prestamo=' + pk;
+  }
+}
+
+/* ═══════════════════════════════════════════════
    MODAL EDITAR — poblar desde data attributes
 ═══════════════════════════════════════════════ */
 document.getElementById('modalEditarPrestamo').addEventListener('show.bs.modal', function (e) {
   var btn = e.relatedTarget;
   document.getElementById('edit_pk').value              = btn.dataset.pk;
   document.getElementById('edit_observaciones').value   = btn.dataset.observaciones || '';
-  var selEstado  = document.getElementById('edit_estado');
-  var selUsuario = document.getElementById('edit_usuario');
-  if (selEstado)  selEstado.value  = btn.dataset.estado || 'activo';
-  if (selUsuario) selUsuario.value = btn.dataset.usuario || '';
-});
-
-/* ═══════════════════════════════════════════════
-   MODAL ELIMINAR — poblar
-═══════════════════════════════════════════════ */
-document.getElementById('modalEliminarPrestamo').addEventListener('show.bs.modal', function (e) {
-  var btn = e.relatedTarget;
-  document.getElementById('eliminar_pk').value                    = btn.dataset.pk;
-  document.getElementById('eliminar_usuario_label').textContent   = btn.dataset.usuario;
 });
 
 /* ═══════════════════════════════════════════════
@@ -1221,8 +1139,8 @@ function goToStep(step) {
   document.getElementById('btn-next').style.display = step < maxSteps ? 'inline-block' : 'none';
   document.getElementById('btn-submit').style.display = step === maxSteps ? 'inline-block' : 'none';
 
-  // Si llegamos al paso 3, actualizar resumen
-  if (step === 3) {
+  // Si llegamos al paso 4, actualizar resumen
+  if (step === maxSteps) {
     updateSummary();
   }
 }
@@ -1239,17 +1157,25 @@ function isCurrentStepValid() {
   }
 
   if (currentStep === 2) {
-    var productSelects = document.querySelectorAll('.crear-prod-sel');
-    var hasProduct = false;
-    productSelects.forEach(function (sel) {
-      if (sel.value) {
-        hasProduct = true;
-        sel.classList.remove('is-invalid');
+    var productRows = document.querySelectorAll('#crear-items-container .crear-item-row');
+    var isValid = true;
+    var count = 0;
+
+    productRows.forEach(function (row) {
+      var sel = row.querySelector('.crear-prod-sel');
+      var cant = row.querySelector('input[name="cantidad[]"]');
+      
+      if (!sel.value || !cant.value || parseInt(cant.value) < 1) {
+        if (!sel.value) sel.classList.add('is-invalid');
+        if (!cant.value || parseInt(cant.value) < 1) cant.classList.add('is-invalid');
+        isValid = false;
       } else {
-        sel.classList.add('is-invalid');
+        sel.classList.remove('is-invalid');
+        cant.classList.remove('is-invalid');
+        count++;
       }
     });
-    return hasProduct;
+    return isValid && count > 0;
   }
 
   return true;
@@ -1260,17 +1186,13 @@ function updateSummary() {
   var usuarioSelect = document.getElementById('id_usuario');
   var nombreInput = document.querySelector('[name="nombre_usuario"]');
   var vencimientoInput = document.querySelector('[name="fecha_vencimiento"]');
-  var horaInput = document.querySelector('[name="hora_vencimiento"]');
 
-  var doc = usuarioSelect.value;
+  var doc = usuarioSelect ? usuarioSelect.value : '';
   var usuario = usuariosData.find(function (u) { return u.doc === doc; });
-  var nombreTexto = nombreInput.value || (usuario ? usuario.nombre : 'No seleccionado');
+  var nombreTexto = nombreInput && nombreInput.value ? nombreInput.value : (usuario ? usuario.nombre : 'No seleccionado');
   var vencimientoTexto = '';
-  if (vencimientoInput.value) {
+  if (vencimientoInput && vencimientoInput.value) {
     vencimientoTexto = 'Vencimiento: ' + vencimientoInput.value;
-    if (horaInput.value) {
-      vencimientoTexto += ' a las ' + horaInput.value;
-    }
   }
 
   document.getElementById('summary-usuario').textContent = nombreTexto;
@@ -1321,6 +1243,10 @@ function crearFilaProducto() {
   div.innerHTML =
     '<div class="col">' +
       '<select name="producto[]" class="form-select crear-prod-sel" required>' + opciones + '</select>' +
+      '<div class="stock-info-dyn d-none mt-1 px-2 py-1 rounded" style="font-size:.78rem; display:flex; align-items:center; gap:.4rem;">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+        '<span class="stock-label-dyn"></span>' +
+      '</div>' +
     '</div>' +
     '<div class="col-auto" style="width:90px;">' +
       '<input type="number" name="cantidad[]" class="form-control text-center" min="1" value="1" required>' +
@@ -1333,6 +1259,23 @@ function crearFilaProducto() {
         '</svg>' +
       '</button>' +
     '</div>';
+
+  // Listener para stock en fila dinámica
+  div.querySelector('.crear-prod-sel').addEventListener('change', function() {
+    var opt = this.options[this.selectedIndex];
+    var info = div.querySelector('.stock-info-dyn');
+    var lbl = div.querySelector('.stock-label-dyn');
+    if (opt.value && opt.dataset.stock) {
+      info.classList.remove('d-none');
+      var s = parseInt(opt.dataset.stock);
+      lbl.textContent = 'Stock: ' + s;
+      info.style.background = s > 0 ? 'rgba(58,122,66,.08)' : 'rgba(152,71,62,.08)';
+      info.style.color = s > 0 ? 'var(--sage)' : 'var(--rust)';
+    } else {
+      info.classList.add('d-none');
+    }
+  });
+
   return div;
 }
 
@@ -1389,6 +1332,12 @@ document.getElementById('modalCrearPrestamo').addEventListener('show.bs.modal', 
   document.getElementById('wizardForm').reset();
   document.getElementById('id_usuario').classList.remove('is-invalid');
   actualizarDelBtns();
+
+  // Limpiar filas extras de herramientas para evitar estados inconsistentes
+  var container = document.getElementById('crear-items-container');
+  while (container.children.length > 1) {
+    container.removeChild(container.lastChild);
+  }
 });
 
 // CSS para los puntos del wizard (agregar a <style>)
