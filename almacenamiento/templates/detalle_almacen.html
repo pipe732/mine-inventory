@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{% url 'almacenes' %}" class="btn-ghost">← Volver</a>
+    <div>
+      <h4 class="mb-0">{{ almacen.nombre }}</h4>
+      <small class="text-muted">{{ almacen.detalles|default:"Sin detalles" }} · Capacidad: {{ almacen.capacidad|default:"—" }}</small>
+    </div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-header">
+      <div class="reg-header-left">
+        <svg viewBox="0 0 24 24">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        Estantes en este almacén
+      </div>
+      <span class="reg-badge">{{ estantes|length }} estante{{ estantes|length|pluralize }}</span>
+    </div>
+
+    <table class="reg-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Código</th>
+          <th>Detalles</th>
+          <th>Capacidad</th>
+          <th>Fecha Creación</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for estante in estantes %}
+        <tr>
+          <td>{{ estante.id }}</td>
+          <td class="td-bold">{{ estante.codigo }}</td>
+          <td>{{ estante.detalles|default:"—" }}</td>
+          <td>
+            {% if estante.capacidad %}
+              <span class="stock-badge">
+                <span class="stock-dot"></span>
+                {{ estante.capacidad }}
+              </span>
+            {% else %}
+              <span class="td-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ estante.fecha_creacion|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="reg-empty">
+            Este almacén no tiene estantes registrados aún.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<style>
+  .reg-card {
+    background: var(--card-bg, #f5f0eb);
+    border: 1px solid var(--card-border, #e0d8cf);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .reg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--header-bg, #ece6df);
+    border-bottom: 1px solid var(--card-border, #e0d8cf);
+  }
+  .reg-header-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--header-color, #3a3530);
+  }
+  .reg-header-left svg {
+    width: 18px; height: 18px;
+    stroke: var(--header-color, #3a3530);
+    fill: none;
+    stroke-width: 1.8;
+  }
+  .reg-badge {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--badge-bg, #f5f0eb);
+    border: 1px solid var(--badge-border, #c8a98a);
+    color: var(--badge-color, #7a4f2e);
+  }
+  .reg-table { width: 100%; border-collapse: collapse; }
+  .reg-table thead th {
+    padding: 10px 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--th-color, #8a7f74);
+    border-bottom: 1px solid var(--row-border, #e0d8cf);
+  }
+  .reg-table tbody td {
+    padding: 13px 20px;
+    font-size: 13px;
+    color: var(--td-color, #3a3530);
+    border-bottom: 1px solid var(--row-border, #e0d8cf);
+    vertical-align: middle;
+  }
+  .reg-table tbody tr:last-child td { border-bottom: none; }
+  .reg-table tbody tr:hover td { background: var(--row-hover, #ede7e0); }
+  .td-bold { font-weight: 600; }
+  .td-muted { color: var(--td-muted, #a09080); font-style: italic; }
+  .stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--stock-bg, #e8f5e9);
+    color: var(--stock-color, #2e7d32);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--row-border, #e0d8cf);
+  }
+  .stock-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--stock-dot, #43a047);
+  }
+  .reg-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--td-muted, #a09080);
+    font-size: 13px;
+  }
+</style>
+{% endblock %}

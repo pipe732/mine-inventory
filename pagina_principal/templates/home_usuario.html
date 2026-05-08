@@ -1,162 +1,730 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
 
-  <!-- HEADER -->
-  <div class="border-bottom pb-3 mb-4">
-    <h1 class="h3 fw-semibold mb-1">Mis préstamos</h1>
-    <p class="text-secondary small mb-0">
-      Historial completo de herramientas prestadas a tu cuenta ·
-      <span class="font-monospace">{{ usuario.nombre_completo }}</span>
+{# ══ CABECERA PERSONALIZADA ══ #}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
+               color:var(--text-main); letter-spacing:.03em; margin:0;">
+      Bienvenido de nuevo,
+      <span style="color:var(--navy);">{{ usuario.nombre_completo|truncatewords:2 }}</span>
+    </h5>
+    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
+      Tu actividad personal en el inventario — <span style="font-family:var(--font-mono); font-size:.75rem;">{{ usuario.numero_documento }}</span>
     </p>
   </div>
+  <a href="{% url 'prestamo_usuario' %}" class="btn-primary-mine">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+    </svg>
+    Ver mis préstamos
+  </a>
+</div>
 
-  <!-- STATS -->
-  <div class="row g-3 mb-4">
-    <div class="col-4">
-      <div class="card border rounded-3 p-3">
-        <p class="text-uppercase text-secondary mb-1" style="font-size:11px;letter-spacing:.06em">Total solicitados</p>
-        <p class="h2 fw-semibold text-primary mb-0">{{ total_prestamos }}</p>
-        <p class="text-secondary mb-0" style="font-size:12px">desde el inicio</p>
-      </div>
-    </div>
-    <div class="col-4">
-      <div class="card border rounded-3 p-3">
-        <p class="text-uppercase text-secondary mb-1" style="font-size:11px;letter-spacing:.06em">Activos ahora</p>
-        <p class="h2 fw-semibold text-danger mb-0">{{ prestamos_activos|length }}</p>
-        <p class="text-secondary mb-0" style="font-size:12px">en tu poder</p>
-      </div>
-    </div>
-    <div class="col-4">
-      <div class="card border rounded-3 p-3">
-        <p class="text-uppercase text-secondary mb-1" style="font-size:11px;letter-spacing:.06em">Devueltos</p>
-        <p class="h2 fw-semibold text-secondary mb-0">{{ historial_reciente|length }}</p>
-        <p class="text-secondary mb-0" style="font-size:12px">completados</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ALERTA VENCIDOS -->
-  {% if vencidos_count %}
-  <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
-    <i class="bi bi-exclamation-circle-fill"></i>
+{# ══ ALERTAS DE URGENCIA ══ #}
+{% if vencidos_count %}
+<div class="d-flex align-items-center gap-3 mb-3 px-4 py-3"
+     style="background:rgba(152,71,62,.07); border:1px solid rgba(152,71,62,.3);
+            border-radius:var(--radius-md); font-family:var(--font-ui);">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--rust)" stroke-width="2.2" style="flex-shrink:0;">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  <span style="font-size:.88rem; color:var(--rust);">
     Tienes <strong>{{ vencidos_count }} préstamo{{ vencidos_count|pluralize }}</strong>
     vencido{{ vencidos_count|pluralize }}. Contacta al administrador.
-  </div>
-  {% endif %}
+  </span>
+</div>
+{% endif %}
 
-  <!-- FILTROS -->
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    <button class="btn btn-sm btn-dark filter-btn active" data-filter="todos">Todos</button>
-    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="activo">Activos</button>
-    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="parcial">Parciales</button>
-    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="devuelto">Devueltos</button>
-    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="vencido">Vencidos</button>
-  </div>
 
-  <!-- TABLA -->
-  <div class="card border rounded-3">
-    <div class="card-header bg-white border-bottom py-3 px-4">
-      <span class="fw-semibold small">Registro de préstamos</span>
+{# ══ KPI CARDS ══ #}
+<div class="row g-3 mb-4">
+
+  <div class="col-6 col-md col-lg">
+    <div class="card h-100 kpi-usr" style="padding:.9rem 1rem;" data-delay="0">
+      <div class="kpi-bar" style="background:var(--navy);"></div>
+      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Total</div>
+      <div class="kpi-num" data-val="{{ total_prestamos }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--text-main); line-height:1;">0</div>
+      <div style="font-size:.72rem; color:var(--text-muted); margin-top:.25rem;">solicitados</div>
     </div>
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th class="ps-4 text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">#</th>
-            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Producto</th>
-            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Cant.</th>
-            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Estado</th>
-            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Fecha</th>
-            <th class="text-uppercase text-secondary fw-normal" style="font-size:11px;letter-spacing:.06em">Vencimiento</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in all_prestamos %}
-          <tr class="prestamo-row" data-estado="{{ p.estado }}">
-            <td class="ps-4 text-secondary small font-monospace">#{{ p.pk }}</td>
-            <td>
-              {% for item in p.items.all %}
-                <div class="fw-semibold small">{{ item.producto.nombre }}</div>
-              {% empty %}
-                <span class="text-secondary small">—</span>
-              {% endfor %}
-            </td>
-            <td class="text-secondary small">
-              {% for item in p.items.all %}{{ item.cantidad }}{% if not forloop.last %}+{% endif %}{% endfor %}
-            </td>
-            <td>
-              {% if p.estado == 'activo' %}
-                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2" style="font-size:11px">Activo</span>
-              {% elif p.estado == 'devuelto' %}
-                <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" style="font-size:11px">Devuelto</span>
-              {% elif p.estado == 'parcial' %}
-                <span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle px-3 py-2" style="font-size:11px">Parcial</span>
-              {% elif p.estado == 'vencido' %}
-                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-3 py-2" style="font-size:11px">Vencido</span>
-              {% endif %}
-            </td>
-            <td class="text-secondary small font-monospace">{{ p.fecha_prestamo|date:"d M Y" }}</td>
-            <td class="small font-monospace">
-              {% if p.fecha_vencimiento %}
-                {% if p.urgencia == 'vencido' %}
-                  <span class="text-danger fw-semibold">{{ p.fecha_vencimiento|date:"d/m/Y" }}</span>
-                {% elif p.urgencia == 'proximo' %}
-                  <span class="text-warning fw-semibold">{{ p.fecha_vencimiento|date:"d/m/Y" }}</span>
-                {% else %}
-                  <span class="text-secondary">{{ p.fecha_vencimiento|date:"d/m/Y" }}</span>
+  </div>
+
+  <div class="col-6 col-md col-lg">
+    <div class="card h-100 kpi-usr" style="padding:.9rem 1rem;" data-delay="80">
+      <div class="kpi-bar" style="background:#3a7a42;"></div>
+      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Activos</div>
+      <div class="kpi-num" data-val="{{ prestamos_activos|length }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--sage); line-height:1;">0</div>
+      <div style="font-size:.72rem; color:var(--text-muted); margin-top:.25rem;">en tu poder</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md col-lg">
+    <div class="card h-100 kpi-usr" style="padding:.9rem 1rem;" data-delay="160">
+      <div class="kpi-bar" style="background:#2e7d6b;"></div>
+      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Devueltos</div>
+      <div class="kpi-num" data-val="{{ historial_reciente|length }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--navy); line-height:1;">0</div>
+      <div style="font-size:.72rem; color:var(--text-muted); margin-top:.25rem;">completados</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md col-lg">
+    <div class="card h-100 kpi-usr" style="padding:.9rem 1rem; {% if vencidos_count > 0 %}border-color:rgba(152,71,62,.35);{% endif %}" data-delay="240">
+      <div class="kpi-bar" style="background:var(--rust);"></div>
+      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Vencidos</div>
+      <div class="kpi-num" data-val="{{ vencidos_count }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:{% if vencidos_count > 0 %}var(--rust){% else %}var(--text-main){% endif %}; line-height:1;">0</div>
+      <div style="font-size:.72rem; color:var(--text-muted); margin-top:.25rem;">requieren atención</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md col-lg">
+    <div class="card h-100 kpi-usr" style="padding:.9rem 1rem;" data-delay="320">
+      <div class="kpi-bar" style="background:#c4900a;"></div>
+      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Tasa devolución</div>
+
+      {# Calcular tasa de devolución #}
+      {% if total_prestamos > 0 %}
+        {% widthratio historial_reciente|length total_prestamos 100 as tasa_devolucion %}
+      {% else %}
+        {% with tasa_devolucion=0 %}{% endwith %}
+      {% endif %}
+
+      <div class="kpi-num" data-val="{{ tasa_devolucion|default:0 }}"
+           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
+                  color:var(--sage); line-height:1;">0</div>
+      <div style="font-size:.72rem; color:var(--text-muted); margin-top:.25rem;">% completados</div>
+    </div>
+  </div>
+
+</div>
+
+
+{# ══ FILA DE GRÁFICAS ══ #}
+<div class="row g-3 mb-4">
+
+  {# Gráfica estado de préstamos (Donut) #}
+  <div class="col-12 col-md-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+          Estado de mis préstamos
+        </span>
+      </div>
+      <div class="card-body d-flex flex-column align-items-center justify-content-center" style="padding:1.25rem; min-height:240px;">
+        <div style="position:relative; width:170px; height:170px; margin-bottom:1rem;">
+          <canvas id="donutEstados" width="170" height="170"></canvas>
+          <div id="donut-center" style="position:absolute; inset:0; display:flex;
+                flex-direction:column; align-items:center; justify-content:center;
+                pointer-events:none;">
+            <span style="font-family:var(--font-mono); font-size:1.6rem; font-weight:700;
+                          color:var(--text-main); line-height:1;">{{ total_prestamos }}</span>
+            <span style="font-family:var(--font-ui); font-size:.68rem; color:var(--text-muted);
+                          text-transform:uppercase; letter-spacing:.07em;">total</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center;">
+          <span class="donut-legend" style="background:rgba(9,77,146,.12); color:var(--navy); border-color:rgba(9,77,146,.25);">
+            <span class="dot" style="background:var(--navy);"></span>Activos: <strong>{{ prestamos_activos|length }}</strong>
+          </span>
+          <span class="donut-legend" style="background:rgba(58,122,66,.1); color:#2b5430; border-color:rgba(58,122,66,.2);">
+            <span class="dot" style="background:#3a7a42;"></span>Devueltos: <strong>{{ historial_reciente|length }}</strong>
+          </span>
+          <span class="donut-legend" style="background:rgba(152,71,62,.1); color:#6e2020; border-color:rgba(152,71,62,.2);">
+            <span class="dot" style="background:var(--rust);"></span>Vencidos: <strong>{{ vencidos_count }}</strong>
+          </span>
+          <span class="donut-legend" style="background:rgba(196,144,10,.1); color:#7a5500; border-color:rgba(196,144,10,.2);">
+            <span class="dot" style="background:#c4900a;"></span>Pendientes: <strong>
+              {% with pendientes=all_prestamos|length %}
+                {{ pendientes|add:0 }}
+              {% endwith %}
+              0
+            </strong>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Gráfica barras por mes (últimos 6 meses) #}
+  <div class="col-12 col-md-7">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          Actividad — últimos 6 meses
+        </span>
+        <span style="font-family:var(--font-mono); font-size:.65rem; color:var(--text-muted);">préstamos</span>
+      </div>
+      <div class="card-body" style="padding:1rem 1.2rem; min-height:240px; display:flex; align-items:center;">
+        <canvas id="barActividad" style="width:100%; max-height:200px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+{# ══ FILA INFERIOR: Progreso + Préstamos activos ══ #}
+<div class="row g-3 mb-4">
+
+  {# Panel de racha / métricas personales #}
+  <div class="col-12 col-md-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Métricas personales
+        </span>
+      </div>
+      <div class="card-body" style="padding:1.1rem 1.2rem;">
+
+        {# Tasa de devolución a tiempo #}
+        <div style="margin-bottom:1.1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;">
+            <span style="font-size:.8rem; font-family:var(--font-ui); color:var(--text-main); font-weight:600;">
+              Tasa de devolución
+            </span>
+            <span style="font-family:var(--font-mono); font-size:.8rem; font-weight:700; color:var(--sage);" id="pct-devolucion">
+              {% if total_prestamos > 0 %}
+                {% widthratio historial_reciente|length total_prestamos 100 %}%
+              {% else %}0%{% endif %}
+            </span>
+          </div>
+          <div style="height:6px; background:var(--border-color); border-radius:3px; overflow:hidden;">
+            <div id="bar-devolucion" style="height:100%; background:var(--sage); border-radius:3px; width:0; transition:width 1.2s ease .4s;"></div>
+          </div>
+          <div style="font-size:.7rem; color:var(--text-muted); margin-top:.25rem;">
+            {{ historial_reciente|length }} de {{ total_prestamos }} devueltos a tiempo
+          </div>
+        </div>
+
+        {# Herramientas en uso #}
+        <div style="margin-bottom:1.1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;">
+            <span style="font-size:.8rem; font-family:var(--font-ui); color:var(--text-main); font-weight:600;">
+              Herramientas activas
+            </span>
+            <span style="font-family:var(--font-mono); font-size:.8rem; font-weight:700; color:var(--navy);" id="pct-activos">
+              {% if total_prestamos > 0 %}
+                {% widthratio prestamos_activos|length total_prestamos 100 %}%
+              {% else %}0%{% endif %}
+            </span>
+          </div>
+          <div style="height:6px; background:var(--border-color); border-radius:3px; overflow:hidden;">
+            <div id="bar-activos" style="height:100%; background:var(--navy); border-radius:3px; width:0; transition:width 1.2s ease .6s;"></div>
+          </div>
+          <div style="font-size:.7rem; color:var(--text-muted); margin-top:.25rem;">
+            {{ prestamos_activos|length }} préstamo{{ prestamos_activos|length|pluralize }} en curso
+          </div>
+        </div>
+
+        {# Vencidos vs total #}
+        <div style="margin-bottom:1.1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;">
+            <span style="font-size:.8rem; font-family:var(--font-ui); color:var(--text-main); font-weight:600;">
+              Índice de incidencias
+            </span>
+            <span style="font-family:var(--font-mono); font-size:.8rem; font-weight:700;
+                          color:{% if vencidos_count > 0 %}var(--rust){% else %}var(--sage){% endif %};" id="pct-vencidos">
+              {% if total_prestamos > 0 %}
+                {% widthratio vencidos_count total_prestamos 100 %}%
+              {% else %}0%{% endif %}
+            </span>
+          </div>
+          <div style="height:6px; background:var(--border-color); border-radius:3px; overflow:hidden;">
+            <div id="bar-vencidos" style="height:100%; background:{% if vencidos_count > 0 %}var(--rust){% else %}var(--sage){% endif %}; border-radius:3px; width:0; transition:width 1.2s ease .8s;"></div>
+          </div>
+          <div style="font-size:.7rem; color:var(--text-muted); margin-top:.25rem;">
+            {{ vencidos_count }} vencido{{ vencidos_count|pluralize }} de {{ total_prestamos }} préstamos
+          </div>
+        </div>
+
+        {# Separador #}
+        <hr style="border-color:var(--border-color); margin:.75rem 0;">
+
+        {# Info card inventario #}
+        <div style="display:flex; gap:.75rem; align-items:center;">
+          <div style="width:38px; height:38px; border-radius:var(--radius-md);
+                      background:rgba(9,77,146,.08); border:1px solid rgba(9,77,146,.15);
+                      display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-family:var(--font-ui); font-weight:700; font-size:.85rem; color:var(--text-main);">
+              Herramientas disponibles
+            </div>
+            <div style="font-family:var(--font-mono); font-size:.78rem; color:var(--navy);">
+              {{ productos_disponibles|length }} en stock actualmente
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {# Préstamos activos — tabla compacta #}
+  <div class="col-12 col-md-8">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+          </svg>
+          Préstamos activos y recientes
+        </span>
+        <a href="{% url 'prestamo_usuario' %}" class="btn-ghost" style="font-size:.75rem;">Ver todos</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.86rem;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Herramienta</th>
+              <th>Estado</th>
+              <th>Vencimiento</th>
+              <th>Progreso</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in all_prestamos|slice:":8" %}
+            <tr>
+              <td>
+                <span style="font-family:var(--font-mono); font-size:.75rem; color:var(--text-muted);">#{{ p.pk }}</span>
+              </td>
+              <td>
+                {% for item in p.items.all|slice:":2" %}
+                  <div style="font-weight:600; font-size:.82rem; color:var(--text-main);">{{ item.producto.nombre }}</div>
+                {% endfor %}
+                {% if p.items.count > 2 %}
+                  <span style="font-size:.7rem; color:var(--text-muted);">+{{ p.items.count|add:"-2" }} más</span>
                 {% endif %}
-              {% else %}
-                <span class="text-secondary">—</span>
-              {% endif %}
-            </td>
-            <td class="pe-3">
-              <a href="{% url 'prestamo_usuario' %}?id={{ p.pk }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-eye me-1"></i>Ver
-              </a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="7" class="text-center py-5 text-secondary">
-              <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-              No tienes préstamos registrados aún.
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div id="empty-filter-msg" class="text-center text-secondary py-5 d-none">
-      <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-      No hay préstamos en esta categoría.
+              </td>
+              <td>
+                {% if p.estado == 'activo' %}
+                  <span class="badge-state badge-aprobada">Activo</span>
+                {% elif p.estado == 'devuelto' %}
+                  <span class="badge-state" style="background:rgba(9,77,146,.1); color:var(--navy);">
+                    <span style="width:5px;height:5px;border-radius:50%;background:var(--navy);display:inline-block;"></span>
+                    Devuelto
+                  </span>
+                {% elif p.estado == 'vencido' %}
+                  <span class="badge-state badge-rechazada">Vencido</span>
+                {% elif p.estado == 'pendiente' %}
+                  <span class="badge-state badge-pendiente">Pendiente</span>
+                {% elif p.estado == 'parcial' %}
+                  <span class="badge-state badge-pendiente">Parcial</span>
+                {% else %}
+                  <span class="badge-state">{{ p.estado }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if p.fecha_vencimiento %}
+                  <span style="font-family:var(--font-mono); font-size:.75rem;
+                    {% if p.urgencia == 'vencido' %}color:var(--rust); font-weight:700;
+                    {% elif p.urgencia == 'proximo' %}color:#c4900a;
+                    {% else %}color:var(--text-muted);{% endif %}">
+                    {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                    {% if p.dias_restantes is not None and p.dias_restantes >= 0 %}
+                      <br><span style="font-size:.65rem; opacity:.7;">({{ p.dias_restantes }}d)</span>
+                    {% elif p.dias_restantes is not None and p.dias_restantes < 0 %}
+                      <br><span style="font-size:.65rem; font-weight:700;">Venció</span>
+                    {% endif %}
+                  </span>
+                {% else %}
+                  <span style="color:var(--text-muted); font-size:.8rem;">—</span>
+                {% endif %}
+              </td>
+              <td style="min-width:80px;">
+                {# Mini barra de progreso de devolución del préstamo #}
+                {% with total_items=p.items.count devueltos=p.items.all %}
+                  {% with dev_count=0 %}
+                    <div style="height:4px; background:var(--border-color); border-radius:2px; overflow:hidden;">
+                      <div style="height:100%; background:{% if p.estado == 'devuelto' %}var(--sage){% elif p.estado == 'vencido' %}var(--rust){% elif p.estado == 'parcial' %}#c4900a{% else %}var(--navy){% endif %};
+                                  width:{% if p.estado == 'devuelto' %}100{% elif p.estado == 'activo' or p.estado == 'pendiente' %}15{% elif p.estado == 'parcial' %}50{% elif p.estado == 'vencido' %}100{% else %}0{% endif %}%;
+                                  border-radius:2px;"></div>
+                    </div>
+                    <div style="font-size:.65rem; color:var(--text-muted); margin-top:.2rem; font-family:var(--font-mono);">
+                      {% if p.estado == 'devuelto' %}completo
+                      {% elif p.estado == 'parcial' %}parcial
+                      {% elif p.estado == 'activo' %}en uso
+                      {% elif p.estado == 'pendiente' %}esperando
+                      {% elif p.estado == 'vencido' %}vencido
+                      {% else %}—{% endif %}
+                    </div>
+                  {% endwith %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" style="text-align:center; padding:3rem 1rem; color:var(--text-muted);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="opacity:.3; display:block; margin:0 auto .5rem;">
+                  <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+                </svg>
+                No tienes préstamos registrados aún.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
+
+</div>
+
+
+{# ══ ACTIVIDAD RECIENTE — TIMELINE ══ #}
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Historial de actividad reciente
+        </span>
+        <span style="font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted);">
+          últimos 5 registros
+        </span>
+      </div>
+      <div class="card-body" style="padding:1rem 1.4rem;">
+        {% if all_prestamos %}
+        <div style="position:relative; padding-left:1.5rem;">
+          {# Línea vertical del timeline #}
+          <div style="position:absolute; left:6px; top:0; bottom:0; width:1.5px; background:var(--border-color);"></div>
+
+          {% for p in all_prestamos|slice:":5" %}
+          <div class="timeline-item" style="position:relative; margin-bottom:1.1rem; padding-bottom:1.1rem;
+                                            border-bottom:1px solid var(--border-color);">
+            {# Punto de la línea de tiempo #}
+            <div style="position:absolute; left:-1.5rem; top:.15rem; width:13px; height:13px;
+                        border-radius:50%; border:2px solid
+                        {% if p.estado == 'devuelto' %}var(--sage)
+                        {% elif p.estado == 'vencido' %}var(--rust)
+                        {% elif p.estado == 'pendiente' %}#c4900a
+                        {% else %}var(--navy){% endif %};
+                        background:var(--bg-surface);"></div>
+
+            <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+              <div style="flex:1; min-width:0;">
+                <div style="font-family:var(--font-ui); font-weight:700; font-size:.88rem;
+                             color:var(--text-main); margin-bottom:.2rem;">
+                  Préstamo #{{ p.pk }}
+                  {% if p.estado == 'devuelto' %}
+                    <span style="color:var(--sage); font-size:.75rem; font-weight:600; margin-left:.4rem;">✓ devuelto</span>
+                  {% elif p.estado == 'vencido' %}
+                    <span style="color:var(--rust); font-size:.75rem; font-weight:600; margin-left:.4rem;">⚠ vencido</span>
+                  {% elif p.estado == 'pendiente' %}
+                    <span style="color:#c4900a; font-size:.75rem; font-weight:600; margin-left:.4rem;">⏳ pendiente</span>
+                  {% endif %}
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:.22rem; margin-bottom:.2rem;">
+                  {% for item in p.items.all %}
+                  <span style="font-size:.72rem; padding:.08rem .42rem; border-radius:10px;
+                               background:rgba(9,77,146,.07); color:var(--navy);
+                               font-family:var(--font-ui); font-weight:600;">
+                    {{ item.producto.nombre }} ×{{ item.cantidad }}
+                  </span>
+                  {% endfor %}
+                </div>
+                {% if p.observaciones %}
+                <div style="font-size:.78rem; color:var(--text-muted); font-family:var(--font-ui);">
+                  {{ p.observaciones|truncatechars:80 }}
+                </div>
+                {% endif %}
+              </div>
+              <div style="text-align:right; flex-shrink:0;">
+                <div style="font-family:var(--font-mono); font-size:.72rem; color:var(--text-muted);">
+                  {{ p.fecha_prestamo|date:"d/m/Y" }}
+                </div>
+                {% if p.fecha_vencimiento %}
+                <div style="font-family:var(--font-mono); font-size:.7rem;
+                             color:{% if p.urgencia == 'vencido' %}var(--rust){% elif p.urgencia == 'proximo' %}#c4900a{% else %}var(--text-muted){% endif %};">
+                  vence {{ p.fecha_vencimiento|date:"d/m/Y" }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+
+          {% if all_prestamos|length > 5 %}
+          <div style="text-align:center; padding-top:.5rem;">
+            <a href="{% url 'prestamo_usuario' %}" class="btn-outline-mine" style="font-size:.8rem;">
+              Ver todos los {{ total_prestamos }} préstamos →
+            </a>
+          </div>
+          {% endif %}
+
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:2.5rem 1rem; color:var(--text-muted);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="opacity:.3; display:block; margin:0 auto .6rem;">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <div style="font-family:var(--font-ui); font-size:.88rem;">No hay actividad registrada aún.</div>
+          <a href="{% url 'prestamo_usuario' %}" class="btn-primary-mine" style="margin-top:.85rem; display:inline-flex;">
+            Solicitar mi primer préstamo
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
+
 {% block js %}
+{# Chart.js CDN #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<style>
+/* ── KPI cards ── */
+.kpi-usr {
+  position: relative;
+  overflow: hidden;
+  transition: transform .18s, box-shadow .18s;
+  opacity: 0;
+  transform: translateY(14px);
+}
+.kpi-usr.kpi-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity .45s ease, transform .45s ease,
+              box-shadow .18s, transform .18s;
+}
+.kpi-usr:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(27,32,33,.12); }
+.kpi-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; border-radius: 0;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .7s ease .2s;
+}
+.kpi-usr.kpi-visible .kpi-bar { transform: scaleX(1); }
+
+/* ── Donut legend ── */
+.donut-legend {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-family: var(--font-ui); font-size: .72rem; font-weight: 600;
+  padding: .18rem .55rem; border-radius: 20px; border: 1px solid;
+}
+.donut-legend .dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ── Timeline ── */
+.timeline-item:last-child { border-bottom: none !important; margin-bottom: 0 !important; padding-bottom: 0 !important; }
+</style>
+
 <script>
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => {
-        b.className = 'btn btn-sm btn-outline-secondary filter-btn';
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ── KPI animación contador ──────────────────────────────────────
+  function animarNum(el, target, dur) {
+    var start = performance.now();
+    function step(now) {
+      var p = Math.min((now - start) / dur, 1);
+      var ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(step);
+  }
+
+  document.querySelectorAll('.kpi-usr').forEach(function (card) {
+    var delay = parseInt(card.dataset.delay || 0);
+    setTimeout(function () {
+      card.classList.add('kpi-visible');
+      card.querySelectorAll('.kpi-num').forEach(function (el) {
+        animarNum(el, parseInt(el.dataset.val) || 0, 900);
       });
-      btn.classList.replace('btn-outline-secondary', 'btn-dark');
-
-      const filter = btn.dataset.filter;
-      const rows   = document.querySelectorAll('.prestamo-row');
-      let visible  = 0;
-
-      rows.forEach(row => {
-        const show = filter === 'todos' || row.dataset.estado === filter;
-        row.style.display = show ? '' : 'none';
-        if (show) visible++;
-      });
-
-      document.getElementById('empty-filter-msg').classList.toggle('d-none', visible > 0);
-    });
+    }, delay + 100);
   });
+
+  // ── Barras de progreso ──────────────────────────────────────────
+  function setPct(barId, pctStr) {
+    var bar = document.getElementById(barId);
+    if (!bar) return;
+    var pct = parseInt(pctStr) || 0;
+    setTimeout(function () { bar.style.width = Math.min(pct, 100) + '%'; }, 400);
+  }
+
+  var pctDev = document.getElementById('pct-devolucion');
+  var pctAct = document.getElementById('pct-activos');
+  var pctVen = document.getElementById('pct-vencidos');
+
+  if (pctDev) setPct('bar-devolucion', parseInt(pctDev.textContent));
+  if (pctAct) setPct('bar-activos',    parseInt(pctAct.textContent));
+  if (pctVen) setPct('bar-vencidos',   parseInt(pctVen.textContent));
+
+  // ── Detectar modo oscuro ────────────────────────────────────────
+  function isDark() { return document.body.classList.contains('dark-mode'); }
+  function textColor() { return isDark() ? 'rgba(239,236,202,.55)' : 'rgba(27,32,33,.45)'; }
+  function gridColor() { return isDark() ? 'rgba(239,236,202,.07)' : 'rgba(27,32,33,.07)'; }
+
+  // ── Chart.js — Donut ──────────────────────────────────────────
+  var activos   = parseInt('{{ prestamos_activos|length }}') || 0;
+  var devueltos = parseInt('{{ historial_reciente|length }}') || 0;
+  var vencidos  = parseInt('{{ vencidos_count }}') || 0;
+  var total     = parseInt('{{ total_prestamos }}') || 0;
+  var otros     = Math.max(0, total - activos - devueltos - vencidos);
+
+  var ctxDonut = document.getElementById('donutEstados');
+  if (ctxDonut) {
+    new Chart(ctxDonut, {
+      type: 'doughnut',
+      data: {
+        labels: ['Activos', 'Devueltos', 'Vencidos', 'Pendientes'],
+        datasets: [{
+          data: [activos, devueltos, vencidos, otros],
+          backgroundColor: [
+            'rgba(9,77,146,.75)',
+            'rgba(58,122,66,.75)',
+            'rgba(152,71,62,.75)',
+            'rgba(196,144,10,.75)',
+          ],
+          borderColor: [
+            'rgba(9,77,146,1)',
+            'rgba(58,122,66,1)',
+            'rgba(152,71,62,1)',
+            'rgba(196,144,10,1)',
+          ],
+          borderWidth: 2,
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        cutout: '72%',
+        animation: { animateRotate: true, duration: 1000 },
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+              return ' ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+            }
+          }
+        }},
+        responsive: false,
+      }
+    });
+  }
+
+  // ── Chart.js — Barras actividad ────────────────────────────────
+  // Generamos etiquetas de los últimos 6 meses desde JS
+  var meses = [];
+  var d = new Date();
+  for (var i = 5; i >= 0; i--) {
+    var mm = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    meses.push(mm.toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }));
+  }
+
+  // Datos desde Django: conteo por mes de los préstamos del usuario
+  // Se pasan como arrays desde la vista (o dejamos placeholder con 0s si no existen)
+  var dataPrestamos = {{ prestamos_por_mes|default:"[0,0,0,0,0,0]" }};
+  var dataDevueltos = {{ devueltos_por_mes|default:"[0,0,0,0,0,0]" }};
+
+  var ctxBar = document.getElementById('barActividad');
+  if (ctxBar) {
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: meses,
+        datasets: [
+          {
+            label: 'Préstamos',
+            data: dataPrestamos,
+            backgroundColor: 'rgba(9,77,146,.65)',
+            borderColor: 'rgba(9,77,146,.9)',
+            borderWidth: 1.5,
+            borderRadius: 4,
+          },
+          {
+            label: 'Devueltos',
+            data: dataDevueltos,
+            backgroundColor: 'rgba(58,122,66,.55)',
+            borderColor: 'rgba(58,122,66,.85)',
+            borderWidth: 1.5,
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 900 },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { family: "'Rajdhani', sans-serif", size: 12 },
+              color: textColor(),
+              usePointStyle: true,
+              pointStyleWidth: 12,
+              boxHeight: 8,
+              padding: 14,
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor() },
+            ticks: { color: textColor(), font: { family: "'Share Tech Mono', monospace", size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              color: textColor(),
+              font: { family: "'Share Tech Mono', monospace", size: 11 }
+            },
+            grid: { color: gridColor() }
+          }
+        }
+      }
+    });
+  }
+
+});
 </script>
 {% endblock %}

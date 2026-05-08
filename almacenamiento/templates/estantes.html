@@ -2,7 +2,6 @@
  
 {% block content %}
 <style>
-  /* ── Variables modo claro ── */
   :root {
     --card-bg:        #f5f0eb;
     --card-border:    #e0d8cf;
@@ -29,8 +28,6 @@
     --stock-color:    #2e7d32;
     --stock-dot:      #43a047;
   }
- 
-  /* ── Variables modo oscuro ── */
   [data-bs-theme="dark"],
   .dark-mode {
     --card-bg:        #1e2230;
@@ -57,7 +54,6 @@
     --stock-color:    #6b7280;
     --stock-dot:      #6b7280;
   }
- 
   .reg-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
@@ -98,10 +94,7 @@
     border: 1px solid var(--badge-border);
     color: var(--badge-color);
   }
-  .reg-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
+  .reg-table { width: 100%; border-collapse: collapse; }
   .reg-table thead th {
     padding: 10px 20px;
     font-size: 11px;
@@ -135,11 +128,7 @@
     font-weight: 600;
     border: 1px solid var(--row-border);
   }
-  .stock-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--stock-dot);
-  }
+  .stock-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--stock-dot); }
   .btn-reg-edit,
   .btn-reg-del {
     display: inline-flex;
@@ -153,28 +142,14 @@
     transition: background 0.15s, border-color 0.15s;
     text-decoration: none;
   }
-  .btn-reg-edit {
-    background: var(--btn-edit-bg);
-    border: 1px solid var(--btn-edit-border);
-    color: var(--btn-edit-color);
-  }
+  .btn-reg-edit { background: var(--btn-edit-bg); border: 1px solid var(--btn-edit-border); color: var(--btn-edit-color); }
   .btn-reg-edit:hover { background: var(--btn-edit-hover); }
-  .btn-reg-del {
-    background: var(--btn-del-bg);
-    border: 1px solid var(--btn-del-border);
-    color: var(--btn-del-color);
-  }
-  .btn-reg-del:hover { background: var(--btn-del-hover); }
-  .reg-empty {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--td-muted);
-    font-size: 13px;
-  }
+  .btn-reg-del  { background: var(--btn-del-bg);  border: 1px solid var(--btn-del-border);  color: var(--btn-del-color); }
+  .btn-reg-del:hover  { background: var(--btn-del-hover); }
+  .reg-empty { text-align: center; padding: 48px 20px; color: var(--td-muted); font-size: 13px; }
 </style>
  
 <div class="container mt-4">
- 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="mb-0">Estantes</h4>
@@ -235,11 +210,11 @@
           <td style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="btn-reg-edit"
                     onclick="abrirEditarEstante('{{ estante.pk }}','{{ estante.almacen.pk }}','{{ estante.codigo|escapejs }}','{{ estante.detalles|default:''|escapejs }}','{{ estante.capacidad|default:'' }}')">
-               Editar
+              ✏️ Editar
             </button>
             <button class="btn-reg-del"
                     onclick="abrirEliminarEstante('{{ estante.pk }}','{{ estante.codigo|escapejs }}')">
-               Eliminar
+              🗑️ Eliminar
             </button>
           </td>
         </tr>
@@ -254,10 +229,9 @@
       </tbody>
     </table>
   </div>
- 
 </div>
  
-<!-- Modal Crear -->
+<!-- ── Modal Crear ── -->
 <div class="modal fade" id="modalEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -290,25 +264,32 @@
               {{ form.capacidad }}
             </div>
           </div>
+          <!-- ── Errores al crear ── -->
           {% if form.errors %}
-            <div class="alert alert-danger mt-3">{{ form.errors }}</div>
+            <div class="alert alert-danger py-2 small mt-3 mb-0">
+              {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                  <div>⚠️ {{ error }}</div>
+                {% endfor %}
+              {% endfor %}
+            </div>
           {% endif %}
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-danger"> Guardar Estante</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Estante</button>
         </div>
       </form>
     </div>
   </div>
 </div>
  
-<!-- Modal Editar -->
+<!-- ── Modal Editar ── -->
 <div class="modal fade" id="modalEditarEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title"> Editar Estante</h5>
+        <h5 class="modal-title">✏️ Editar Estante</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form method="POST" action="{% url 'estantes' %}">
@@ -316,6 +297,16 @@
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="estante_id" id="edit_estante_id">
         <div class="modal-body">
+          <!-- ── Errores al editar ── -->
+          {% if form_editar.errors %}
+            <div class="alert alert-danger py-2 small mb-3">
+              {% for field, errors in form_editar.errors.items %}
+                {% for error in errors %}
+                  <div>⚠️ {{ error }}</div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold small">ALMACÉN *</label>
@@ -343,19 +334,19 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-danger"> Guardar Cambios</button>
+          <button type="submit" class="btn btn-danger">💾 Guardar Cambios</button>
         </div>
       </form>
     </div>
   </div>
 </div>
  
-<!-- Modal Eliminar -->
+<!-- ── Modal Eliminar ── -->
 <div class="modal fade" id="modalEliminarEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title"> Eliminar Estante</h5>
+        <h5 class="modal-title">🗑️ Eliminar Estante</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center">
@@ -376,10 +367,26 @@
   </div>
 </div>
  
+<!-- ── Scripts ── -->
 {% if show_modal %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     new bootstrap.Modal(document.getElementById('modalEstante')).show();
+  });
+</script>
+{% endif %}
+ 
+{% if show_modal_editar %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('edit_estante_id').value        = '{{ request.POST.estante_id }}';
+    document.getElementById('edit_estante_codigo').value    = '{{ request.POST.codigo|escapejs }}';
+    document.getElementById('edit_estante_detalles').value  = '{{ request.POST.detalles|escapejs }}';
+    document.getElementById('edit_estante_capacidad').value = '{{ request.POST.capacidad }}';
+    const sel = document.getElementById('edit_estante_almacen');
+    const almacenPk = '{{ request.POST.almacen }}';
+    for (let opt of sel.options) { opt.selected = opt.value == almacenPk; }
+    new bootstrap.Modal(document.getElementById('modalEditarEstante')).show();
   });
 </script>
 {% endif %}
