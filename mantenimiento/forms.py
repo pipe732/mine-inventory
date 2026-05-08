@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 from .models import (
-    TipoEstado, TipoMantenimiento, Mantenimiento, MantenimientoCambio, ConsumoRepuesto,
+    TipoEstado, TipoMantenimiento, Mantenimiento, MantenimientoCambio,
     MOTIVO_CAMBIO_CHOICES
 )
 from inventario.models import Producto

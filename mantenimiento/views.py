@@ -14,7 +14,7 @@ from .models import (
     TIPO_MANTENIMIENTO_CHOICES,
     ESTADO_REGISTRO_CHOICES,
 )
-from .forms import TipoEstadoForm, TipoMantenimientoForm, MantenimientoForm, MantenimientoUpdateForm, ConsumoRepuestoFormSet
+from .forms import TipoEstadoForm, TipoMantenimientoForm, MantenimientoForm, MantenimientoUpdateForm
 from inventario.models import Producto
 
 

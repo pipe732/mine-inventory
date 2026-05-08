@@ -229,7 +229,6 @@ class Mantenimiento(models.Model):
     )
 
     #Campos
-    tipo_mantenimiento  = models.CharField(max_length=30, choices=TIPO_CHOICES, verbose_name="Tipo de mantenimiento")
     estado_registro     = models.CharField(max_length=20, choices=ESTADO_REGISTRO_CHOICES, default='abierto', verbose_name="Estado del registro")
     prioridad           = models.CharField(max_length=10, choices=PRIORIDAD_CHOICES, default='media', verbose_name="Prioridad / urgencia")
     fecha_reporte       = models.DateField(verbose_name="Fecha de reporte / detección")
@@ -252,95 +251,6 @@ class Mantenimiento(models.Model):
         blank=True,
         related_name='mantenimientos_actualizados',
         verbose_name="Última edición por"
-    )
-
-    # ── Campos de clasificación ───────────────────────────────────
-    estado_registro = models.CharField(
-        max_length=20,
-        choices=ESTADO_REGISTRO_CHOICES,
-        default='abierto',
-        verbose_name="Estado del registro"
-    )
-    prioridad = models.CharField(
-        max_length=10,
-        choices=PRIORIDAD_MANTENIMIENTO_CHOICES,
-        default='media',
-        verbose_name="Prioridad / urgencia"
-    )
-
-    # ── Fechas ────────────────────────────────────────────────────
-    fecha_reporte = models.DateField(
-        verbose_name="Fecha de reporte / detección"
-    )
-    fecha_inicio = models.DateField(
-        verbose_name="Fecha inicio mantenimiento"
-    )
-    fecha_fin_estimada = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name="Fecha estimada de entrega"
-    )
-    fecha_fin_real = models.DateField(
-        blank=True,
-        null=True,
-        verbose_name="Fecha entrega real"
-    )
-
-    # ── Descripción y acciones ────────────────────────────────────
-    descripcion_problema = models.TextField(
-        verbose_name="Descripción del problema / falla"
-    )
-    acciones_realizadas = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Acciones realizadas / planificadas"
-    )
-    materiales_usados = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Materiales / repuestos usados (deprecado: ver ConsumoRepuesto)"
-    )
-    notas_adicionales = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Notas adicionales"
-    )
-
-    # ── Recursos y costos ─────────────────────────────────────────
-    tiempo_empleado_horas = models.DecimalField(
-        max_digits=7,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Tiempo empleado (horas)"
-    )
-    costo_estimado = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Costo estimado"
-    )
-    costo_real = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Costo real"
-    )
-
-    # ── Evidencia y trazabilidad ──────────────────────────────────
-    evidencia_adicional = models.FileField(
-        upload_to='mantenimiento/evidencias/',
-        blank=True,
-        null=True,
-        verbose_name="Evidencia adjunta"
-    )
-    ubicacion_snapshot = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-        verbose_name="Ubicación al momento del registro"
     )
 
     # ── Auditoría ─────────────────────────────────────────────────
