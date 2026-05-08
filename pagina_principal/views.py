@@ -22,7 +22,7 @@ def dashboard_view(request):
     prestamos_pendientes_count = Prestamo.objects.filter(estado='pendiente').count()
     prestamos_recientes       = Prestamo.objects.prefetch_related('items__producto').order_by('-fecha_prestamo')[:5]
     # ── Devoluciones ──
-    devoluciones_pendientes_count = Devolucion.objects.filter(estado='pendiente').count()
+    devoluciones_pendientes_count = Devolucion.objects.count()
     devoluciones_recientes        = Devolucion.objects.select_related('prestamo').order_by('-fecha_creacion')[:5]
     # ── Stock por categoría ──
     stock_por_categoria = (
