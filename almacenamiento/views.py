@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count
 from .forms import EstanteForm, AlmacenForm
 from .models import Estante, Almacen
 from common.mixins import sesion_requerida
@@ -41,7 +42,9 @@ def vista_almacenes(request):
         'form': form,
         'form_editar': form_editar,
         'show_modal': bool(form.errors),
-        'show_modal_editar': show_modal_editar,   # ← nuevo
+        'show_modal_editar': show_modal_editar,
+        'total_almacenes': almacenes.count(),
+        'total_estantes': Estante.objects.count(),
     })
 
 
