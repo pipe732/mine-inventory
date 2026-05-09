@@ -85,13 +85,14 @@
           <th>Tipo</th>
           <th>Ítems</th>
           <th>Fecha</th>
-          <th style="width:60px;"></th>
+          {# ── CAMBIO: columna acciones más ancha para los dos botones ── #}
+          <th style="width:160px; text-align:center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for d in devoluciones %}
         <tr style="cursor:pointer;" 
-            onclick="if(!event.target.closest('button')) document.querySelector('[data-bs-target=\'#detail-{{ d.pk }}\']').click();"
+            onclick="if(!event.target.closest('button') && !event.target.closest('form')) document.querySelector('[data-bs-target=\'#detail-{{ d.pk }}\']').click();"
             onmouseover="this.style.background='rgba(9,77,146,.02)'" 
             onmouseout="this.style.background='transparent'">
           <td style="text-align:center;">
@@ -125,20 +126,39 @@
           <td style="font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted);">
             {{ d.fecha_creacion|date:"d/m/Y" }}
           </td>
+
+          {% comment %} {# ══════════════════════════════════════════════════════
+             CAMBIO PRINCIPAL: botones Aceptar y Rechazar
+          ══════════════════════════════════════════════════════ #} {% endcomment %}
           <td style="text-align:center;">
-            <button type="button"
-                    class="btn-ghost btn-editar"
-                    style="padding:.22rem .5rem;"
-                    data-id="{{ d.pk }}"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalEditar"
-                    title="Confirmar">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
+            <div style="display:flex; align-items:center; justify-content:center; gap:.35rem;">
+
+              {# ── Botón ACEPTAR ── #}
+              <button type="button"
+                      class="btn-dev-accion btn-dev-aceptar"
+                      onclick="abrirAceptar({{ d.pk }}, '{{ d.prestamo.pk }}', '{{ d.prestamo.usuario|escapejs }}')"
+                      title="Aceptar devolución">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Aceptar
+              </button>
+{% comment %} 
+              {# ── Botón RECHAZAR ── #} {% endcomment %}
+              <button type="button"
+                      class="btn-dev-accion btn-dev-rechazar"
+                      onclick="abrirRechazar({{ d.pk }}, '{{ d.prestamo.pk }}', '{{ d.prestamo.usuario|escapejs }}')"
+                      title="Rechazar devolución">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Rechazar
+              </button>
+
+            </div>
           </td>
         </tr>
 
@@ -222,8 +242,7 @@
 
 
 <!-- ══════════════════════════════════════
-     DATOS PRÉSTAMOS ACTIVOS — fuente de datos para el wizard
-     (oculto; el JS los lee al abrir el modal)
+     DATOS PRÉSTAMOS ACTIVOS
 ══════════════════════════════════════ -->
 <script id="dev-prestamos-data" type="application/json">
 [{% for p in prestamos_activos %}
@@ -256,13 +275,11 @@
 
 <!-- ══════════════════════════════════════
      MODAL CREAR — Wizard 3 pasos
-     (mismo diseño que modal de préstamos)
 ══════════════════════════════════════ -->
 <div class="modal fade" id="modalCrear" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content" style="border:none;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 20px 60px rgba(27,32,33,.18);">
 
-      <!-- Header — idéntico al de préstamos -->
       <div class="modal-header" style="padding:.9rem 1.35rem;">
         <div style="display:flex;align-items:center;gap:.75rem;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="2.2" opacity=".7">
@@ -274,7 +291,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <!-- Cuerpo del wizard — mismo patrón que préstamos -->
       <div class="modal-body" style="padding:0;">
         <div style="padding:16px 24px 0;" id="dev-wiz-progress-wrap">
           <div id="dev-wiz-progress-bar" style="display:flex;align-items:center;gap:0;margin-bottom:20px;"></div>
@@ -298,58 +314,185 @@
 
 
 <!-- ══════════════════════════════════════
-     MODAL EDITAR — Solo estado
+     MODAL ACEPTAR DEVOLUCIÓN
 ══════════════════════════════════════ -->
-<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalAceptarDevolucion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
-          Confirmar Devolución <span id="edit-modal-id" style="opacity:.5; font-size:.85rem;"></span>
+          Aceptar Devolución <span id="acp-id" style="opacity:.5; font-size:.85rem;"></span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body" style="padding:1.5rem;">
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
-                      border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1.1rem;">
-            Estado de la devolución
-          </div>
-          <p style="font-family:var(--font-ui); font-size:.85rem; color:var(--text-muted); margin-bottom:1rem;">
-            Confirma la devolución <strong id="edit-modal-id-body"></strong>:
-          </p>
-          <div style="display:flex; gap:.75rem; flex-direction:column;">
-            <div style="display:flex; align-items:center; gap:.75rem; padding:.9rem 1.1rem;
-                       border-radius:var(--radius-md); border:2px solid rgba(22,163,74,.3);
-                       background:rgba(22,163,74,.06); cursor:pointer; text-align:left;
-                       width:100%; font-family:var(--font-ui);">
-              <div style="width:36px; height:36px; border-radius:50%; background:rgba(22,163,74,.15);
-                           display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
+
+        <!-- Info de la devolución -->
+        <div style="padding:.85rem 1rem; border-radius:var(--radius-md);
+                    background:rgba(22,163,74,.06); border:1px solid rgba(22,163,74,.2);
+                    margin-bottom:1.2rem;">
+          <div style="display:flex; align-items:center; gap:.65rem;">
+            <div style="width:36px; height:36px; border-radius:50%; background:rgba(22,163,74,.15);
+                         display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-family:var(--font-ui); font-size:.9rem; font-weight:700; color:#15803d;">
+                Confirmar recepción
               </div>
-              <div>
-                <div style="font-weight:700; font-size:.9rem; color:#15803d;">Confirmar devolución</div>
-                <div style="font-size:.78rem; color:var(--text-muted); margin-top:.1rem;">El stock se restaurará y el préstamo se marcará como devuelto.</div>
+              <div style="font-family:var(--font-ui); font-size:.78rem; color:var(--text-muted); margin-top:.1rem;">
+                Préstamo <span id="acp-prestamo" style="font-family:var(--font-mono); font-weight:700; color:var(--navy);"></span>
+                · Usuario: <span id="acp-usuario"></span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cerrar</button>
+        <p style="font-family:var(--font-ui); font-size:.88rem; color:var(--text-muted); margin-bottom:1.1rem;">
+          Al aceptar, se confirmará que las herramientas fueron recibidas correctamente y el préstamo quedará como <strong>Devuelto</strong>.
+        </p>
+
+        <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                    text-transform:uppercase; color:var(--navy);
+                    border-bottom:1px solid rgba(9,77,146,.18);
+                    padding-bottom:.4rem; margin-bottom:.85rem;">
+          Observaciones de recepción (opcional)
         </div>
+        <form method="post" id="form-aceptar-devolucion">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="aceptar_devolucion">
+          <input type="hidden" name="devolucion_id" id="acp-dev-id">
+          <textarea name="observaciones_recepcion"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Ej: Herramientas recibidas en buen estado…"
+                    style="font-family:var(--font-ui); font-size:.88rem; resize:none;"></textarea>
+        </form>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button"
+                class="btn-primary-mine"
+                style="background:rgba(22,163,74,.85);"
+                onclick="confirmarAceptar()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirmar recepción
+        </button>
       </div>
     </div>
   </div>
 </div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL RECHAZAR DEVOLUCIÓN
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalRechazarDevolucion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.7; margin-right:.4rem;">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          Rechazar Devolución <span id="rch-id" style="opacity:.5; font-size:.85rem;"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem;">
+
+        <!-- Info de la devolución -->
+        <div style="padding:.85rem 1rem; border-radius:var(--radius-md);
+                    background:rgba(152,71,62,.06); border:1px solid rgba(152,71,62,.2);
+                    margin-bottom:1.2rem;">
+          <div style="display:flex; align-items:center; gap:.65rem;">
+            <div style="width:36px; height:36px; border-radius:50%; background:rgba(152,71,62,.12);
+                         display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--rust)" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-family:var(--font-ui); font-size:.9rem; font-weight:700; color:var(--rust);">
+                Rechazar devolución
+              </div>
+              <div style="font-family:var(--font-ui); font-size:.78rem; color:var(--text-muted); margin-top:.1rem;">
+                Préstamo <span id="rch-prestamo" style="font-family:var(--font-mono); font-weight:700; color:var(--navy);"></span>
+                · Usuario: <span id="rch-usuario"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form method="post" id="form-rechazar-devolucion" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="rechazar_devolucion">
+          <input type="hidden" name="devolucion_id" id="rch-dev-id">
+
+          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
+                      text-transform:uppercase; color:var(--rust);
+                      border-bottom:1px solid rgba(152,71,62,.18);
+                      padding-bottom:.4rem; margin-bottom:.85rem;">
+            Motivo del rechazo *
+          </div>
+
+          <!-- ══ ALERTA INLINE de validación (visible solo cuando falta el motivo) ══ -->
+          <div id="rch-motivo-err"
+               style="display:none; align-items:center; gap:.5rem;
+                      padding:.55rem .85rem; border-radius:var(--radius-sm);
+                      background:rgba(152,71,62,.08); border:1px solid rgba(152,71,62,.28);
+                      color:var(--rust); font-family:var(--font-ui); font-size:.82rem;
+                      margin-bottom:.75rem; animation: shakeX .35s ease;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>El motivo del rechazo es obligatorio (mínimo 10 caracteres).</span>
+          </div>
+
+          <textarea name="motivo_rechazo"
+                    id="rch-motivo-textarea"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Explica por qué se rechaza la devolución… (obligatorio)"
+                    style="font-family:var(--font-ui); font-size:.88rem; resize:none;"
+                    oninput="rchLimpiarError()"></textarea>
+          <div style="font-size:.72rem; color:var(--text-muted); margin-top:.3rem;">
+            Mínimo 10 caracteres. El usuario será informado del motivo.
+          </div>
+        </form>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button"
+                class="btn-primary-mine"
+                style="background:var(--rust);"
+                onclick="confirmarRechazar()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Confirmar rechazo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {% endblock %}
 
@@ -358,11 +501,46 @@
 <script src="{% static 'js/devoluciones.js' %}"></script>
 
 <style>
-/* ═══════════════════════════════════════════════════════
-   WIZARD DEVOLUCIONES — mismo sistema visual que préstamos
-═══════════════════════════════════════════════════════ */
+{% comment %} /* ══════════════════════════════════════════════════════════════
+   ESTILOS BOTONES ACEPTAR / RECHAZAR
+══════════════════════════════════════════════════════════════ */ {% endcomment %}
+.btn-dev-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-family: var(--font-ui);
+  font-size: .75rem;
+  font-weight: 700;
+  padding: .28rem .65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+  border: none;
+  letter-spacing: .02em;
+}
+.btn-dev-accion:active { transform: scale(.96); }
 
-/* ── Progress dots — idénticos al wizard de préstamos ── */
+.btn-dev-aceptar {
+  background: rgba(22,163,74,.12);
+  color: #15803d;
+  border: 1px solid rgba(22,163,74,.3) !important;
+}
+.btn-dev-aceptar:hover {
+  background: rgba(22,163,74,.22);
+  color: #15803d;
+}
+
+.btn-dev-rechazar {
+  background: rgba(152,71,62,.1);
+  color: var(--rust);
+  border: 1px solid rgba(152,71,62,.28) !important;
+}
+.btn-dev-rechazar:hover {
+  background: rgba(152,71,62,.2);
+  color: var(--rust);
+}
+
+/* ══ WIZARD DEVOLUCIONES ══ */
 .dev-wiz-step-dot {
   display: flex; flex-direction: column; align-items: center;
   gap: 5px; flex: 1; cursor: default; position: relative;
@@ -373,7 +551,6 @@
   height: 1.5px; background: var(--border-color);
 }
 .dev-wiz-step-dot.dev-wiz-done:not(:last-child)::after { background: var(--navy); }
-
 .dev-wiz-dot-circle {
   width: 26px; height: 26px; border-radius: 50%;
   border: 1.5px solid var(--border-color);
@@ -397,7 +574,6 @@
 .dev-wiz-step-dot.dev-wiz-active .dev-wiz-dot-label { color: var(--navy); font-weight: 700; }
 .dev-wiz-step-dot.dev-wiz-done   .dev-wiz-dot-label { color: var(--navy); }
 
-/* ── Sección label — igual que wiz-sec-label ── */
 .dev-wiz-sec-label {
   font-family: var(--font-mono); font-size: .62rem;
   letter-spacing: .13em; text-transform: uppercase;
@@ -407,7 +583,6 @@
 }
 .dev-wiz-sec-label svg { color: var(--navy); opacity: .6; flex-shrink: 0; }
 
-/* ── Botones de navegación — copias exactas de préstamos ── */
 .dev-wiz-btn-back {
   padding: 7px 16px; border: 1px solid var(--border-color);
   border-radius: var(--radius-sm); background: transparent;
@@ -416,7 +591,6 @@
   font-family: var(--font-ui);
 }
 .dev-wiz-btn-back:hover { background: rgba(0,0,0,.04); }
-
 .dev-wiz-btn-next {
   padding: 7px 20px; border: none; border-radius: var(--radius-sm);
   background: var(--navy); color: #fff; font-size: .85rem;
@@ -428,7 +602,6 @@
 .dev-wiz-btn-next:disabled {
   background: var(--border-color); color: var(--text-muted); cursor: not-allowed;
 }
-
 .dev-wiz-btn-save {
   padding: 7px 20px; border: none; border-radius: var(--radius-sm);
   background: var(--rust); color: #fff; font-size: .85rem;
@@ -437,15 +610,11 @@
   transition: background .12s; font-family: var(--font-ui);
 }
 .dev-wiz-btn-save:hover { background: #7a3530; }
-
-/* ── Nav row ── */
 .dev-wiz-nav-row {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 20px; padding-top: 16px;
   border-top: 1px solid var(--border-color);
 }
-
-/* ── Inputs — mismos estilos que el wizard de préstamos ── */
 .dev-wiz-search-input {
   width: 100%; padding: .45rem .75rem .45rem 34px;
   border: 1px solid var(--border-color); border-radius: var(--radius-sm);
@@ -457,7 +626,6 @@
   border-color: var(--navy); box-shadow: 0 0 0 3px rgba(9,77,146,.09);
 }
 .dev-wiz-search-input::placeholder { color: var(--text-muted); opacity: .55; }
-
 .dev-wiz-scanner-input {
   width: 100%; padding: .45rem .75rem .45rem 34px;
   border: 1px solid rgba(9,77,146,.2); border-radius: var(--radius-sm);
@@ -470,7 +638,6 @@
   border-color: var(--navy); box-shadow: 0 0 0 3px rgba(9,77,146,.08);
   background: var(--bg-surface);
 }
-
 .dev-wiz-textarea {
   padding: 8px 10px; border: 1px solid var(--border-color);
   border-radius: var(--radius-sm); background: var(--bg-surface);
@@ -480,8 +647,16 @@
 .dev-wiz-textarea:focus {
   border-color: var(--navy); box-shadow: 0 0 0 3px rgba(9,77,146,.08);
 }
-
-/* ── Loan cards (lista de préstamos) — igual a prestamo.html ── */
+/* Alerta inline del wizard */
+.dev-wiz-alert-inline {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .55rem .85rem; border-radius: var(--radius-sm);
+  font-family: var(--font-ui); font-size: .82rem;
+  margin-bottom: .75rem;
+  background: rgba(152,71,62,.08); border: 1px solid rgba(152,71,62,.25);
+  color: var(--rust);
+  animation: shakeX .35s ease;
+}
 .dev-loan-card {
   display: flex; align-items: center; gap: .75rem;
   padding: .6rem .9rem; border: 1px solid var(--border-color);
@@ -496,8 +671,6 @@
 .dev-loan-card.dev-activa {
   border-color: var(--rust); background: rgba(152,71,62,.03);
 }
-
-/* ── Item row (herramientas) ── */
 .dev-item-row {
   display: flex; align-items: center; gap: .7rem;
   padding: .58rem .8rem; border: 1px solid var(--border-color);
@@ -508,7 +681,6 @@
 .dev-item-row:hover    { border-color: rgba(9,77,146,.2); }
 .dev-item-sel          { border-color: rgba(152,71,62,.3)!important; background: rgba(152,71,62,.03)!important; }
 .dev-item-scanned      { border-color: rgba(22,163,74,.3)!important;  background: rgba(22,163,74,.03)!important; }
-
 .dev-checkbox {
   width: 17px; height: 17px; border-radius: 4px; flex-shrink: 0;
   border: 1.5px solid #ccc; background: #fff;
@@ -517,98 +689,183 @@
 }
 .dev-item-sel    .dev-checkbox { border-color: var(--rust);  background: var(--rust); }
 .dev-item-scanned .dev-checkbox { border-color: #16a34a; background: #16a34a; }
-
-/* ── Summary rows — copia exacta de préstamos ── */
 .dev-summary-row {
   display: flex; align-items: flex-start;
   justify-content: space-between;
   padding: 7px 0; border-bottom: 1px solid var(--border-color); gap: 10px;
 }
 .dev-summary-row:last-child { border-bottom: none; }
-
-/* ── Alert/feedback strip ── */
 .dev-alert-strip {
   display: flex; align-items: center; gap: .5rem;
   padding: .5rem .85rem; border-radius: var(--radius-sm);
   font-family: var(--font-ui); font-size: .8rem;
   margin-bottom: .45rem;
 }
-
-/* ── Badge de estado en lista ── */
 .dev-badge-activo  { background:rgba(234,179,8,.1); color:#92400e; border:1px solid rgba(234,179,8,.25); }
 .dev-badge-parcial { background:rgba(59,130,246,.1); color:#1e40af; border:1px solid rgba(59,130,246,.2); }
 .dev-badge-vencido { background:rgba(185,28,28,.1);  color:#991b1b; border:1px solid rgba(185,28,28,.2); }
+
+/* Animación shake para alertas de error */
+@keyframes shakeX {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
 </style>
 
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  WIZARD DEVOLUCIONES — mismo patrón visual que préstamos
+//  BOTONES ACEPTAR / RECHAZAR — lógica de los modales
+// ══════════════════════════════════════════════════════════════
+
+function abrirAceptar(devId, prestamoId, usuario) {
+  document.getElementById('acp-id').textContent       = '#' + devId;
+  document.getElementById('acp-dev-id').value         = devId;
+  document.getElementById('acp-prestamo').textContent = '#' + prestamoId;
+  document.getElementById('acp-usuario').textContent  = usuario;
+  // Limpiar textarea
+  var ta = document.querySelector('#form-aceptar-devolucion textarea');
+  if (ta) ta.value = '';
+  new bootstrap.Modal(document.getElementById('modalAceptarDevolucion')).show();
+}
+
+function confirmarAceptar() {
+  document.getElementById('form-aceptar-devolucion').submit();
+}
+
+function abrirRechazar(devId, prestamoId, usuario) {
+  document.getElementById('rch-id').textContent       = '#' + devId;
+  document.getElementById('rch-dev-id').value         = devId;
+  document.getElementById('rch-prestamo').textContent = '#' + prestamoId;
+  document.getElementById('rch-usuario').textContent  = usuario;
+  // Limpiar estado
+  var ta  = document.getElementById('rch-motivo-textarea');
+  var err = document.getElementById('rch-motivo-err');
+  if (ta)  { ta.value = ''; ta.style.borderColor = ''; }
+  if (err) err.style.display = 'none';
+  new bootstrap.Modal(document.getElementById('modalRechazarDevolucion')).show();
+}
+
+// Validación inline: sin cerrar el modal ni reiniciar
+function confirmarRechazar() {
+  var ta  = document.getElementById('rch-motivo-textarea');
+  var err = document.getElementById('rch-motivo-err');
+  var val = (ta.value || '').trim();
+
+  if (val.length < 10) {
+    // Mostrar alerta inline, resaltar campo, NO cerrar ni reiniciar
+    err.style.display = 'flex';
+    ta.style.borderColor = 'var(--rust)';
+    ta.style.boxShadow   = '0 0 0 3px rgba(152,71,62,.12)';
+    ta.focus();
+    // Reanimar la alerta si ya estaba visible
+    err.style.animation = 'none';
+    void err.offsetWidth; // forzar reflow
+    err.style.animation = 'shakeX .35s ease';
+    return; // ← NO envía el formulario
+  }
+
+  document.getElementById('form-rechazar-devolucion').submit();
+}
+
+function rchLimpiarError() {
+  var ta  = document.getElementById('rch-motivo-textarea');
+  var err = document.getElementById('rch-motivo-err');
+  if (!ta || !err) return;
+  if ((ta.value || '').trim().length >= 10) {
+    err.style.display    = 'none';
+    ta.style.borderColor = '';
+    ta.style.boxShadow   = '';
+  }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  WIZARD DEVOLUCIONES
 // ══════════════════════════════════════════════════════════════
 (function () {
 
-  // ── Estado ────────────────────────────────────────────────────
-  let _paso       = 0;
-  let _prestamo   = null;
-  let _escaneados = {};
-  const DEV_PRESTAMOS = JSON.parse(
+  var _paso       = 0;
+  var _prestamo   = null;
+  var _escaneados = {};
+  var DEV_PRESTAMOS = JSON.parse(
     document.getElementById('dev-prestamos-data').textContent
   );
 
-  // ── Pasos — igual que préstamos ───────────────────────────────
-  const DEV_STEPS = [
+  var DEV_STEPS = [
     { label: 'Préstamo'     },
     { label: 'Herramientas' },
     { label: 'Confirmar'    },
   ];
 
-  // ── SVG helpers ───────────────────────────────────────────────
-  const svgCheck = () => `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>`;
-  const svgArR   = () => `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`;
-  const svgArL   = () => `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>`;
+  var svgCheck = function() { return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>'; };
+  var svgArR   = function() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'; };
+  var svgArL   = function() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>'; };
 
-  // ── Progress bar — misma lógica que préstamos ─────────────────
   function renderProgress() {
-    const bar = document.getElementById('dev-wiz-progress-bar');
+    var bar = document.getElementById('dev-wiz-progress-bar');
     if (!bar) return;
-    bar.innerHTML = DEV_STEPS.map((s, i) => {
-      let cls = 'dev-wiz-step-dot';
+    bar.innerHTML = DEV_STEPS.map(function(s, i) {
+      var cls = 'dev-wiz-step-dot';
       if (i < _paso)  cls += ' dev-wiz-done';
       if (i === _paso) cls += ' dev-wiz-active';
-      const inner = i < _paso ? svgCheck() : (i + 1);
-      return `<div class="${cls}">
-        <div class="dev-wiz-dot-circle">${inner}</div>
-        <div class="dev-wiz-dot-label">${s.label}</div>
-      </div>`;
+      var inner = i < _paso ? svgCheck() : (i + 1);
+      return '<div class="' + cls + '">' +
+               '<div class="dev-wiz-dot-circle">' + inner + '</div>' +
+               '<div class="dev-wiz-dot-label">' + s.label + '</div>' +
+             '</div>';
     }).join('');
   }
 
   function canAdvance() {
     if (_paso === 0) return !!_prestamo;
-    if (_paso === 1) return Object.values(_escaneados).some(e => e.seleccionado);
+    if (_paso === 1) return Object.values(_escaneados).some(function(e) { return e.seleccionado; });
     return true;
   }
 
   function updateBtn() {
-    const btn = document.getElementById('dev-btn-next');
+    var btn = document.getElementById('dev-btn-next');
     if (btn) btn.disabled = !canAdvance();
   }
 
-  // ── Render del panel activo ───────────────────────────────────
+  // ── Mostrar alerta inline sin avanzar ──
+  function mostrarAlertaInline(panelId, mensaje) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+    var existing = panel.querySelector('.dev-wiz-alert-inline');
+    if (existing) existing.remove();
+    var div = document.createElement('div');
+    div.className = 'dev-wiz-alert-inline';
+    div.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;">' +
+        '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' +
+        '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' +
+      '</svg>' +
+      '<span>' + mensaje + '</span>';
+    // Insertar antes del nav-row
+    var navRow = panel.querySelector('.dev-wiz-nav-row');
+    if (navRow) panel.insertBefore(div, navRow);
+    else panel.appendChild(div);
+    // Auto-quitar al escribir o interactuar
+    div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   function render() {
     renderProgress();
-    const panel = document.getElementById('dev-wiz-panel');
+    var panel = document.getElementById('dev-wiz-panel');
     if (!panel) return;
     if (_paso === 0)      panel.innerHTML = renderStep0();
     else if (_paso === 1) panel.innerHTML = renderStep1();
     else                  panel.innerHTML = renderStep2();
     updateBtn();
 
-    // Reiniciar scanner listener en paso 1
     if (_paso === 1) {
-      const sc = document.getElementById('dev-scanner-input');
+      var sc = document.getElementById('dev-scanner-input');
       if (sc) {
-        sc.addEventListener('keydown', e => {
+        sc.addEventListener('keydown', function(e) {
           if (e.key === 'Enter') { e.preventDefault(); devProcesarScan(); }
         });
         sc.focus();
@@ -616,495 +873,265 @@
     }
   }
 
-  // ══ PASO 0: Seleccionar Préstamo ══════════════════════════════
+  // ══ PASO 0 ══
   function renderStep0() {
-    const loansHtml = DEV_PRESTAMOS.length === 0
-      ? `<div style="text-align:center;padding:2.5rem 1rem;color:var(--text-muted);font-family:var(--font-ui);font-size:.88rem;">No hay préstamos activos pendientes de devolución.</div>`
-      : DEV_PRESTAMOS.map(p => {
-          const selectedCls = (_prestamo?.id === p.id) ? 'dev-loan-card dev-activa' : 'dev-loan-card';
-          const statusMap = {
-            activo:  ['dev-badge-activo',  'Activo'],
-            parcial: ['dev-badge-parcial', 'Parcial'],
-            vencido: ['dev-badge-vencido', 'Vencido'],
-          };
-          const [badgeCls, badgeTxt] = statusMap[p.estado] || ['', p.estado];
-          const chipsHtml = p.items
-            .filter(it => !it.devuelto)
-            .map(it => `<span style="font-family:var(--font-mono);font-size:.65rem;
-                                     background:rgba(9,77,146,.07);color:var(--navy);
-                                     border:1px solid rgba(9,77,146,.12);
-                                     padding:.1rem .38rem;border-radius:var(--radius-sm);
-                                     margin:1px 2px 0 0;">
-              ${it.producto.nombre} ×${it.cantidad}
-            </span>`).join('');
-          const textoData = `${p.id} ${p.usuario.toLowerCase()} ${p.items.map(it => it.producto.nombre.toLowerCase() + ' ' + it.producto.codigo_sku.toLowerCase()).join(' ')}`;
+    var loansHtml = DEV_PRESTAMOS.length === 0
+      ? '<div style="text-align:center;padding:2.5rem 1rem;color:var(--text-muted);font-family:var(--font-ui);font-size:.88rem;">No hay préstamos activos pendientes de devolución.</div>'
+      : DEV_PRESTAMOS.map(function(p) {
+          var selectedCls = (_prestamo && _prestamo.id === p.id) ? 'dev-loan-card dev-activa' : 'dev-loan-card';
+          var statusMap = { activo: ['dev-badge-activo','Activo'], parcial: ['dev-badge-parcial','Parcial'], vencido: ['dev-badge-vencido','Vencido'] };
+          var sm = statusMap[p.estado] || ['',''];
+          var chipsHtml = p.items.filter(function(it){ return !it.devuelto; })
+            .map(function(it){ return '<span style="font-family:var(--font-mono);font-size:.65rem;background:rgba(9,77,146,.07);color:var(--navy);border:1px solid rgba(9,77,146,.12);padding:.1rem .38rem;border-radius:var(--radius-sm);margin:1px 2px 0 0;">' + it.producto.nombre + ' ×' + it.cantidad + '</span>'; }).join('');
+          var textoData = p.id + ' ' + p.usuario.toLowerCase() + ' ' + p.items.map(function(it){ return it.producto.nombre.toLowerCase() + ' ' + it.producto.codigo_sku.toLowerCase(); }).join(' ');
+          var esActiva = (_prestamo && _prestamo.id === p.id);
 
-          return `
-            <div class="${selectedCls}" data-id="${p.id}"
-                 data-texto="${textoData.replace(/"/g,'&quot;')}"
-                 onclick="devSeleccionarPrestamo(this, ${p.id})">
-              <!-- Número -->
-              <span style="font-family:var(--font-mono);font-size:.7rem;font-weight:700;
-                            color:var(--navy);background:rgba(9,77,146,.08);
-                            border:1px solid rgba(9,77,146,.15);padding:.18rem .5rem;
-                            border-radius:var(--radius-sm);white-space:nowrap;flex-shrink:0;">
-                #${p.id}
-              </span>
-              <!-- Cuerpo -->
-              <div style="flex:1;min-width:0;">
-                <div style="font-family:var(--font-ui);font-size:.88rem;font-weight:600;
-                             color:var(--text-main);white-space:nowrap;overflow:hidden;
-                             text-overflow:ellipsis;margin-bottom:.25rem;">
-                  ${p.usuario}${p.nombre_usuario ? ` · <span style="font-weight:400;opacity:.7;">${p.nombre_usuario}</span>` : ''}
-                </div>
-                <div style="display:flex;flex-wrap:wrap;">${chipsHtml}</div>
-              </div>
-              <!-- Derecha -->
-              <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;">
-                <span class="${badgeCls}" style="font-size:.65rem;font-weight:700;
-                              padding:.12rem .45rem;border-radius:20px;font-family:var(--font-ui);">
-                  ${badgeTxt}
-                </span>
-                <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);">
-                  ${p.fecha_prestamo}
-                </span>
-              </div>
-              <!-- Radio ring -->
-              <div style="width:16px;height:16px;border-radius:50%;flex-shrink:0;
-                           border:1.5px solid ${(_prestamo?.id === p.id) ? 'var(--rust)' : 'rgba(0,0,0,.15)'};
-                           background:${(_prestamo?.id === p.id) ? 'var(--rust)' : 'transparent'};
-                           position:relative;">
-                ${(_prestamo?.id === p.id) ? '<span style="position:absolute;inset:3px;border-radius:50%;background:#fff;display:block;"></span>' : ''}
-              </div>
-            </div>`;
+          return '<div class="' + selectedCls + '" data-id="' + p.id + '" data-texto="' + textoData.replace(/"/g,'&quot;') + '" onclick="devSeleccionarPrestamo(this,' + p.id + ')">' +
+            '<span style="font-family:var(--font-mono);font-size:.7rem;font-weight:700;color:var(--navy);background:rgba(9,77,146,.08);border:1px solid rgba(9,77,146,.15);padding:.18rem .5rem;border-radius:var(--radius-sm);white-space:nowrap;flex-shrink:0;">#' + p.id + '</span>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-family:var(--font-ui);font-size:.88rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.25rem;">' + p.usuario + (p.nombre_usuario ? ' · <span style="font-weight:400;opacity:.7;">' + p.nombre_usuario + '</span>' : '') + '</div>' +
+              '<div style="display:flex;flex-wrap:wrap;">' + chipsHtml + '</div>' +
+            '</div>' +
+            '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;">' +
+              '<span class="' + sm[0] + '" style="font-size:.65rem;font-weight:700;padding:.12rem .45rem;border-radius:20px;font-family:var(--font-ui);">' + sm[1] + '</span>' +
+              '<span style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);">' + p.fecha_prestamo + '</span>' +
+            '</div>' +
+            '<div style="width:16px;height:16px;border-radius:50%;flex-shrink:0;border:1.5px solid ' + (esActiva ? 'var(--rust)' : 'rgba(0,0,0,.15)') + ';background:' + (esActiva ? 'var(--rust)' : 'transparent') + ';position:relative;">' +
+              (esActiva ? '<span style="position:absolute;inset:3px;border-radius:50%;background:#fff;display:block;"></span>' : '') +
+            '</div>' +
+          '</div>';
         }).join('');
 
-    return `
-      <div class="dev-wiz-sec-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Selecciona el préstamo a devolver
-      </div>
-
-      <div style="position:relative;margin-bottom:.75rem;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
-                    color:var(--text-muted);pointer-events:none;">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" class="dev-wiz-search-input" id="dev-search-prestamos"
-               placeholder="Buscar por usuario, N° o herramienta…"
-               oninput="devFiltrarPrestamos()" autocomplete="off">
-      </div>
-
-      <div id="dev-loan-list" style="max-height:280px;overflow-y:auto;">${loansHtml}</div>
-      <div id="dev-sin-resultados" class="d-none"
-           style="text-align:center;padding:1.5rem;color:var(--text-muted);
-                  font-family:var(--font-ui);font-size:.85rem;">
-        Sin coincidencias para esa búsqueda.
-      </div>
-      <div id="dev-p0-error" class="d-none dev-alert-strip"
-           style="background:rgba(185,28,28,.07);border:1px solid rgba(185,28,28,.2);
-                  color:#b91c1c;margin-top:.5rem;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span id="dev-p0-error-txt"></span>
-      </div>
-
-      <div class="dev-wiz-nav-row">
-        <div></div>
-        <button class="dev-wiz-btn-next" id="dev-btn-next"
-                onclick="devWizSiguiente()" ${canAdvance() ? '' : 'disabled'}>
-          Continuar ${svgArR()}
-        </button>
-      </div>`;
+    return '<div class="dev-wiz-sec-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Selecciona el préstamo a devolver</div>' +
+      '<div style="position:relative;margin-bottom:.75rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+      '<input type="text" class="dev-wiz-search-input" id="dev-search-prestamos" placeholder="Buscar por usuario, N° o herramienta…" oninput="devFiltrarPrestamos()" autocomplete="off"></div>' +
+      '<div id="dev-loan-list" style="max-height:280px;overflow-y:auto;">' + loansHtml + '</div>' +
+      '<div id="dev-sin-resultados" class="d-none" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-family:var(--font-ui);font-size:.85rem;">Sin coincidencias.</div>' +
+      '<div class="dev-wiz-nav-row"><div></div>' +
+        '<button class="dev-wiz-btn-next" id="dev-btn-next" onclick="devWizSiguiente()" ' + (canAdvance() ? '' : 'disabled') + '>Continuar ' + svgArR() + '</button>' +
+      '</div>';
   }
 
-  // ══ PASO 1: Herramientas / Escáner ════════════════════════════
+  // ══ PASO 1 ══
   function renderStep1() {
     if (!_prestamo) return '';
-    const pendientes = _prestamo.items.filter(it => !it.devuelto);
-    const devueltos  = _prestamo.items.filter(it =>  it.devuelto);
-    const totalEsc   = Object.values(_escaneados).filter(e => e.escaneado).length;
-    const badgeTxt   = totalEsc
-      ? `${totalEsc}/${pendientes.length} escaneados`
-      : `${pendientes.length} pendiente${pendientes.length !== 1 ? 's' : ''}`;
+    var pendientes = _prestamo.items.filter(function(it){ return !it.devuelto; });
+    var devueltos  = _prestamo.items.filter(function(it){ return  it.devuelto; });
+    var totalEsc   = Object.values(_escaneados).filter(function(e){ return e.escaneado; }).length;
+    var badgeTxt   = totalEsc ? (totalEsc + '/' + pendientes.length + ' escaneados') : (pendientes.length + ' pendiente' + (pendientes.length !== 1 ? 's' : ''));
 
-    const itemsHtml = pendientes.map(it => {
-      const e    = _escaneados[it.id] || {};
-      const sel  = e.seleccionado ?? true;
-      const esc  = e.escaneado    ?? false;
-      const cant = e.cantDevolver ?? it.cantidad;
-      const serialTxt = it.serial ? `&nbsp;·&nbsp; <span style="color:var(--navy); opacity:.8;">SN: ${it.serial}</span>` : '';
-      const rowCls = 'dev-item-row' + (esc ? ' dev-item-scanned' : sel ? ' dev-item-sel' : '');
-      const chkMark = sel
-        ? `<svg width="8" height="7" viewBox="0 0 11 9" fill="none"><path d="M1 4L4.5 7.5L10 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-        : '';
-      const escBadge = esc
-        ? `<span style="font-size:.62rem;background:rgba(22,163,74,.1);color:#15803d;
-                        padding:.08rem .38rem;border-radius:6px;font-weight:700;
-                        border:1px solid rgba(22,163,74,.2);">✓ Escaneado</span>`
-        : '';
-      const cantCtrl = sel
-        ? `<div style="display:flex;align-items:center;gap:3px;" onclick="event.stopPropagation()">
-             <button type="button" onclick="devCambiarCant(${it.id},-1)"
-               style="width:20px;height:20px;border-radius:4px;
-                      border:1px solid rgba(152,71,62,.3);background:#fff;
-                      color:var(--rust);font-size:.85rem;cursor:pointer;
-                      display:flex;align-items:center;justify-content:center;">−</button>
-             <span id="dev-cant-${it.id}"
-               style="font-family:var(--font-mono);font-weight:700;font-size:.82rem;
-                      min-width:18px;text-align:center;color:var(--navy);">${cant}</span>
-             <button type="button" onclick="devCambiarCant(${it.id},+1)"
-               style="width:20px;height:20px;border-radius:4px;
-                      border:1px solid rgba(152,71,62,.3);background:#fff;
-                      color:var(--rust);font-size:.85rem;cursor:pointer;
-                      display:flex;align-items:center;justify-content:center;">+</button>
-             <span style="font-size:.62rem;color:var(--text-muted);">/${it.cantidad}</span>
-           </div>`
-        : `<span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);">${it.cantidad} ud.</span>`;
+    var itemsHtml = pendientes.map(function(it) {
+      var e = _escaneados[it.id] || {};
+      var sel  = e.seleccionado !== undefined ? e.seleccionado : true;
+      var esc  = e.escaneado    || false;
+      var cant = e.cantDevolver !== undefined ? e.cantDevolver : it.cantidad;
+      var serialTxt = it.serial ? ' &nbsp;·&nbsp; <span style="color:var(--navy);opacity:.8;">SN: ' + it.serial + '</span>' : '';
+      var rowCls = 'dev-item-row' + (esc ? ' dev-item-scanned' : (sel ? ' dev-item-sel' : ''));
+      var chkMark = sel ? '<svg width="8" height="7" viewBox="0 0 11 9" fill="none"><path d="M1 4L4.5 7.5L10 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+      var escBadge = esc ? '<span style="font-size:.62rem;background:rgba(22,163,74,.1);color:#15803d;padding:.08rem .38rem;border-radius:6px;font-weight:700;border:1px solid rgba(22,163,74,.2);">✓ Escaneado</span>' : '';
+      var cantCtrl = sel
+        ? '<div style="display:flex;align-items:center;gap:3px;" onclick="event.stopPropagation()"><button type="button" onclick="devCambiarCant(' + it.id + ',-1)" style="width:20px;height:20px;border-radius:4px;border:1px solid rgba(152,71,62,.3);background:#fff;color:var(--rust);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button><span id="dev-cant-' + it.id + '" style="font-family:var(--font-mono);font-weight:700;font-size:.82rem;min-width:18px;text-align:center;color:var(--navy);">' + cant + '</span><button type="button" onclick="devCambiarCant(' + it.id + ',+1)" style="width:20px;height:20px;border-radius:4px;border:1px solid rgba(152,71,62,.3);background:#fff;color:var(--rust);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button><span style="font-size:.62rem;color:var(--text-muted);">/' + it.cantidad + '</span></div>'
+        : '<span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);">' + it.cantidad + ' ud.</span>';
 
-      return `
-        <div class="${rowCls}" onclick="devToggleItem(${it.id})">
-          <div class="dev-checkbox">${chkMark}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:.86rem;color:var(--text-main);font-family:var(--font-ui);
-                        display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
-              ${it.producto.nombre} ${escBadge}
-            </div>
-            <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;font-family:var(--font-mono);">
-              SKU: ${it.producto.codigo_sku} ${serialTxt} &nbsp;·&nbsp; Stock: ${it.producto.stock}
-            </div>
-          </div>
-          <div style="flex-shrink:0;" onclick="event.stopPropagation()">${cantCtrl}</div>
-        </div>`;
+      return '<div class="' + rowCls + '" onclick="devToggleItem(' + it.id + ')">' +
+        '<div class="dev-checkbox">' + chkMark + '</div>' +
+        '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:.86rem;color:var(--text-main);font-family:var(--font-ui);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">' + it.producto.nombre + ' ' + escBadge + '</div>' +
+        '<div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;font-family:var(--font-mono);">SKU: ' + it.producto.codigo_sku + serialTxt + ' &nbsp;·&nbsp; Stock: ' + it.producto.stock + '</div></div>' +
+        '<div style="flex-shrink:0;" onclick="event.stopPropagation()">' + cantCtrl + '</div></div>';
     }).join('');
 
-    const devueltosHtml = devueltos.length
-      ? `<div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;
-                     color:var(--text-muted);font-weight:600;margin:8px 0 5px;
-                     font-family:var(--font-mono);">Ya devueltos</div>` +
-        devueltos.map(it => `
-          <div class="dev-item-row" style="opacity:.45;cursor:default;">
-            <div class="dev-checkbox" style="background:#16a34a;border-color:#16a34a;">
-              <svg width="8" height="7" viewBox="0 0 11 9" fill="none"><path d="M1 4L4.5 7.5L10 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div style="flex:1;">
-              <div style="font-weight:600;font-size:.84rem;font-family:var(--font-ui);">${it.producto.nombre}</div>
-              <div style="font-size:.68rem;color:var(--text-muted);font-family:var(--font-mono);">
-                SKU: ${it.producto.codigo_sku} · ✓ Ya devuelto
-              </div>
-            </div>
-          </div>`).join('')
+    var devueltosHtml = devueltos.length
+      ? '<div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-weight:600;margin:8px 0 5px;font-family:var(--font-mono);">Ya devueltos</div>' +
+        devueltos.map(function(it){
+          return '<div class="dev-item-row" style="opacity:.45;cursor:default;">' +
+            '<div class="dev-checkbox" style="background:#16a34a;border-color:#16a34a;"><svg width="8" height="7" viewBox="0 0 11 9" fill="none"><path d="M1 4L4.5 7.5L10 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+            '<div style="flex:1;"><div style="font-weight:600;font-size:.84rem;font-family:var(--font-ui);">' + it.producto.nombre + '</div><div style="font-size:.68rem;color:var(--text-muted);font-family:var(--font-mono);">SKU: ' + it.producto.codigo_sku + ' · ✓ Ya devuelto</div></div></div>';
+        }).join('')
       : '';
 
-    return `
-      <!-- Banner préstamo — mismo look que la fila de edición ──>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;
-                  flex-wrap:wrap;padding:.6rem .9rem;
-                  background:rgba(9,77,146,.04);border:1px solid rgba(9,77,146,.14);
-                  border-radius:var(--radius-md);margin-bottom:1rem;">
-        <div>
-          <span style="font-family:var(--font-mono);font-weight:700;color:var(--navy);font-size:.85rem;">
-            Préstamo #${_prestamo.id}
-          </span>
-          <span style="color:var(--text-muted);margin:0 .3rem;">·</span>
-          <span style="font-family:var(--font-ui);font-weight:600;font-size:.85rem;color:var(--text-main);">
-            ${_prestamo.usuario}
-          </span>
-        </div>
-        <button type="button" onclick="devWizAtras()"
-                style="background:none;border:none;color:var(--navy);font-family:var(--font-ui);
-                       font-size:.75rem;font-weight:600;cursor:pointer;
-                       text-decoration:underline;text-underline-offset:2px;padding:0;opacity:.7;">
-          Cambiar
-        </button>
-      </div>
-
-      <!-- Escáner ── -->
-      <div class="dev-wiz-sec-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="7" width="18" height="10" rx="1"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="7" x2="14" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/></svg>
-        Escanear código SKU
-      </div>
-      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.65rem;">
-        <div style="position:relative;flex:1;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
-                      color:var(--navy);opacity:.4;pointer-events:none;">
-            <rect x="3" y="7" width="18" height="10" rx="1"/>
-            <line x1="7" y1="7" x2="7" y2="17"/><line x1="10" y1="7" x2="10" y2="17"/>
-            <line x1="14" y1="7" x2="14" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/>
-          </svg>
-          <input type="text" id="dev-scanner-input" class="dev-wiz-scanner-input"
-                 placeholder="Escanea o escribe el SKU y presiona Enter…"
-                 autocomplete="off" autocorrect="off" spellcheck="false">
-        </div>
-        <button type="button" onclick="devProcesarScan()" class="dev-wiz-btn-save"
-                style="padding:.45rem .9rem;font-size:.82rem;white-space:nowrap;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
-          </svg>
-          Agregar
-        </button>
-      </div>
-
-      <div id="dev-scan-feedback" class="d-none"></div>
-
-      <!-- Lista herramientas ── -->
-      <div class="dev-wiz-sec-label" style="margin-top:.85rem;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span>Herramientas del préstamo</span>
-        <span style="font-size:.6rem;background:rgba(9,77,146,.1);color:var(--navy);
-                     border:1px solid rgba(9,77,146,.18);padding:.08rem .42rem;
-                     border-radius:10px;font-family:var(--font-mono);">${badgeTxt}</span>
-        <button type="button" onclick="devToggleTodas()"
-                style="margin-left:auto;background:none;border:none;color:var(--navy);
-                       font-family:var(--font-ui);font-size:.72rem;font-weight:600;cursor:pointer;
-                       text-decoration:underline;text-underline-offset:2px;opacity:.75;">
-          Marcar todas
-        </button>
-      </div>
-
-      <div style="max-height:195px;overflow-y:auto;margin-bottom:.4rem;">
-        ${itemsHtml}${devueltosHtml}
-      </div>
-
-      <div id="dev-resumen-strip"></div>
-
-      <div class="dev-wiz-nav-row">
-        <button class="dev-wiz-btn-back" onclick="devWizAtras()">${svgArL()} Volver</button>
-        <button class="dev-wiz-btn-next" id="dev-btn-next"
-                onclick="devWizSiguiente()" ${canAdvance() ? '' : 'disabled'}>
-          Continuar ${svgArR()}
-        </button>
-      </div>`;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;padding:.6rem .9rem;background:rgba(9,77,146,.04);border:1px solid rgba(9,77,146,.14);border-radius:var(--radius-md);margin-bottom:1rem;">' +
+        '<div><span style="font-family:var(--font-mono);font-weight:700;color:var(--navy);font-size:.85rem;">Préstamo #' + _prestamo.id + '</span>' +
+        '<span style="color:var(--text-muted);margin:0 .3rem;">·</span>' +
+        '<span style="font-family:var(--font-ui);font-weight:600;font-size:.85rem;color:var(--text-main);">' + _prestamo.usuario + '</span></div>' +
+        '<button type="button" onclick="devWizAtras()" style="background:none;border:none;color:var(--navy);font-family:var(--font-ui);font-size:.75rem;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:0;opacity:.7;">Cambiar</button>' +
+      '</div>' +
+      '<div class="dev-wiz-sec-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="7" width="18" height="10" rx="1"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="7" x2="14" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/></svg>Escanear código SKU</div>' +
+      '<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.65rem;">' +
+        '<div style="position:relative;flex:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--navy);opacity:.4;pointer-events:none;"><rect x="3" y="7" width="18" height="10" rx="1"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="7" x2="14" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/></svg>' +
+        '<input type="text" id="dev-scanner-input" class="dev-wiz-scanner-input" placeholder="Escanea o escribe el SKU y presiona Enter…" autocomplete="off" autocorrect="off" spellcheck="false"></div>' +
+        '<button type="button" onclick="devProcesarScan()" class="dev-wiz-btn-save" style="padding:.45rem .9rem;font-size:.82rem;white-space:nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>Agregar</button>' +
+      '</div>' +
+      '<div id="dev-scan-feedback" class="d-none"></div>' +
+      '<div class="dev-wiz-sec-label" style="margin-top:.85rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>' +
+        '<span>Herramientas del préstamo</span>' +
+        '<span style="font-size:.6rem;background:rgba(9,77,146,.1);color:var(--navy);border:1px solid rgba(9,77,146,.18);padding:.08rem .42rem;border-radius:10px;font-family:var(--font-mono);">' + badgeTxt + '</span>' +
+        '<button type="button" onclick="devToggleTodas()" style="margin-left:auto;background:none;border:none;color:var(--navy);font-family:var(--font-ui);font-size:.72rem;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;opacity:.75;">Marcar todas</button>' +
+      '</div>' +
+      '<div style="max-height:195px;overflow-y:auto;margin-bottom:.4rem;">' + itemsHtml + devueltosHtml + '</div>' +
+      '<div id="dev-resumen-strip"></div>' +
+      '<div class="dev-wiz-nav-row">' +
+        '<button class="dev-wiz-btn-back" onclick="devWizAtras()">' + svgArL() + ' Volver</button>' +
+        '<button class="dev-wiz-btn-next" id="dev-btn-next" onclick="devWizSiguiente()" ' + (canAdvance() ? '' : 'disabled') + '>Continuar ' + svgArR() + '</button>' +
+      '</div>';
   }
 
-  // ══ PASO 2: Confirmar ═════════════════════════════════════════
+  // ══ PASO 2 ══
   function renderStep2() {
     if (!_prestamo) return '';
-    const pend    = _prestamo.items.filter(it => !it.devuelto);
-    const sel     = pend.filter(it => _escaneados[it.id]?.seleccionado);
-    const parcial = esDevolucionParcial();
+    var pend    = _prestamo.items.filter(function(it){ return !it.devuelto; });
+    var sel     = pend.filter(function(it){ return _escaneados[it.id] && _escaneados[it.id].seleccionado; });
+    var parcial = esDevolucionParcial();
 
-    const chipsHtml = sel.map(it => {
-      const cant = _escaneados[it.id]?.cantDevolver ?? it.cantidad;
-      const esc  = _escaneados[it.id]?.escaneado;
-      return `<span style="font-family:var(--font-mono);font-size:.72rem;margin:2px;
-                           background:${esc ? 'rgba(22,163,74,.1)' : 'rgba(9,77,146,.07)'};
-                           color:${esc ? '#15803d' : 'var(--navy)'};
-                           padding:.2rem .55rem;border-radius:6px;
-                           border:1px solid ${esc ? 'rgba(22,163,74,.2)' : 'rgba(9,77,146,.12)'};">
-               ${esc ? '✓ ' : ''}${it.producto.nombre} ×${cant}
-             </span>`;
+    var chipsHtml = sel.map(function(it) {
+      var cant = (_escaneados[it.id] && _escaneados[it.id].cantDevolver !== undefined) ? _escaneados[it.id].cantDevolver : it.cantidad;
+      var esc  = _escaneados[it.id] && _escaneados[it.id].escaneado;
+      return '<span style="font-family:var(--font-mono);font-size:.72rem;margin:2px;background:' + (esc ? 'rgba(22,163,74,.1)' : 'rgba(9,77,146,.07)') + ';color:' + (esc ? '#15803d' : 'var(--navy)') + ';padding:.2rem .55rem;border-radius:6px;border:1px solid ' + (esc ? 'rgba(22,163,74,.2)' : 'rgba(9,77,146,.12)') + ';">' + (esc ? '✓ ' : '') + it.producto.nombre + ' ×' + cant + '</span>';
     }).join('');
 
-    const tipoBadge = parcial
-      ? `<span style="font-size:.72rem;background:rgba(234,179,8,.1);color:#92400e;
-                      padding:.2rem .6rem;border-radius:6px;font-weight:700;
-                      border:1px solid rgba(234,179,8,.22);">
-           ☑️ Devolución parcial — el préstamo quedará como "Parcial"
-         </span>`
-      : `<span style="font-size:.72rem;background:rgba(22,163,74,.09);color:#15803d;
-                      padding:.2rem .6rem;border-radius:6px;font-weight:700;
-                      border:1px solid rgba(22,163,74,.2);">
-           ✅ Devolución total — el préstamo quedará como "Devuelto"
-         </span>`;
+    var tipoBadge = parcial
+      ? '<span style="font-size:.72rem;background:rgba(234,179,8,.1);color:#92400e;padding:.2rem .6rem;border-radius:6px;font-weight:700;border:1px solid rgba(234,179,8,.22);">☑️ Devolución parcial</span>'
+      : '<span style="font-size:.72rem;background:rgba(22,163,74,.09);color:#15803d;padding:.2rem .6rem;border-radius:6px;font-weight:700;border:1px solid rgba(22,163,74,.2);">✅ Devolución total</span>';
 
-    return `
-      <div class="dev-wiz-sec-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Revisión final
-      </div>
-
-      <!-- Tarjeta resumen — igual que paso 3 de préstamos ── -->
-      <div style="background:rgba(9,77,146,.03);border:1px solid rgba(9,77,146,.12);
-                  border-radius:var(--radius-md);padding:.85rem 1rem;margin-bottom:.75rem;">
-        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;
-                    color:var(--text-muted);font-weight:600;font-family:var(--font-mono);
-                    margin-bottom:.5rem;">Herramientas a devolver</div>
-        <div style="display:flex;flex-wrap:wrap;margin-bottom:.5rem;">${chipsHtml}</div>
-        <div>${tipoBadge}</div>
-      </div>
-
-      <!-- Tabla resumen — idéntica a préstamos ── -->
-      <div style="background:var(--bg-body);border-radius:var(--radius-md);
-                  border:1px solid var(--border-color);overflow:hidden;margin-bottom:.75rem;">
-        <div class="dev-summary-row" style="padding:7px 12px;">
-          <span style="font-size:.82rem;color:var(--text-muted);">Préstamo</span>
-          <span style="font-size:.88rem;font-weight:600;color:var(--text-main);">
-            #${_prestamo.id} — ${_prestamo.usuario}
-          </span>
-        </div>
-        <div class="dev-summary-row" style="padding:7px 12px;">
-          <span style="font-size:.82rem;color:var(--text-muted);">Ítems devueltos</span>
-          <span style="font-size:.88rem;font-weight:600;color:var(--text-main);">
-            ${sel.length} herramienta${sel.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-        <div class="dev-summary-row" style="padding:7px 12px;">
-          <span style="font-size:.82rem;color:var(--text-muted);">Tipo</span>
-          <span style="background:${parcial ? 'rgba(234,179,8,.1)' : 'rgba(9,77,146,.1)'};
-                       color:${parcial ? '#92400e' : 'var(--navy)'};
-                       border:1px solid ${parcial ? 'rgba(234,179,8,.22)' : 'rgba(9,77,146,.2)'};
-                       border-radius:20px;font-size:.72rem;font-weight:600;
-                       padding:2px 8px;font-family:var(--font-mono);">
-            ${parcial ? 'Parcial' : 'Total'}
-          </span>
-        </div>
-        <div class="dev-summary-row" style="padding:7px 12px;">
-          <span style="font-size:.82rem;color:var(--text-muted);">Estado resultante</span>
-          <span style="background:rgba(9,77,146,.1);color:var(--navy);
-                       border:1px solid rgba(9,77,146,.2);border-radius:20px;
-                       font-size:.72rem;font-weight:600;padding:2px 8px;
-                       font-family:var(--font-mono);">
-            ${parcial ? 'Parcial' : 'Devuelto'}
-          </span>
-        </div>
-      </div>
-
-      <!-- Motivo ── -->
-      <div class="dev-wiz-sec-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
-        Motivo
-        ${parcial
-          ? `<span style="color:var(--rust);font-size:.7rem;font-weight:700;margin-left:.2rem;">* obligatorio</span>`
-          : `<span style="color:var(--text-muted);font-size:.7rem;font-weight:400;margin-left:.2rem;">(opcional)</span>`}
-      </div>
-      <textarea id="dev-motivo-input" class="dev-wiz-textarea" rows="3"
-                placeholder="${parcial
-                  ? 'Explica por qué no se devuelven todas las herramientas… (obligatorio)'
-                  : 'Observaciones adicionales (opcional)…'}"
-                oninput="devUpdateBtn()"></textarea>
-      ${parcial ? `
-        <div style="display:flex;align-items:center;gap:.4rem;margin-top:.4rem;
-                    padding:.35rem .65rem;background:rgba(196,144,10,.08);
-                    border:1px solid rgba(196,144,10,.22);border-radius:var(--radius-sm);
-                    font-family:var(--font-ui);font-size:.76rem;color:#92400e;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-          </svg>
-          El motivo es obligatorio en devoluciones parciales.
-        </div>` : ''}
-
-      <div class="dev-wiz-nav-row">
-        <button class="dev-wiz-btn-back" onclick="devWizAtras()">${svgArL()} Editar</button>
-        <button class="dev-wiz-btn-save" id="dev-btn-next" onclick="devEnviar()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-            <polyline points="17 21 17 13 7 13 7 21"/>
-            <polyline points="7 3 7 8 15 8"/>
-          </svg>
-          Guardar devolución
-        </button>
-      </div>`;
+    return '<div class="dev-wiz-sec-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Revisión final</div>' +
+      '<div style="background:rgba(9,77,146,.03);border:1px solid rgba(9,77,146,.12);border-radius:var(--radius-md);padding:.85rem 1rem;margin-bottom:.75rem;">' +
+        '<div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600;font-family:var(--font-mono);margin-bottom:.5rem;">Herramientas a devolver</div>' +
+        '<div style="display:flex;flex-wrap:wrap;margin-bottom:.5rem;">' + chipsHtml + '</div>' +
+        '<div>' + tipoBadge + '</div>' +
+      '</div>' +
+      '<div style="background:var(--bg-body);border-radius:var(--radius-md);border:1px solid var(--border-color);overflow:hidden;margin-bottom:.75rem;">' +
+        '<div class="dev-summary-row" style="padding:7px 12px;"><span style="font-size:.82rem;color:var(--text-muted);">Préstamo</span><span style="font-size:.88rem;font-weight:600;color:var(--text-main);">#' + _prestamo.id + ' — ' + _prestamo.usuario + '</span></div>' +
+        '<div class="dev-summary-row" style="padding:7px 12px;"><span style="font-size:.82rem;color:var(--text-muted);">Ítems devueltos</span><span style="font-size:.88rem;font-weight:600;color:var(--text-main);">' + sel.length + ' herramienta' + (sel.length !== 1 ? 's' : '') + '</span></div>' +
+        '<div class="dev-summary-row" style="padding:7px 12px;"><span style="font-size:.82rem;color:var(--text-muted);">Tipo</span>' + tipoBadge + '</div>' +
+      '</div>' +
+      // Motivo — con validación inline (NO reinicia wizard)
+      '<div class="dev-wiz-sec-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>Motivo' +
+        (parcial ? '<span style="color:var(--rust);font-size:.7rem;font-weight:700;margin-left:.2rem;">* obligatorio</span>' : '<span style="color:var(--text-muted);font-size:.7rem;font-weight:400;margin-left:.2rem;">(opcional)</span>') +
+      '</div>' +
+      '<textarea id="dev-motivo-input" class="dev-wiz-textarea" rows="3" placeholder="' +
+        (parcial ? 'Explica por qué no se devuelven todas las herramientas… (obligatorio)' : 'Observaciones adicionales (opcional)…') +
+        '" oninput="devLimpiarAlertaMotivo()"></textarea>' +
+      (parcial ? '<div style="display:flex;align-items:center;gap:.4rem;margin-top:.4rem;padding:.35rem .65rem;background:rgba(196,144,10,.08);border:1px solid rgba(196,144,10,.22);border-radius:var(--radius-sm);font-family:var(--font-ui);font-size:.76rem;color:#92400e;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>El motivo es obligatorio en devoluciones parciales.</div>' : '') +
+      '<div class="dev-wiz-nav-row">' +
+        '<button class="dev-wiz-btn-back" onclick="devWizAtras()">' + svgArL() + ' Editar</button>' +
+        '<button class="dev-wiz-btn-save" id="dev-btn-next" onclick="devEnviar()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Guardar devolución</button>' +
+      '</div>';
   }
 
-  // ─── Navegación ───────────────────────────────────────────────
-  window.devWizSiguiente = function () {
-    if (!canAdvance()) return;
+  // ── Limpiar alerta motivo mientras escribe ──
+  window.devLimpiarAlertaMotivo = function() {
+    var panel = document.getElementById('dev-wiz-panel');
+    if (!panel) return;
+    var alerta = panel.querySelector('.dev-wiz-alert-inline');
+    var ta = document.getElementById('dev-motivo-input');
+    if (alerta && ta && ta.value.trim().length >= 10) {
+      alerta.remove();
+      ta.style.borderColor = '';
+    }
+  };
+
+  // ── Navegación ──
+  window.devWizSiguiente = function() {
+    if (!canAdvance()) {
+      // Mostrar alerta inline sin avanzar
+      if (_paso === 0) {
+        mostrarAlertaInline('dev-wiz-panel', 'Debes seleccionar un préstamo para continuar.');
+      } else if (_paso === 1) {
+        mostrarAlertaInline('dev-wiz-panel', 'Selecciona al menos una herramienta para devolver.');
+      }
+      return;
+    }
     if (_paso < 2) { _paso++; render(); }
   };
-  window.devWizAtras = function () {
+  window.devWizAtras = function() {
     if (_paso > 0) { _paso--; render(); }
   };
-  window.devUpdateBtn = function () { updateBtn(); };
+  window.devUpdateBtn = function() { updateBtn(); };
 
-  // ─── PASO 0: filtro de búsqueda ───────────────────────────────
-  window.devFiltrarPrestamos = function () {
-    const q   = (document.getElementById('dev-search-prestamos')?.value || '').toLowerCase().trim();
-    let vis   = 0;
-    document.querySelectorAll('#dev-loan-list .dev-loan-card').forEach(f => {
-      const ok = !q || (f.dataset.texto || f.textContent).toLowerCase().includes(q);
+  // ── Paso 0: filtro ──
+  window.devFiltrarPrestamos = function() {
+    var q = (document.getElementById('dev-search-prestamos') && document.getElementById('dev-search-prestamos').value || '').toLowerCase().trim();
+    var vis = 0;
+    document.querySelectorAll('#dev-loan-list .dev-loan-card').forEach(function(f) {
+      var ok = !q || (f.dataset.texto || f.textContent).toLowerCase().includes(q);
       f.style.display = ok ? '' : 'none';
       if (ok) vis++;
     });
-    const noRes = document.getElementById('dev-sin-resultados');
+    var noRes = document.getElementById('dev-sin-resultados');
     if (noRes) noRes.classList.toggle('d-none', vis > 0 || !q);
   };
 
-  window.devSeleccionarPrestamo = function (fila, id) {
-    // Selección local inmediata usando los datos ya disponibles en DEV_PRESTAMOS
-    const found = DEV_PRESTAMOS.find(p => p.id === id);
+  window.devSeleccionarPrestamo = function(fila, id) {
+    var found = DEV_PRESTAMOS.find(function(p){ return p.id === id; });
     if (!found) return;
-
     _prestamo   = found;
     _escaneados = {};
-    found.items.forEach(it => {
+    found.items.forEach(function(it) {
       if (!it.devuelto) {
         _escaneados[it.id] = { item: it, cantDevolver: it.cantidad, seleccionado: true, escaneado: false };
       }
     });
-
-    // Re-render solo el paso 0 para actualizar el radio ring visualmente
     renderProgress();
-    const panel = document.getElementById('dev-wiz-panel');
+    var panel = document.getElementById('dev-wiz-panel');
     if (panel) panel.innerHTML = renderStep0();
     updateBtn();
   };
 
-  // ─── PASO 1: Escáner ──────────────────────────────────────────
-  window.devProcesarScan = function () {
-    const input  = document.getElementById('dev-scanner-input');
-    const codigo = (input?.value || '').trim().toUpperCase();
+  // ── Paso 1: Escáner ──
+  window.devProcesarScan = function() {
+    var input  = document.getElementById('dev-scanner-input');
+    var codigo = (input && input.value || '').trim().toUpperCase();
     if (input) input.value = '';
-    if (!codigo || !_prestamo) { input?.focus(); return; }
+    if (!codigo || !_prestamo) { if (input) input.focus(); return; }
 
-    const encontrado = _prestamo.items.find(
-      it => !it.devuelto && it.producto.codigo_sku.toUpperCase() === codigo
-    );
+    var encontrado = _prestamo.items.find(function(it){
+      return !it.devuelto && it.producto.codigo_sku.toUpperCase() === codigo;
+    });
 
-    const showFb = (bg, bd, color, msg) => {
-      const fb = document.getElementById('dev-scan-feedback');
+    var showFb = function(bg, bd, color, msg) {
+      var fb = document.getElementById('dev-scan-feedback');
       if (!fb) return;
       fb.className  = 'dev-alert-strip';
-      fb.style.cssText = `background:${bg};border:1px solid ${bd};color:${color};`;
+      fb.style.cssText = 'background:' + bg + ';border:1px solid ' + bd + ';color:' + color + ';';
       fb.innerHTML  = msg;
       fb.classList.remove('d-none');
       clearTimeout(fb._t);
-      fb._t = setTimeout(() => fb.classList.add('d-none'), 3500);
+      fb._t = setTimeout(function(){ fb.classList.add('d-none'); }, 3500);
     };
 
     if (!encontrado) {
-      showFb('rgba(185,28,28,.07)', 'rgba(185,28,28,.22)', '#b91c1c',
-        `❌ &nbsp;"${codigo}" no coincide con ninguna herramienta de este préstamo.`);
-    } else if (_escaneados[encontrado.id]?.escaneado) {
-      showFb('rgba(234,179,8,.08)', 'rgba(234,179,8,.22)', '#92400e',
-        `⚠️ &nbsp;"${encontrado.producto.nombre}" ya fue escaneado.`);
+      showFb('rgba(185,28,28,.07)', 'rgba(185,28,28,.22)', '#b91c1c', '❌ &nbsp;"' + codigo + '" no coincide con ninguna herramienta de este préstamo.');
+    } else if (_escaneados[encontrado.id] && _escaneados[encontrado.id].escaneado) {
+      showFb('rgba(234,179,8,.08)', 'rgba(234,179,8,.22)', '#92400e', '⚠️ &nbsp;"' + encontrado.producto.nombre + '" ya fue escaneado.');
     } else {
       _escaneados[encontrado.id].escaneado    = true;
       _escaneados[encontrado.id].seleccionado = true;
-      showFb('rgba(22,163,74,.08)', 'rgba(22,163,74,.22)', '#15803d',
-        `✅ &nbsp;<strong>${encontrado.producto.nombre}</strong> confirmado.`);
+      showFb('rgba(22,163,74,.08)', 'rgba(22,163,74,.22)', '#15803d', '✅ &nbsp;<strong>' + encontrado.producto.nombre + '</strong> confirmado.');
       render();
     }
-    document.getElementById('dev-scanner-input')?.focus();
+    if (document.getElementById('dev-scanner-input')) document.getElementById('dev-scanner-input').focus();
   };
 
-  window.devToggleItem = function (id) {
+  window.devToggleItem = function(id) {
     if (!_escaneados[id]) return;
     _escaneados[id].seleccionado = !_escaneados[id].seleccionado;
     if (!_escaneados[id].seleccionado) _escaneados[id].escaneado = false;
     render();
   };
 
-  window.devCambiarCant = function (id, delta) {
+  window.devCambiarCant = function(id, delta) {
     if (!_escaneados[id]) return;
-    const max = _escaneados[id].item.cantidad;
-    _escaneados[id].cantDevolver = Math.min(max, Math.max(1,
-      (_escaneados[id].cantDevolver || max) + delta));
-    const el = document.getElementById(`dev-cant-${id}`);
+    var max = _escaneados[id].item.cantidad;
+    _escaneados[id].cantDevolver = Math.min(max, Math.max(1, (_escaneados[id].cantDevolver || max) + delta));
+    var el = document.getElementById('dev-cant-' + id);
     if (el) el.textContent = _escaneados[id].cantDevolver;
     devActualizarResumen();
   };
 
-  window.devToggleTodas = function () {
+  window.devToggleTodas = function() {
     if (!_prestamo) return;
-    const pend      = _prestamo.items.filter(it => !it.devuelto);
-    const algunaSel = pend.some(it => _escaneados[it.id]?.seleccionado);
-    pend.forEach(it => {
+    var pend = _prestamo.items.filter(function(it){ return !it.devuelto; });
+    var algunaSel = pend.some(function(it){ return _escaneados[it.id] && _escaneados[it.id].seleccionado; });
+    pend.forEach(function(it) {
       if (_escaneados[it.id]) {
         _escaneados[it.id].seleccionado = !algunaSel;
         if (!algunaSel) _escaneados[it.id].cantDevolver = it.cantidad;
@@ -1114,102 +1141,103 @@
   };
 
   function devActualizarResumen() {
-    const strip = document.getElementById('dev-resumen-strip');
+    var strip = document.getElementById('dev-resumen-strip');
     if (!strip || !_prestamo) return;
-    const pend  = _prestamo.items.filter(it => !it.devuelto);
-    const sel   = pend.filter(it => _escaneados[it.id]?.seleccionado);
-    const tot   = pend.length;
-    const todo  = sel.length === tot &&
-      sel.every(it => (_escaneados[it.id]?.cantDevolver ?? it.cantidad) === it.cantidad);
-
+    var pend  = _prestamo.items.filter(function(it){ return !it.devuelto; });
+    var sel   = pend.filter(function(it){ return _escaneados[it.id] && _escaneados[it.id].seleccionado; });
+    var tot   = pend.length;
+    var todo  = sel.length === tot && sel.every(function(it){ return (_escaneados[it.id] && _escaneados[it.id].cantDevolver !== undefined ? _escaneados[it.id].cantDevolver : it.cantidad) === it.cantidad; });
     if (!sel.length) {
-      strip.innerHTML = `<div class="dev-alert-strip" style="background:rgba(185,28,28,.07);border:1px solid rgba(185,28,28,.2);color:#b91c1c;">⚠️ &nbsp;Selecciona al menos una herramienta.</div>`;
+      strip.innerHTML = '<div class="dev-alert-strip" style="background:rgba(185,28,28,.07);border:1px solid rgba(185,28,28,.2);color:#b91c1c;">⚠️ &nbsp;Selecciona al menos una herramienta.</div>';
     } else if (todo) {
-      strip.innerHTML = `<div class="dev-alert-strip" style="background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2);color:#15803d;">✅ &nbsp;Devolución <strong>total</strong> — ${tot} herramienta${tot !== 1 ? 's' : ''}.</div>`;
+      strip.innerHTML = '<div class="dev-alert-strip" style="background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2);color:#15803d;">✅ &nbsp;Devolución <strong>total</strong> — ' + tot + ' herramienta' + (tot !== 1 ? 's' : '') + '.</div>';
     } else {
-      const det = sel.map(it => `${it.producto.nombre} ×${_escaneados[it.id]?.cantDevolver ?? it.cantidad}`).join(', ');
-      strip.innerHTML = `<div class="dev-alert-strip" style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);color:#92400e;">☑️ &nbsp;Devolución <strong>parcial</strong>: ${det}.</div>`;
+      var det = sel.map(function(it){ return it.producto.nombre + ' ×' + (_escaneados[it.id] && _escaneados[it.id].cantDevolver !== undefined ? _escaneados[it.id].cantDevolver : it.cantidad); }).join(', ');
+      strip.innerHTML = '<div class="dev-alert-strip" style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);color:#92400e;">☑️ &nbsp;Devolución <strong>parcial</strong>: ' + det + '.</div>';
     }
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────
   function esDevolucionParcial() {
     if (!_prestamo) return false;
-    const pend = _prestamo.items.filter(it => !it.devuelto);
-    const sel  = pend.filter(it => _escaneados[it.id]?.seleccionado);
-    return !(sel.length === pend.length &&
-      sel.every(it => (_escaneados[it.id]?.cantDevolver ?? it.cantidad) === it.cantidad));
+    var pend = _prestamo.items.filter(function(it){ return !it.devuelto; });
+    var sel  = pend.filter(function(it){ return _escaneados[it.id] && _escaneados[it.id].seleccionado; });
+    return !(sel.length === pend.length && sel.every(function(it){ return (_escaneados[it.id] && _escaneados[it.id].cantDevolver !== undefined ? _escaneados[it.id].cantDevolver : it.cantidad) === it.cantidad; }));
   }
 
-  // ─── Enviar formulario ────────────────────────────────────────
-  window.devEnviar = function () {
+  // ── Enviar — con validación inline sin reiniciar ──
+  window.devEnviar = function() {
     if (!_prestamo) return;
-    const parcial = esDevolucionParcial();
-    const motivo  = (document.getElementById('dev-motivo-input')?.value || '').trim();
-    if (parcial && !motivo) {
-      const inp = document.getElementById('dev-motivo-input');
-      if (inp) { inp.style.borderColor = '#c0392b'; inp.focus(); }
-      return;
-    }
-    const pend = _prestamo.items.filter(it => !it.devuelto);
-    const sel  = pend.filter(it => _escaneados[it.id]?.seleccionado);
+    var parcial = esDevolucionParcial();
+    var motivo  = (document.getElementById('dev-motivo-input') && document.getElementById('dev-motivo-input').value || '').trim();
 
-    const form = document.getElementById('form-devolucion-final');
-    form.querySelectorAll('input[data-dyn]').forEach(el => el.remove());
+    if (parcial && motivo.length < 10) {
+      // Alerta inline: NO reinicia wizard, NO va al paso 0
+      var ta = document.getElementById('dev-motivo-input');
+      if (ta) {
+        ta.style.borderColor = 'var(--rust)';
+        ta.style.boxShadow   = '0 0 0 3px rgba(152,71,62,.12)';
+        ta.focus();
+      }
+      mostrarAlertaInline('dev-wiz-panel', 'El motivo es obligatorio en devoluciones parciales (mínimo 10 caracteres).');
+      return; // ← NO envía ni avanza
+    }
+
+    var pend = _prestamo.items.filter(function(it){ return !it.devuelto; });
+    var sel  = pend.filter(function(it){ return _escaneados[it.id] && _escaneados[it.id].seleccionado; });
+
+    var form = document.getElementById('form-devolucion-final');
+    form.querySelectorAll('input[data-dyn]').forEach(function(el){ el.remove(); });
 
     document.getElementById('fin-prestamo-id').value      = _prestamo.id;
     document.getElementById('fin-devolucion-total').value = parcial ? 'false' : 'true';
     document.getElementById('fin-motivo-requerido').value = parcial ? 'true'  : 'false';
     document.getElementById('fin-motivo').value           = motivo;
 
-    sel.forEach(it => {
-      const i1 = document.createElement('input');
+    sel.forEach(function(it) {
+      var i1 = document.createElement('input');
       i1.type = 'hidden'; i1.name = 'items'; i1.value = it.id;
-      i1.setAttribute('data-dyn', '1'); form.appendChild(i1);
-
-      const i2 = document.createElement('input');
-      i2.type = 'hidden'; i2.name = `cantidad_${it.id}`;
-      i2.value = _escaneados[it.id]?.cantDevolver ?? it.cantidad;
-      i2.setAttribute('data-dyn', '1'); form.appendChild(i2);
+      i1.setAttribute('data-dyn','1'); form.appendChild(i1);
+      var i2 = document.createElement('input');
+      i2.type = 'hidden'; i2.name = 'cantidad_' + it.id;
+      i2.value = (_escaneados[it.id] && _escaneados[it.id].cantDevolver !== undefined) ? _escaneados[it.id].cantDevolver : it.cantidad;
+      i2.setAttribute('data-dyn','1'); form.appendChild(i2);
     });
     form.submit();
   };
 
-  // ─── Init y reset del modal ───────────────────────────────────
-  const modal = document.getElementById('modalCrear');
+  // ── Init modal ──
+  var modal = document.getElementById('modalCrear');
   if (modal) {
-    modal.addEventListener('shown.bs.modal', function () {
-      render();
-    });
-    modal.addEventListener('hidden.bs.modal', function () {
+    modal.addEventListener('shown.bs.modal', function() { render(); });
+    modal.addEventListener('hidden.bs.modal', function() {
       _paso = 0; _prestamo = null; _escaneados = {};
-      const panel = document.getElementById('dev-wiz-panel');
-      const bar   = document.getElementById('dev-wiz-progress-bar');
+      var panel = document.getElementById('dev-wiz-panel');
+      var bar   = document.getElementById('dev-wiz-progress-bar');
       if (panel) panel.innerHTML = '';
       if (bar)   bar.innerHTML   = '';
     });
   }
 
-  // ─── Auto-abrir modal si viene desde prestamo.html ────────────
-  const urlParams = new URLSearchParams(window.location.search);
-  const prestamoFromUrl = urlParams.get('prestamo');
+  // ── Auto-abrir desde prestamo.html ──
+  var urlParams = new URLSearchParams(window.location.search);
+  var prestamoFromUrl = urlParams.get('prestamo');
   if (prestamoFromUrl) {
-    const prestamoId = parseInt(prestamoFromUrl, 10);
-    const found = DEV_PRESTAMOS.find(p => p.id === prestamoId);
+    var prestamoId = parseInt(prestamoFromUrl, 10);
+    var found = DEV_PRESTAMOS.find(function(p){ return p.id === prestamoId; });
     if (found) {
       _prestamo = found;
       _escaneados = {};
-      found.items.forEach(it => {
+      found.items.forEach(function(it) {
         if (!it.devuelto) {
           _escaneados[it.id] = { item: it, cantDevolver: it.cantidad, seleccionado: true, escaneado: false };
         }
       });
       _paso = 0;
       renderProgress();
-      const panel = document.getElementById('dev-wiz-panel');
+      var panel = document.getElementById('dev-wiz-panel');
       if (panel) panel.innerHTML = renderStep0();
       updateBtn();
-      setTimeout(() => {
+      setTimeout(function() {
         bootstrap.Modal.getOrCreateInstance(modal).show();
       }, 100);
     }
@@ -1218,66 +1246,16 @@
 })();
 
 
-// ══════════════════════════════════════════════════════════════
-//  MODAL APROBAR DEVOLUCIÓN
-// ══════════════════════════════════════════════════════════════
-document.querySelectorAll('.btn-aprobar-devolucion').forEach(btn => {
-  btn.addEventListener('click', function () {
-    const id = this.dataset.id;
-    document.getElementById('aprobar-dev-pk').value      = id;
-    document.getElementById('aprobar-dev-id').textContent      = `#${id}`;
-    document.getElementById('aprobar-dev-id-body').textContent = `#${id}`;
-  });
-});
-
-// ══════════════════════════════════════════════════════════════
-//  MODAL RECHAZAR DEVOLUCIÓN
-// ══════════════════════════════════════════════════════════════
-document.querySelectorAll('.btn-rechazar-devolucion').forEach(btn => {
-  btn.addEventListener('click', function () {
-    const id = this.dataset.id;
-    document.getElementById('rechazar-dev-pk').value      = id;
-    document.getElementById('rechazar-dev-id').textContent      = `#${id}`;
-    document.getElementById('rechazar-dev-id-body').textContent = `#${id}`;
-    // Clear previous rejection reason if any
-    const motivoInput = document.querySelector('#formRechazarDevolucion textarea[name="motivo_rechazo"]');
-    if (motivoInput) {
-      motivoInput.value = '';
-      motivoInput.classList.remove('is-invalid'); // Remove any previous invalid state
-    }
-  });
-});
-
-// Add client-side validation for rejection reason
-document.getElementById('formRechazarDevolucion')?.addEventListener('submit', function(e) {
-  const motivoInput = this.querySelector('textarea[name="motivo_rechazo"]');
-  if (!motivoInput.value.trim()) {
-    e.preventDefault();
-    motivoInput.classList.add('is-invalid');
-    alert('Por favor, ingresa el motivo del rechazo.');
-  } else {
-    motivoInput.classList.remove('is-invalid');
-  }
-});
-
-{% if edit_id %}
-  // Este bloque de código parece ser un remanente o una implementación parcial.
-  // Para esta solicitud, nos centramos en los nuevos botones y modales.
-  // Si 'edit_id' se pasa, se debería decidir qué modal abrir aquí.
-  // Por ahora, se comenta para evitar errores, ya que 'modalEditar' ya no existe.
-  // bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAprobarDevolucion')).show();
-{% endif %}
-
-// ── Chevron filas desplegables ──
-document.querySelectorAll('[data-bs-target^="#detail-"]').forEach(function (btn) {
-  const target = document.querySelector(btn.getAttribute('data-bs-target'));
+// ══ Chevron filas desplegables ══
+document.querySelectorAll('[data-bs-target^="#detail-"]').forEach(function(btn) {
+  var target = document.querySelector(btn.getAttribute('data-bs-target'));
   if (!target) return;
-  target.addEventListener('show.bs.collapse', function () {
-    const icon = btn.querySelector('.row-chevron');
+  target.addEventListener('show.bs.collapse', function() {
+    var icon = btn.querySelector('.row-chevron');
     if (icon) icon.style.transform = 'rotate(90deg)';
   });
-  target.addEventListener('hide.bs.collapse', function () {
-    const icon = btn.querySelector('.row-chevron');
+  target.addEventListener('hide.bs.collapse', function() {
+    var icon = btn.querySelector('.row-chevron');
     if (icon) icon.style.transform = 'rotate(0deg)';
   });
 });
