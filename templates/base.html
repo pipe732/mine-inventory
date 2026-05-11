@@ -27,40 +27,7 @@
       </svg>
     </button>
 
-    <!-- Header con notificaciones -->
-    <header class="bg-dark text-light d-flex align-items-center px-4" style="height: var(--header-h); position: fixed; top: 0; left: 0; right: 0; z-index: 1040; box-shadow: 0 2px 12px rgba(9,77,146,.25);">
-      <div class="header-brand d-flex align-items-center gap-2">
-        <i class="bi bi-gem"></i>
-        <span>Mina Inventory</span>
-      </div>
-      
-      <div class="ms-auto d-flex align-items-center gap-3">
-        <!-- Botón de Notificaciones -->
-        <button id="btn-notif-bell" type="button" class="btn btn-link text-light position-relative" style="background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.13); padding: .6rem; border-radius: var(--radius-sm); transition: background .15s;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: .6rem; padding: .25rem .5rem;">0</span>
-        </button>
-
-        <!-- Menú de Usuario -->
-        <div class="dropdown">
-          <button class="btn btn-link text-light dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.13); padding: .42rem .75rem; border-radius: var(--radius-sm); transition: background .15s;">
-            <i class="bi bi-person-circle"></i>
-            <span class="d-none d-sm-inline">{{ request.session.usuario_nombre|default:"Usuario" }}</span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-dark">
-            <li><a class="dropdown-item" href="#">Perfil</a></li>
-            <li><a class="dropdown-item" href="#">Configuración</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-danger" href="#">Cerrar sesión</a></li>
-          </ul>
-        </div>
-      </div>
-    </header>
-
-    <div class="body-wrap" style="margin-top: var(--header-h);">
+    <div class="body-wrap">
 
       {# ── Aside condicional según rol ── #}
       {% with rol=request.session.usuario_rol|default:"" %}
@@ -78,6 +45,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/accesibilidad.js' %}"></script>
+
+    <!-- Botón flotante de notificaciones -->
+    <button id="btn-notif-bell" type="button" class="position-fixed" 
+            style="bottom: 2rem; right: 2rem; z-index: 1040; background: var(--navy); 
+                   color: var(--cream); border: none; width: 50px; height: 50px; 
+                   border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                   cursor: pointer; box-shadow: 0 4px 18px rgba(9,77,146,.38); transition: all .18s;
+                   font-size: 1.4rem;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+            style="display: none; font-size: .6rem; padding: .25rem .5rem; transform: translate(-25%, -25%);">0</span>
+    </button>
 
     <!-- Sidebar móvil toggle -->
     <script>
