@@ -27,7 +27,40 @@
       </svg>
     </button>
 
-    <div class="body-wrap">
+    <!-- Header con notificaciones -->
+    <header class="bg-dark text-light d-flex align-items-center px-4" style="height: var(--header-h); position: fixed; top: 0; left: 0; right: 0; z-index: 1040; box-shadow: 0 2px 12px rgba(9,77,146,.25);">
+      <div class="header-brand d-flex align-items-center gap-2">
+        <i class="bi bi-gem"></i>
+        <span>Mina Inventory</span>
+      </div>
+      
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <!-- Botón de Notificaciones -->
+        <button id="btn-notif-bell" type="button" class="btn btn-link text-light position-relative" style="background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.13); padding: .6rem; border-radius: var(--radius-sm); transition: background .15s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: .6rem; padding: .25rem .5rem;">0</span>
+        </button>
+
+        <!-- Menú de Usuario -->
+        <div class="dropdown">
+          <button class="btn btn-link text-light dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.13); padding: .42rem .75rem; border-radius: var(--radius-sm); transition: background .15s;">
+            <i class="bi bi-person-circle"></i>
+            <span class="d-none d-sm-inline">{{ request.session.usuario_nombre|default:"Usuario" }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li><a class="dropdown-item" href="#">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="body-wrap" style="margin-top: var(--header-h);">
 
       {# ── Aside condicional según rol ── #}
       {% with rol=request.session.usuario_rol|default:"" %}
@@ -68,5 +101,371 @@
     </script>
 
     {% block js %}{% endblock js %}
+    <!-- ══════════════════════════════════════════════════════════
+     PANEL DE NOTIFICACIONES — pegar justo antes de </body>
+     en templates/base.html
+════════════════════════════════════════════════════════════ -->
+
+<!-- Overlay invisible que cierra el panel al hacer click afuera -->
+<div id="notif-overlay"
+     style="display:none; position:fixed; inset:0; z-index:1049;"></div>
+
+<!-- Panel de notificaciones -->
+<div id="notif-panel"
+     style="display:none;
+            position:fixed;
+            bottom:0;
+            left:var(--aside-w);
+            width:340px;
+            max-height:min(520px, calc(100vh - 2rem));
+            background:var(--bg-surface);
+            border:1px solid var(--border-color);
+            border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+            box-shadow:6px 0 32px rgba(27,32,33,.18);
+            z-index:1050;
+            display:none;
+            flex-direction:column;
+            overflow:hidden;
+            transition:transform .2s ease, opacity .2s ease;">
+
+  <!-- Cabecera del panel -->
+  <div style="padding:.85rem 1.1rem .75rem;
+              background:var(--dark);
+              display:flex; align-items:center; justify-content:space-between;
+              border-bottom:2px solid var(--rust);
+              flex-shrink:0;">
+    <div style="display:flex; align-items:center; gap:.55rem;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+           stroke="var(--cream)" stroke-width="2" opacity=".8">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span style="font-family:var(--font-ui); font-weight:700; font-size:.9rem;
+                   color:var(--cream); letter-spacing:.04em;">
+        Notificaciones
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:.5rem;">
+      <span id="notif-panel-count"
+            style="font-family:var(--font-mono); font-size:.65rem;
+                   background:rgba(152,71,62,.35); color:var(--cream);
+                   padding:.12rem .5rem; border-radius:20px;
+                   border:1px solid rgba(152,71,62,.5);">
+        0
+      </span>
+      <button id="btn-notif-close"
+              type="button"
+              style="background:none; border:none; cursor:pointer;
+                     color:rgba(239,236,202,.45); padding:0; line-height:1;
+                     transition:color .15s;"
+              onmouseover="this.style.color='var(--cream)'"
+              onmouseout="this.style.color='rgba(239,236,202,.45)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Cuerpo scrollable -->
+  <div id="notif-list"
+       style="flex:1; overflow-y:auto; padding:.5rem .6rem;">
+
+    <!-- Estado de carga -->
+    <div id="notif-loading"
+         style="padding:2rem; text-align:center; color:var(--text-muted);
+                font-family:var(--font-ui); font-size:.85rem;">
+      <div style="display:inline-flex; gap:.3rem; align-items:center;">
+        <span style="width:8px; height:8px; border-radius:50%;
+                     background:var(--navy); opacity:.6;
+                     animation:notifDot 1s ease-in-out infinite;"></span>
+        <span style="width:8px; height:8px; border-radius:50%;
+                     background:var(--navy); opacity:.6;
+                     animation:notifDot 1s ease-in-out .2s infinite;"></span>
+        <span style="width:8px; height:8px; border-radius:50%;
+                     background:var(--navy); opacity:.6;
+                     animation:notifDot 1s ease-in-out .4s infinite;"></span>
+      </div>
+      <div style="margin-top:.5rem;">Cargando…</div>
+    </div>
+
+    <!-- Contenido dinámico (inyectado por JS) -->
+    <div id="notif-items" style="display:none;"></div>
+
+    <!-- Estado vacío -->
+    <div id="notif-empty" style="display:none;
+         padding:2.5rem 1rem; text-align:center;">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none"
+           stroke="var(--text-muted)" stroke-width="1.2"
+           style="opacity:.3; display:block; margin:0 auto .75rem;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <p style="font-family:var(--font-ui); color:var(--text-muted);
+                font-size:.85rem; margin:0; font-weight:600;">
+        Todo en orden
+      </p>
+      <p style="font-family:var(--font-ui); color:var(--text-muted);
+                font-size:.75rem; margin:.25rem 0 0; opacity:.7;">
+        No hay notificaciones pendientes
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Pie del panel -->
+  <div style="padding:.55rem .9rem;
+              border-top:1px solid var(--border-color);
+              background:rgba(27,32,33,.03);
+              flex-shrink:0;
+              display:flex; align-items:center; justify-content:space-between;">
+    <span id="notif-timestamp"
+          style="font-family:var(--font-mono); font-size:.62rem; color:var(--text-muted);">
+      —
+    </span>
+    <button id="btn-notif-refresh"
+            type="button"
+            style="background:none; border:none; cursor:pointer;
+                   color:var(--text-muted); font-family:var(--font-ui);
+                   font-size:.72rem; font-weight:600; padding:0;
+                   display:flex; align-items:center; gap:.3rem;
+                   transition:color .15s;"
+            onmouseover="this.style.color='var(--navy)'"
+            onmouseout="this.style.color='var(--text-muted)'">
+      <svg id="notif-refresh-icon" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+      </svg>
+      Actualizar
+    </button>
+  </div>
+</div>
+
+
+
+
+
+<!-- ══ LÓGICA JS DEL PANEL ══ -->
+<script>
+(function () {
+
+  var panel        = document.getElementById('notif-panel');
+  var overlay      = document.getElementById('notif-overlay');
+  var badge        = document.getElementById('notif-badge');
+  var panelCount   = document.getElementById('notif-panel-count');
+  var notifItems   = document.getElementById('notif-items');
+  var notifLoading = document.getElementById('notif-loading');
+  var notifEmpty   = document.getElementById('notif-empty');
+  var timestamp    = document.getElementById('notif-timestamp');
+  var btnRefresh   = document.getElementById('btn-notif-refresh');
+  var btnClose     = document.getElementById('btn-notif-close');
+  var btnBell      = document.getElementById('btn-notif-bell');
+  var refreshIcon  = document.getElementById('notif-refresh-icon');
+
+  var _panelOpen    = false;
+  var _lastCount    = 0;
+  var _fetching     = false;
+
+  // ── Iconos SVG por tipo ─────────────────────────────────────
+  var ICONS = {
+    'clock': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    'exclamation-circle': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    'alarm': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M5 3 2 6M22 6l-3-3M12 9v4l2 2"/><line x1="12" y1="1" x2="12" y2="3"/></svg>',
+    'arrow-counterclockwise': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>',
+    'box-seam': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+    'hourglass-split': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>',
+  };
+
+  // ── Abrir / cerrar panel ────────────────────────────────────
+  function openPanel() {
+    if (!panel) return;
+    _panelOpen = true;
+    panel.style.display    = 'flex';
+    overlay.style.display  = 'block';
+    // Pequeña animación de entrada
+    panel.style.opacity   = '0';
+    panel.style.transform = 'translateX(-10px)';
+    requestAnimationFrame(function() {
+      panel.style.transition = 'transform .2s ease, opacity .2s ease';
+      panel.style.opacity    = '1';
+      panel.style.transform  = 'translateX(0)';
+    });
+    fetchNotifications();
+  }
+
+  function closePanel() {
+    if (!panel) return;
+    _panelOpen = false;
+    panel.style.transition = 'transform .15s ease, opacity .15s ease';
+    panel.style.opacity    = '0';
+    panel.style.transform  = 'translateX(-10px)';
+    setTimeout(function() {
+      panel.style.display   = 'none';
+      panel.style.transform = '';
+      panel.style.opacity   = '';
+    }, 160);
+    overlay.style.display = 'none';
+  }
+
+  if (btnBell) {
+    btnBell.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _panelOpen ? closePanel() : openPanel();
+    });
+    btnBell.addEventListener('mouseover', function() {
+      this.style.background = 'rgba(255,255,255,.08)';
+    });
+    btnBell.addEventListener('mouseout', function() {
+      this.style.background = 'rgba(255,255,255,.04)';
+    });
+  }
+
+  if (btnClose)   btnClose.addEventListener('click', closePanel);
+  if (overlay)    overlay.addEventListener('click', closePanel);
+  if (btnRefresh) btnRefresh.addEventListener('click', function() {
+    if (_fetching) return;
+    // Animar icono de actualizar
+    refreshIcon.style.transition  = 'transform .5s ease';
+    refreshIcon.style.transform   = 'rotate(360deg)';
+    setTimeout(function() { refreshIcon.style.transform = 'rotate(0deg)'; }, 550);
+    fetchNotifications(true);
+  });
+
+  // ── Fetch notificaciones ────────────────────────────────────
+  function fetchNotifications(force) {
+    if (_fetching && !force) return;
+    _fetching = true;
+
+    // Mostrar estado de carga solo si panel está vacío
+    if (notifItems.innerHTML === '' || force) {
+      notifLoading.style.display = 'block';
+      notifItems.style.display   = 'none';
+      notifEmpty.style.display   = 'none';
+    }
+
+    fetch('/home/notificaciones/', {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      renderNotifications(data.items, data.total);
+      updateBadge(data.total);
+    })
+    .catch(function() {
+      notifLoading.style.display = 'none';
+      notifEmpty.style.display   = 'block';
+    })
+    .finally(function() { _fetching = false; });
+  }
+
+  // ── Renderizar items ────────────────────────────────────────
+  function renderNotifications(items, total) {
+    notifLoading.style.display = 'none';
+
+    if (!total || !items || !items.length) {
+      notifItems.style.display = 'none';
+      notifEmpty.style.display = 'block';
+      panelCount.textContent   = '0';
+      return;
+    }
+
+    notifEmpty.style.display   = 'none';
+    panelCount.textContent     = total;
+    notifItems.style.display   = 'block';
+    notifItems.innerHTML       = '';
+
+    items.forEach(function(item, idx) {
+      var a  = document.createElement('a');
+      a.href = item.url || '#';
+      a.className = 'notif-item-card';
+      a.style.animationDelay = (idx * 55) + 'ms';
+
+      var iconHtml = ICONS[item.icono] || ICONS['alarm'];
+      var bgAlpha  = '0.1';
+      var brdAlpha = '0.2';
+
+      a.innerHTML =
+        '<div class="notif-icon-wrap" style="background:' + hexToRgba(item.color, bgAlpha) + '; border:1px solid ' + hexToRgba(item.color, brdAlpha) + '; color:' + item.color + ';">' +
+          iconHtml +
+        '</div>' +
+        '<div style="flex:1; min-width:0;">' +
+          '<div class="notif-item-title">' + escH(item.titulo) + '</div>' +
+          '<div class="notif-item-desc">' + escH(item.desc) + '</div>' +
+        '</div>' +
+        '<div class="notif-item-arrow">' +
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+        '</div>';
+
+      notifItems.appendChild(a);
+    });
+
+    // Actualizar timestamp
+    var now = new Date();
+    timestamp.textContent = 'Actualizado ' + now.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  // ── Actualizar badge en campana ─────────────────────────────
+  function updateBadge(count) {
+    if (!badge) return;
+    if (count > 0) {
+      var prev = _lastCount;
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'inline-flex';
+      badge.classList.add('notif-has-items');
+      // Agitar campana si aparecieron notificaciones nuevas
+      if (count > prev && btnBell) {
+        var bellSvg = btnBell.querySelector('svg');
+        if (bellSvg) {
+          bellSvg.classList.add('bell-shake');
+          setTimeout(function() { bellSvg.classList.remove('bell-shake'); }, 650);
+        }
+      }
+    } else {
+      badge.style.display = 'none';
+      badge.classList.remove('notif-has-items');
+    }
+    _lastCount = count;
+  }
+
+  // ── Polling cada 90 segundos para actualizar el badge ──────
+  function pollBadge() {
+    fetch('/home/notificaciones/', {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      updateBadge(data.total);
+      if (_panelOpen) renderNotifications(data.items, data.total);
+    })
+    .catch(function() {});
+  }
+  // Primera consulta al cargar la página
+  setTimeout(pollBadge, 1200);
+  // Polling periódico
+  setInterval(pollBadge, 90000);
+
+  // ── Helpers ────────────────────────────────────────────────
+  function escH(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function hexToRgba(hex, alpha) {
+    if (!hex || !hex.startsWith('#')) return 'rgba(9,77,146,' + alpha + ')';
+    var r = parseInt(hex.slice(1,3),16);
+    var g = parseInt(hex.slice(3,5),16);
+    var b = parseInt(hex.slice(5,7),16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
+
+})();
+</script>
   </body>
 </html>
