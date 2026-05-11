@@ -1,6 +1,7 @@
 # devoluciones/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.utils import timezone
 from .models import Devolucion
 from prestamo.models import Prestamo, ItemPrestamo
 from common.mixins import sesion_requerida   
@@ -31,6 +32,15 @@ def devoluciones_view(request):
             if not items_ids:
                 errores.append('Debes seleccionar al menos un ítem.')
 
+            prestamo = None
+            if prestamo_id:
+                try:
+                    prestamo = Prestamo.objects.get(pk=prestamo_id)
+                    if prestamo.fecha_vencimiento and prestamo.fecha_vencimiento < timezone.localdate():
+                        errores.append('No se puede devolver un préstamo con fecha de vencimiento en el pasado.')
+                except Prestamo.DoesNotExist:
+                    errores.append('Préstamo no encontrado.')
+
             if errores:
                 for e in errores:
                     messages.error(request, e)
@@ -40,7 +50,6 @@ def devoluciones_view(request):
                     prestamo=prestamo,
                     motivo=motivo,
                     devolucion_total=devolucion_total,
-                    estado='pendiente',
                 )
                 items = ItemPrestamo.objects.filter(pk__in=items_ids, prestamo=prestamo)
                 devolucion.items.set(items)
@@ -61,17 +70,11 @@ def devoluciones_view(request):
 
         elif action == 'editar':
             pk           = request.POST.get('devolucion_id')
-            nuevo_estado = request.POST.get('estado')
             instancia    = get_object_or_404(Devolucion, pk=pk)
 
-            if nuevo_estado in ['aprobada', 'rechazada']:
-                instancia.estado = nuevo_estado
-                instancia.save(update_fields=['estado', 'fecha_actualizacion'])
-                messages.success(request, f'Devolución #{pk} actualizada correctamente.')
-                return redirect('devoluciones')
-            else:
-                messages.error(request, 'Estado no válido.')
-                edit_id = pk
+            # No hay estado que editar, solo motivo
+            messages.info(request, f'Devolución #{pk} no editable.')
+            return redirect('devoluciones')
 
     devoluciones = Devolucion.objects.select_related('prestamo').prefetch_related('items__producto').all()
 
@@ -82,12 +85,6 @@ def devoluciones_view(request):
         .prefetch_related('items__producto')
         .order_by('-fecha_prestamo')
     )
-
-    for d in devoluciones.filter(estado='rechazada'):
-        messages.warning(
-            request,
-            f'⚠️ La devolución #{d.id} (Préstamo #{d.prestamo_id}) está marcada como rechazada.'
-        )
 
     return render(request, 'devoluciones.html', {
         'edit_id':           edit_id,

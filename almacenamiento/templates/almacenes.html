@@ -7,7 +7,9 @@
     --card-bg:        #f5f0eb;
     --card-border:    #e0d8cf;
     --card-radius:    14px;
-    --header-bg:      #ece6df;
+    --header-bg:      #ece6df;}
+
+    
     --header-color:   #3a3530;
     --badge-bg:       #f5f0eb;
     --badge-border:   #c8a98a;
@@ -171,6 +173,36 @@
     color: var(--td-muted);
     font-size: 13px;
   }
+  
+  /* ── Estilos animaciones KPI ── */
+  .kpi-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .kpi-card.kpi-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .kpi-accent-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 4px 4px 0 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.65s ease 0.2s;
+  }
+  .kpi-card.kpi-visible .kpi-accent-bar {
+    transform: scaleX(1);
+  }
 </style>
  
 <div class="container mt-4">
@@ -182,6 +214,30 @@
     <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalAlmacen">
       ➕ Nuevo Almacén
     </button>
+  </div>
+
+  <!-- ══ TARJETAS KPI ══ -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;" data-kpi-delay="0">
+        <div class="kpi-accent-bar" style="background:#378ADD;"></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+          <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted);">Almacenes</span>
+        </div>
+        <div class="kpi-number" data-target="{{ total_almacenes }}" style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; color:var(--text-main); line-height:1;">0</div>
+        <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted); margin-top:.3rem;">registro{{ total_almacenes|pluralize }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;" data-kpi-delay="130">
+        <div class="kpi-accent-bar" style="background:#1D9E75;"></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+          <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted);">Estantes</span>
+        </div>
+        <div class="kpi-number" data-target="{{ total_estantes }}" style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; color:var(--text-main); line-height:1;">0</div>
+        <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted); margin-top:.3rem;">registro{{ total_estantes|pluralize }}</div>
+      </div>
+    </div>
   </div>
  
   <div class="reg-card">
@@ -410,5 +466,31 @@
     new bootstrap.Modal(document.getElementById('modalEliminarAlmacen')).show();
   }
 </script>
- 
+
+<script>
+  // ── Animación KPI ──
+  document.addEventListener('DOMContentLoaded', function () {
+    function animarContador(el, target, duracion) {
+      var inicio = performance.now();
+      function paso(ahora) {
+        var p = Math.min((ahora - inicio) / duracion, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(paso);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(paso);
+    }
+    document.querySelectorAll('.kpi-card').forEach(function (card) {
+      var delay = parseInt(card.getAttribute('data-kpi-delay')) || 0;
+      setTimeout(function () {
+        card.classList.add('kpi-visible');
+        card.querySelectorAll('.kpi-number').forEach(function (num) {
+          animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 950);
+        });
+      }, delay + 150);
+    });
+  });
+</script>
+
 {% endblock %}
