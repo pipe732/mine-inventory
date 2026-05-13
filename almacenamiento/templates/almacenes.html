@@ -7,9 +7,7 @@
     --card-bg:        #f5f0eb;
     --card-border:    #e0d8cf;
     --card-radius:    14px;
-    --header-bg:      #ece6df;}
-
-    
+    --header-bg:      #ece6df;
     --header-color:   #3a3530;
     --badge-bg:       #f5f0eb;
     --badge-border:   #c8a98a;
@@ -30,6 +28,10 @@
     --stock-bg:       #e8f5e9;
     --stock-color:    #2e7d32;
     --stock-dot:      #43a047;
+    --btn-eye-bg:     #f5f0eb;
+    --btn-eye-border: #c8b8a8;
+    --btn-eye-color:  #7a4f2e;
+    --btn-eye-hover:  #ece6df;
   }
  
   /* ── Variables modo oscuro ── */
@@ -58,6 +60,10 @@
     --stock-bg:       #1e2230;
     --stock-color:    #6b7280;
     --stock-dot:      #6b7280;
+    --btn-eye-bg:     #1e2230;
+    --btn-eye-border: #3a4055;
+    --btn-eye-color:  #8ab4d4;
+    --btn-eye-hover:  #2a3045;
   }
  
   .reg-card {
@@ -142,39 +148,70 @@
     border-radius: 50%;
     background: var(--stock-dot);
   }
+  /* ── Ajuste fino botones acción (Bootstrap hace el peso) ── */
   .btn-reg-edit,
-  .btn-reg-del {
-    display: inline-flex;
+  .btn-reg-del,
+  .btn-reg-mant,
+  .btn-reg-eye {
+    display: inline-flex !important;
     align-items: center;
     gap: 5px;
     font-size: 12px;
     font-weight: 500;
-    padding: 5px 13px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    text-decoration: none;
+    padding: 4px 11px;
   }
-  .btn-reg-edit {
-    background: var(--btn-edit-bg);
-    border: 1px solid var(--btn-edit-border);
-    color: var(--btn-edit-color);
+  .btn-reg-edit svg,
+  .btn-reg-del  svg,
+  .btn-reg-mant svg,
+  .btn-reg-eye  svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
   }
-  .btn-reg-edit:hover { background: var(--btn-edit-hover); }
-  .btn-reg-del {
-    background: var(--btn-del-bg);
-    border: 1px solid var(--btn-del-border);
-    color: var(--btn-del-color);
-  }
-  .btn-reg-del:hover { background: var(--btn-del-hover); }
+
   .reg-empty {
     text-align: center;
     padding: 48px 20px;
     color: var(--td-muted);
     font-size: 13px;
   }
+
+  /* ── Modal detalles almacén ── */
+  #modalDetallesAlmacen .modal-content {
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .detalle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--row-border);
+    gap: 16px;
+  }
+  .detalle-row:last-child { border-bottom: none; }
+  .detalle-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--td-muted);
+    min-width: 110px;
+    padding-top: 2px;
+  }
+  .detalle-val {
+    font-size: 13px;
+    color: var(--td-color);
+    text-align: right;
+    word-break: break-word;
+    flex: 1;
+  }
   
-  /* ── Estilos animaciones KPI ── */
+  /* ── Animaciones KPI ── */
   .kpi-card {
     opacity: 0;
     transform: translateY(20px);
@@ -266,20 +303,41 @@
       </thead>
       <tbody>
         {% for almacen in almacenes %}
-        <tr>
+        <tr
+          data-alm-id="{{ almacen.id }}"
+          data-alm-nombre="{{ almacen.nombre|escapejs }}"
+          data-alm-detalles="{{ almacen.detalles|default:''|escapejs }}"
+          data-alm-capacidad="{{ almacen.capacidad|default:'' }}"
+          data-alm-fecha="{{ almacen.fecha_creacion|date:'d/m/Y H:i' }}"
+        >
           <td>{{ almacen.id }}</td>
           <td class="td-bold">
-  <a href="{% url 'detalle_almacen' almacen.pk %}" 
-     style="color:inherit; text-decoration:none; display:flex; align-items:center; gap:6px;">
-    {{ almacen.nombre }}
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-      <polyline points="15 3 21 3 21 9"/>
-      <line x1="10" y1="14" x2="21" y2="3"/>
-    </svg>
-  </a>
-</td>
-          <td>{{ almacen.detalles|default:"—" }}</td>
+            <a href="{% url 'detalle_almacen' almacen.pk %}"
+               style="color:inherit; text-decoration:none; display:flex; align-items:center; gap:6px;">
+              {{ almacen.nombre }}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
+          </td>
+
+          <!-- ── Columna Detalles: botón ojito ── -->
+          <td>
+            {% if almacen.detalles %}
+              <button class="btn btn-outline-secondary btn-sm btn-reg-eye btn-ver-detalle" title="Ver detalles">
+                <svg viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Ver
+              </button>
+            {% else %}
+              <span class="td-muted">—</span>
+            {% endif %}
+          </td>
+
           <td>
             {% if almacen.capacidad %}
               <span class="stock-badge">
@@ -291,15 +349,19 @@
             {% endif %}
           </td>
           <td>{{ almacen.fecha_creacion|date:"d/m/Y H:i" }}</td>
-          <td style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button class="btn-reg-edit"
-                    onclick="abrirEditarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}','{{ almacen.detalles|default:''|escapejs }}','{{ almacen.capacidad|default:'' }}')">
-              ✏️ Editar
-            </button>
-            <button class="btn-reg-del"
-                    onclick="abrirEliminarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}')">
-              🗑️ Eliminar
-            </button>
+          <td>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary btn-sm btn-reg-edit"
+                      onclick="abrirEditarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}','{{ almacen.detalles|default:''|escapejs }}','{{ almacen.capacidad|default:'' }}')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar
+              </button>
+              <button class="btn btn-outline-danger btn-sm btn-reg-del"
+                      onclick="abrirEliminarAlmacen('{{ almacen.pk }}','{{ almacen.nombre|escapejs }}')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                Eliminar
+              </button>
+            </div>
           </td>
         </tr>
         {% empty %}
@@ -315,6 +377,49 @@
   </div>
 </div>
  
+<!-- ══ Modal Ver Detalles ══ -->
+<div class="modal fade" id="modalDetallesAlmacen" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Detalles del Almacén
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem 1.5rem;">
+        <div class="detalle-row">
+          <span class="detalle-label">ID</span>
+          <span class="detalle-val" id="det_id">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Nombre</span>
+          <span class="detalle-val" id="det_nombre">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Descripción</span>
+          <span class="detalle-val" id="det_detalles">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Capacidad</span>
+          <span class="detalle-val" id="det_capacidad">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Fecha creación</span>
+          <span class="detalle-val" id="det_fecha">—</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Modal Crear ── -->
 <div class="modal fade" id="modalAlmacen" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -339,7 +444,6 @@
             <label class="form-label fw-semibold small">CAPACIDAD</label>
             {{ form.capacidad }}
           </div>
-          <!-- ── Errores al crear ── -->
           {% if form.errors %}
             <div class="alert alert-danger py-2 small mb-0">
               {% for field, errors in form.errors.items %}
@@ -372,7 +476,6 @@
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="almacen_id" id="edit_almacen_id">
         <div class="modal-body">
-          <!-- ── Errores al editar ── -->
           {% if form_editar.errors %}
             <div class="alert alert-danger py-2 small">
               {% for field, errors in form_editar.errors.items %}
@@ -452,6 +555,21 @@
 {% endif %}
  
 <script>
+  /* ── Abre modal de detalles (ojito) — lee data-* del <tr> padre ── */
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-ver-detalle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        document.getElementById('det_id').textContent        = tr.dataset.almId;
+        document.getElementById('det_nombre').textContent    = tr.dataset.almNombre;
+        document.getElementById('det_detalles').textContent  = tr.dataset.almDetalles || '—';
+        document.getElementById('det_capacidad').textContent = tr.dataset.almCapacidad || '—';
+        document.getElementById('det_fecha').textContent     = tr.dataset.almFecha;
+        new bootstrap.Modal(document.getElementById('modalDetallesAlmacen')).show();
+      });
+    });
+  });
+
   function abrirEditarAlmacen(pk, nombre, detalles, capacidad) {
     document.getElementById('edit_almacen_id').value        = pk;
     document.getElementById('edit_almacen_nombre').value    = nombre;
@@ -468,7 +586,7 @@
 </script>
 
 <script>
-  // ── Animación KPI ──
+  /* ── Animación KPI ── */
   document.addEventListener('DOMContentLoaded', function () {
     function animarContador(el, target, duracion) {
       var inicio = performance.now();
