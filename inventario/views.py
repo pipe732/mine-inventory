@@ -88,7 +88,9 @@ def inventario(request):
             if form.is_valid():
                 sku = form.cleaned_data.get("codigo_sku", "")
 
-                if Producto.objects.filter(codigo_sku__iexact=sku).exclude(pk=pk).exists():
+                if sku.strip().lower() != producto.codigo_sku.strip().lower():
+                    messages.error(request, "No se puede modificar el código / SKU una vez registrado.")
+                elif Producto.objects.filter(codigo_sku__iexact=sku).exclude(pk=pk).exists():
                     messages.error(request, f'El código / SKU "{sku}" ya está en uso.')
                 else:
                     try:
