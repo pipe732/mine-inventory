@@ -209,9 +209,13 @@ def inventario(request):
     total_stock = productos.aggregate(s=Sum("stock"))["s"] or 0
     sin_stock = productos.filter(stock=0).count()
     stock_bajo = productos.filter(stock__lte=5).count()
+    alertas_stock = list(productos.filter(stock__lte=5).values_list('nombre', 'stock'))
+    hay_alertas = len(alertas_stock) > 0
 
     context = {
         "productos": productos,
+        "alertas_stock": alertas_stock,
+        "hay_alertas": hay_alertas,
         "categorias": categorias,
         "almacenes_lista": Almacen.objects.all(),
         "estantes": Estante.objects.all(),
