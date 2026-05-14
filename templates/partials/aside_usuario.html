@@ -70,7 +70,55 @@
   <!-- ── Usuario + logout al fondo ── -->
   <div class="nav-bottom">
     <hr class="opacity-10 mx-3 my-2">
+{# templates/partials/notificaciones_bell.html #}
+{# Incluir en nav-bottom de aside_admin.html y aside_usuario.html, ANTES del dropup #}
 
+<!-- ══ CAMPANITA DE NOTIFICACIONES ══ -->
+<div style="padding:.4rem .75rem .2rem; position:relative;">
+  <button id="btn-notif-bell"
+          type="button"
+          aria-label="Notificaciones"
+          style="width:100%; display:flex; align-items:center; gap:.65rem;
+                 padding:.48rem .75rem;
+                 background:rgba(255,255,255,.04);
+                 border:1px solid rgba(255,255,255,.07);
+                 border-radius:.5rem;
+                 color:rgba(239,236,202,.72);
+                 font-family:var(--font-ui);
+                 font-size:.86rem;
+                 cursor:pointer;
+                 transition:background .15s;
+                 position:relative;">
+
+    <!-- Icono campana -->
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.8" style="flex-shrink:0; opacity:.7;">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+
+    <span class="flex-grow-1 text-start">Notificaciones</span>
+
+    <!-- Badge contador -->
+    <span id="notif-badge"
+          style="display:none;
+                 min-width:18px; height:18px;
+                 padding:0 5px;
+                 border-radius:20px;
+                 background:var(--rust);
+                 color:#fff;
+                 font-family:var(--font-mono);
+                 font-size:.6rem;
+                 font-weight:700;
+                 display:none;
+                 align-items:center;
+                 justify-content:center;
+                 line-height:1;">
+      0
+    </span>
+
+  </button>
+</div>
     <div class="dropup px-2 pb-2">
       <button type="button"
               class="btn w-100 d-flex align-items-center gap-2 px-3 py-2 dropdown-toggle"
