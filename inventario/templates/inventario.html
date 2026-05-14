@@ -92,6 +92,36 @@
       </svg>
       Nueva Herramienta
     </button>
+    <div class="stock-notif-wrapper">
+      <button id="btn-stock-bell" type="button" class="btn-outline-mine btn-icon"
+              aria-expanded="false" aria-controls="stock-notif-panel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M18 8a6 6 0 0 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        {% if alertas_stock|length > 0 %}
+          <span class="notif-count">{{ alertas_stock|length }}</span>
+        {% endif %}
+      </button>
+      <div id="stock-notif-panel" class="stock-notif-panel">
+        <div class="stock-notif-header">
+          <span>Alertas de stock</span>
+          <button type="button" id="btn-stock-close" class="stock-notif-close" aria-label="Cerrar alertas">×</button>
+        </div>
+        <div class="stock-notif-items">
+          {% if alertas_stock %}
+            {% for nombre, stock in alertas_stock %}
+              <div class="stock-notif-item">
+                <div class="stock-notif-name">{{ nombre }}</div>
+                <div class="stock-notif-value">{% if stock == 0 %}Sin stock{% else %}{{ stock }} ud.{% endif %}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="stock-notif-empty">No hay alertas de stock bajo.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
  
@@ -143,6 +173,116 @@
   .badge-ubicacion svg {
     flex-shrink: 0;
     opacity: .7;
+  }
+  .btn-icon {
+    position: relative;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .65rem;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+  }
+  .btn-icon:hover {
+    background: rgba(0,0,0,.05);
+  }
+  .stock-notif-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .notif-count {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    background: #d64541;
+    color: #fff;
+  }
+  .stock-notif-panel {
+    position: absolute;
+    top: calc(100% + .55rem);
+    right: 0;
+    width: min(330px, 100vw - 2rem);
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(46,61,73,.14);
+    padding: .85rem;
+    display: none;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 30;
+  }
+  .stock-notif-panel.open {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .stock-notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .8rem;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: .9rem;
+  }
+  .stock-notif-close {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+  .stock-notif-items {
+    max-height: 320px;
+    overflow-y: auto;
+    display: grid;
+    gap: .5rem;
+  }
+  .stock-notif-item {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    align-items: center;
+    padding: .75rem .85rem;
+    border-radius: 14px;
+    background: rgba(245, 241, 237, .8);
+    font-size: .88rem;
+    color: var(--text-main);
+  }
+  .stock-notif-item:last-child {
+    margin-bottom: 0;
+  }
+  .stock-notif-value {
+    font-weight: 700;
+    color: #b46414;
+    white-space: nowrap;
+  }
+  .stock-notif-empty {
+    padding: .9rem .85rem;
+    border-radius: 14px;
+    background: rgba(245,245,245,.9);
+    color: var(--text-muted);
+    font-size: .88rem;
+    text-align: center;
   }
 </style>
  
@@ -631,7 +771,7 @@
             <div class="col-md-4">
               <label class="form-label">Código / SKU *</label>
               <input type="text" name="codigo_sku" id="edit_codigo_sku"
-                     class="form-control" required>
+                     class="form-control" readonly required>
             </div>
             <div class="col-md-8">
               <label class="form-label">Nombre *</label>
@@ -1123,6 +1263,44 @@
     document.getElementById('mant_titulo_producto').textContent = '[' + sku + '] ' + nombre;
     new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
   }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var stockBellButton = document.getElementById('btn-stock-bell');
+    var stockNotifPanel = document.getElementById('stock-notif-panel');
+    var stockNotifClose = document.getElementById('btn-stock-close');
+
+    function cerrarStockPanel() {
+      if (!stockNotifPanel || !stockBellButton) return;
+      stockNotifPanel.classList.remove('open');
+      stockBellButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function alternarStockPanel(event) {
+      event.stopPropagation();
+      if (!stockNotifPanel || !stockBellButton) return;
+      var abierto = stockNotifPanel.classList.toggle('open');
+      stockBellButton.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    }
+
+    if (stockBellButton && stockNotifPanel) {
+      stockBellButton.addEventListener('click', alternarStockPanel);
+      stockNotifPanel.addEventListener('click', function (event) {
+        event.stopPropagation();
+      });
+      if (stockNotifClose) {
+        stockNotifClose.addEventListener('click', function (event) {
+          event.stopPropagation();
+          cerrarStockPanel();
+        });
+      }
+      document.addEventListener('click', cerrarStockPanel);
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          cerrarStockPanel();
+        }
+      });
+    }
+  });
  
   {% if mant_modal_errors %}
   document.addEventListener("DOMContentLoaded", function () {
