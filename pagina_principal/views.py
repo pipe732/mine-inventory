@@ -81,6 +81,10 @@ def home_usuario_view(request):
 
     productos_disponibles = Producto.objects.filter(stock__gt=0).order_by('nombre')
 
+    # Alertas de stock bajo
+    alertas_stock = list(Producto.objects.filter(stock__lt=5).values_list('nombre', 'stock'))
+    hay_alertas = len(alertas_stock) > 0
+
     return render(request, 'home_usuario.html', {
         'usuario':               usuario,
         'all_prestamos':         all_prestamos,
@@ -89,6 +93,8 @@ def home_usuario_view(request):
         'total_prestamos':       total_prestamos,
         'vencidos_count':        vencidos_count,
         'productos_disponibles': productos_disponibles,
+        'alertas_stock':         alertas_stock,
+        'hay_alertas':           hay_alertas,
     })
 # ─────────────────────────────────────────────────────────────
 #  NOTIFICACIONES JSON — agregar a pagina_principal/views.py
@@ -107,6 +113,18 @@ def notificaciones_json(request):
 
     # ── Para admin/administrador: notificaciones globales ────────
     if rol in ('administrador', 'admin'):
+
+        # Préstamos activos/hechos en este momento
+        activos = Prestamo.objects.filter(estado__in=['activo', 'parcial']).count()
+        if activos:
+            items.append({
+                'tipo':  'activo',
+                'icono': 'box-seam',
+                'color': '#1D9E75',
+                'titulo': f'{activos} préstamo{"s" if activos != 1 else ""} activo{"s" if activos != 1 else ""}',
+                'desc':  'Préstamos en curso',
+                'url':   '/prestamo/?estado=activo',
+            })
 
         # Solicitudes pendientes de aprobación
         pend = Prestamo.objects.filter(estado='pendiente').count()
@@ -158,6 +176,18 @@ def notificaciones_json(request):
                 'titulo': f'{devs} devolución{"es" if devs != 1 else ""} registrada{"s" if devs != 1 else ""}',
                 'desc':  'Revisar en módulo de devoluciones',
                 'url':   '/devoluciones/',
+            })
+
+        # Stock bajo (bajo stock pero no sin stock)
+        bajo = Producto.objects.filter(stock__gt=0, stock__lt=5).count()
+        if bajo:
+            items.append({
+                'tipo':  'stock_bajo',
+                'icono': 'exclamation-circle',
+                'color': '#c4900a',
+                'titulo': f'{bajo} herramienta{"s" if bajo != 1 else ""} con stock bajo',
+                'desc':  'Menos de 5 unidades disponibles',
+                'url':   '/inventario/',
             })
 
         # Stock crítico (sin stock)

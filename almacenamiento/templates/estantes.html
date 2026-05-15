@@ -1,7 +1,8 @@
 {% extends "base.html" %}
- 
+
 {% block content %}
 <style>
+  /* ── Variables modo claro ── */
   :root {
     --card-bg:        #f5f0eb;
     --card-border:    #e0d8cf;
@@ -16,18 +17,12 @@
     --td-muted:       #a09080;
     --row-hover:      #ede7e0;
     --row-border:     #e0d8cf;
-    --btn-edit-bg:    #f5f0eb;
-    --btn-edit-border:#c8b8a8;
-    --btn-edit-color: #3a3530;
-    --btn-edit-hover: #ece6df;
-    --btn-del-bg:     #f5f0eb;
-    --btn-del-border: #e8b8b0;
-    --btn-del-color:  #c0392b;
-    --btn-del-hover:  #fbeae8;
     --stock-bg:       #e8f5e9;
     --stock-color:    #2e7d32;
     --stock-dot:      #43a047;
   }
+
+  /* ── Variables modo oscuro ── */
   [data-bs-theme="dark"],
   .dark-mode {
     --card-bg:        #1e2230;
@@ -42,18 +37,12 @@
     --td-muted:       #6b7280;
     --row-hover:      #232840;
     --row-border:     #2a3045;
-    --btn-edit-bg:    #1e2230;
-    --btn-edit-border:#3a4055;
-    --btn-edit-color: #c8c5bc;
-    --btn-edit-hover: #2a3045;
-    --btn-del-bg:     #1e2230;
-    --btn-del-border: #7a2a22;
-    --btn-del-color:  #e07060;
-    --btn-del-hover:  #2a1f1e;
     --stock-bg:       #1e2230;
     --stock-color:    #6b7280;
     --stock-dot:      #6b7280;
   }
+
+  /* ── Tarjeta tabla ── */
   .reg-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
@@ -94,6 +83,8 @@
     border: 1px solid var(--badge-border);
     color: var(--badge-color);
   }
+
+  /* ── Tabla ── */
   .reg-table { width: 100%; border-collapse: collapse; }
   .reg-table thead th {
     padding: 10px 20px;
@@ -113,9 +104,11 @@
     vertical-align: middle;
   }
   .reg-table tbody tr:last-child td { border-bottom: none; }
-  .reg-table tbody tr:hover td { background: var(--row-hover); }
-  .td-muted  { color: var(--td-muted) !important; font-style: italic; }
-  .td-bold   { font-weight: 600; }
+  .reg-table tbody tr:hover td     { background: var(--row-hover); }
+  .td-muted { color: var(--td-muted) !important; font-style: italic; }
+  .td-bold  { font-weight: 600; }
+
+  /* ── Stock badge ── */
   .stock-badge {
     display: inline-flex;
     align-items: center;
@@ -128,27 +121,95 @@
     font-weight: 600;
     border: 1px solid var(--row-border);
   }
-  .stock-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--stock-dot); }
-  .btn-reg-edit,
-  .btn-reg-del {
-    display: inline-flex;
+  .stock-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--stock-dot);
+  }
+
+  /* ── Botones acción (ícono + texto) ── */
+  .btn-reg-action {
+    display: inline-flex !important;
     align-items: center;
     gap: 5px;
     font-size: 12px;
     font-weight: 500;
-    padding: 5px 13px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    text-decoration: none;
+    padding: 4px 11px;
   }
-  .btn-reg-edit { background: var(--btn-edit-bg); border: 1px solid var(--btn-edit-border); color: var(--btn-edit-color); }
-  .btn-reg-edit:hover { background: var(--btn-edit-hover); }
-  .btn-reg-del  { background: var(--btn-del-bg);  border: 1px solid var(--btn-del-border);  color: var(--btn-del-color); }
-  .btn-reg-del:hover  { background: var(--btn-del-hover); }
-  .reg-empty { text-align: center; padding: 48px 20px; color: var(--td-muted); font-size: 13px; }
+  .btn-reg-action svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  .reg-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--td-muted);
+    font-size: 13px;
+  }
+
+  /* ── Modal detalles ── */
+  #modalDetallesEstante .modal-content { border-radius: 14px; overflow: hidden; }
+  .detalle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--row-border);
+    gap: 16px;
+  }
+  .detalle-row:last-child { border-bottom: none; }
+  .detalle-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--td-muted);
+    min-width: 110px;
+    padding-top: 2px;
+  }
+  .detalle-val {
+    font-size: 13px;
+    color: var(--td-color);
+    text-align: right;
+    word-break: break-word;
+    flex: 1;
+  }
+
+  /* ── KPI cards ── */
+  .kpi-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .kpi-card.kpi-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .kpi-accent-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 4px 4px 0 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.65s ease 0.2s;
+  }
+  .kpi-card.kpi-visible .kpi-accent-bar { transform: scaleX(1); }
 </style>
- 
+
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -159,7 +220,32 @@
       ➕ Nuevo Estante
     </button>
   </div>
- 
+
+  <!-- ══ TARJETAS KPI ══ -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;" data-kpi-delay="0">
+        <div class="kpi-accent-bar" style="background:#1D9E75;"></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+          <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted);">Estantes</span>
+        </div>
+        <div class="kpi-number" data-target="{{ total_estantes }}" style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; color:var(--text-main); line-height:1;">0</div>
+        <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted); margin-top:.3rem;">registro{{ total_estantes|pluralize }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card h-100 kpi-card" style="padding:.9rem 1.1rem;" data-kpi-delay="130">
+        <div class="kpi-accent-bar" style="background:#378ADD;"></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.45rem;">
+          <span style="font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted);">Almacenes</span>
+        </div>
+        <div class="kpi-number" data-target="{{ total_almacenes }}" style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700; color:var(--text-main); line-height:1;">0</div>
+        <div style="font-family:var(--font-ui); font-size:.72rem; color:var(--text-muted); margin-top:.3rem;">registro{{ total_almacenes|pluralize }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TABLA ══ -->
   <div class="reg-card">
     <div class="reg-header">
       <div class="reg-header-left">
@@ -176,7 +262,7 @@
       </div>
       <span class="reg-badge">{{ estantes|length }} registro{{ estantes|length|pluralize }}</span>
     </div>
- 
+
     <table class="reg-table">
       <thead>
         <tr>
@@ -191,11 +277,30 @@
       </thead>
       <tbody>
         {% for estante in estantes %}
-        <tr>
+        <tr
+          data-est-id="{{ estante.id }}"
+          data-est-almacen="{{ estante.almacen }}"
+          data-est-codigo="{{ estante.codigo|escapejs }}"
+          data-est-detalles="{{ estante.detalles|default:''|escapejs }}"
+          data-est-capacidad="{{ estante.capacidad|default:'' }}"
+          data-est-fecha="{{ estante.fecha_creacion|date:'d/m/Y H:i' }}"
+        >
           <td>{{ estante.id }}</td>
           <td>{{ estante.almacen }}</td>
           <td class="td-bold">{{ estante.codigo }}</td>
-          <td>{{ estante.detalles|default:"—" }}</td>
+          <td>
+            {% if estante.detalles %}
+              <button class="btn btn-outline-secondary btn-sm btn-reg-action btn-ver-detalle-estante" title="Ver detalles">
+                <svg viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Ver
+              </button>
+            {% else %}
+              <span class="td-muted">—</span>
+            {% endif %}
+          </td>
           <td>
             {% if estante.capacidad %}
               <span class="stock-badge">
@@ -207,15 +312,27 @@
             {% endif %}
           </td>
           <td>{{ estante.fecha_creacion|date:"d/m/Y H:i" }}</td>
-          <td style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button class="btn-reg-edit"
-                    onclick="abrirEditarEstante('{{ estante.pk }}','{{ estante.almacen.pk }}','{{ estante.codigo|escapejs }}','{{ estante.detalles|default:''|escapejs }}','{{ estante.capacidad|default:'' }}')">
-              ✏️ Editar
-            </button>
-            <button class="btn-reg-del"
-                    onclick="abrirEliminarEstante('{{ estante.pk }}','{{ estante.codigo|escapejs }}')">
-              🗑️ Eliminar
-            </button>
+          <td>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-outline-secondary btn-sm btn-reg-action"
+                      onclick="abrirEditarEstante('{{ estante.pk }}','{{ estante.almacen.pk }}','{{ estante.codigo|escapejs }}','{{ estante.detalles|default:''|escapejs }}','{{ estante.capacidad|default:'' }}')">
+                <svg viewBox="0 0 24 24">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button class="btn btn-outline-danger btn-sm btn-reg-action"
+                      onclick="abrirEliminarEstante('{{ estante.pk }}','{{ estante.codigo|escapejs }}')">
+                <svg viewBox="0 0 24 24">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+                Eliminar
+              </button>
+            </div>
           </td>
         </tr>
         {% empty %}
@@ -230,7 +347,54 @@
     </table>
   </div>
 </div>
- 
+
+<!-- ══ Modal Ver Detalles ══ -->
+<div class="modal fade" id="modalDetallesEstante" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Detalles del Estante
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem 1.5rem;">
+        <div class="detalle-row">
+          <span class="detalle-label">ID</span>
+          <span class="detalle-val" id="det_est_id">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Almacén</span>
+          <span class="detalle-val" id="det_est_almacen">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Código</span>
+          <span class="detalle-val" id="det_est_codigo">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Descripción</span>
+          <span class="detalle-val" id="det_est_detalles">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Capacidad</span>
+          <span class="detalle-val" id="det_est_capacidad">—</span>
+        </div>
+        <div class="detalle-row">
+          <span class="detalle-label">Fecha creación</span>
+          <span class="detalle-val" id="det_est_fecha">—</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Modal Crear ── -->
 <div class="modal fade" id="modalEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -264,13 +428,10 @@
               {{ form.capacidad }}
             </div>
           </div>
-          <!-- ── Errores al crear ── -->
           {% if form.errors %}
             <div class="alert alert-danger py-2 small mt-3 mb-0">
               {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                  <div>⚠️ {{ error }}</div>
-                {% endfor %}
+                {% for error in errors %}<div>⚠️ {{ error }}</div>{% endfor %}
               {% endfor %}
             </div>
           {% endif %}
@@ -283,7 +444,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- ── Modal Editar ── -->
 <div class="modal fade" id="modalEditarEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -297,13 +458,10 @@
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="estante_id" id="edit_estante_id">
         <div class="modal-body">
-          <!-- ── Errores al editar ── -->
           {% if form_editar.errors %}
             <div class="alert alert-danger py-2 small mb-3">
               {% for field, errors in form_editar.errors.items %}
-                {% for error in errors %}
-                  <div>⚠️ {{ error }}</div>
-                {% endfor %}
+                {% for error in errors %}<div>⚠️ {{ error }}</div>{% endfor %}
               {% endfor %}
             </div>
           {% endif %}
@@ -340,7 +498,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- ── Modal Eliminar ── -->
 <div class="modal fade" id="modalEliminarEstante" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -366,7 +524,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- ── Scripts ── -->
 {% if show_modal %}
 <script>
@@ -375,7 +533,7 @@
   });
 </script>
 {% endif %}
- 
+
 {% if show_modal_editar %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -390,8 +548,24 @@
   });
 </script>
 {% endif %}
- 
+
 <script>
+  /* ── Modal detalles (ojito) ── */
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-ver-detalle-estante').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        document.getElementById('det_est_id').textContent        = tr.dataset.estId;
+        document.getElementById('det_est_almacen').textContent   = tr.dataset.estAlmacen;
+        document.getElementById('det_est_codigo').textContent    = tr.dataset.estCodigo;
+        document.getElementById('det_est_detalles').textContent  = tr.dataset.estDetalles || '—';
+        document.getElementById('det_est_capacidad').textContent = tr.dataset.estCapacidad || '—';
+        document.getElementById('det_est_fecha').textContent     = tr.dataset.estFecha;
+        new bootstrap.Modal(document.getElementById('modalDetallesEstante')).show();
+      });
+    });
+  });
+
   function abrirEditarEstante(pk, almacenPk, codigo, detalles, capacidad) {
     document.getElementById('edit_estante_id').value        = pk;
     document.getElementById('edit_estante_codigo').value    = codigo;
@@ -401,12 +575,38 @@
     for (let opt of sel.options) { opt.selected = opt.value == almacenPk; }
     new bootstrap.Modal(document.getElementById('modalEditarEstante')).show();
   }
- 
+
   function abrirEliminarEstante(pk, codigo) {
     document.getElementById('eliminar_estante_id').value           = pk;
     document.getElementById('eliminar_estante_codigo').textContent = '"' + codigo + '"';
     new bootstrap.Modal(document.getElementById('modalEliminarEstante')).show();
   }
 </script>
- 
+
+<script>
+  /* ── KPI animación ── */
+  document.addEventListener('DOMContentLoaded', function () {
+    function animarContador(el, target, duracion) {
+      var inicio = performance.now();
+      function paso(ahora) {
+        var p = Math.min((ahora - inicio) / duracion, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(paso);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(paso);
+    }
+    document.querySelectorAll('.kpi-card').forEach(function (card) {
+      var delay = parseInt(card.getAttribute('data-kpi-delay')) || 0;
+      setTimeout(function () {
+        card.classList.add('kpi-visible');
+        card.querySelectorAll('.kpi-number').forEach(function (num) {
+          animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 950);
+        });
+      }, delay + 150);
+    });
+  });
+</script>
+
 {% endblock %}
