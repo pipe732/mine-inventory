@@ -88,7 +88,9 @@ def inventario(request):
             if form.is_valid():
                 sku = form.cleaned_data.get("codigo_sku", "")
 
-                if Producto.objects.filter(codigo_sku__iexact=sku).exclude(pk=pk).exists():
+                if sku.strip().lower() != producto.codigo_sku.strip().lower():
+                    messages.error(request, "No se puede modificar el código / SKU una vez registrado.")
+                elif Producto.objects.filter(codigo_sku__iexact=sku).exclude(pk=pk).exists():
                     messages.error(request, f'El código / SKU "{sku}" ya está en uso.')
                 else:
                     try:
@@ -206,10 +208,14 @@ def inventario(request):
     total_productos = productos.count()
     total_stock = productos.aggregate(s=Sum("stock"))["s"] or 0
     sin_stock = productos.filter(stock=0).count()
-    stock_bajo = productos.filter(stock__lte=5).count()
+    stock_bajo = productos.filter(stock__lt=5).count()
+    alertas_stock = list(productos.filter(stock__lt=5).values_list('nombre', 'stock'))
+    hay_alertas = len(alertas_stock) > 0
 
     context = {
         "productos": productos,
+        "alertas_stock": alertas_stock,
+        "hay_alertas": hay_alertas,
         "categorias": categorias,
         "almacenes_lista": Almacen.objects.all(),
         "estantes": Estante.objects.all(),
