@@ -7,7 +7,7 @@
 
 {% include "mantenimiento/partials/_cabecera.html" with titulo="Estado Actual de Herramientas" subtitulo="Disponibilidad y ultimo estado registrado de cada item" %}
 
-<!-- Totales -->
+ 
 <div class="d-flex gap-3 mb-4">
   <span
     style="
@@ -29,7 +29,7 @@
 
 {% include "mantenimiento/partials/_filtros.html" with modo='estado_actual' %}
 
-<!-- Tabla -->
+ 
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
@@ -105,7 +105,7 @@
               {% endif %}
             {% endwith %}
           </td>
-          <!-- === BLOQUE CORREGIDO === -->
+          
           <td>
             {% with ultimo=p.mantenimientos.all|first %}
               {% if ultimo and ultimo.tipo_estado %}
@@ -120,7 +120,7 @@
               {% endif %}
             {% endwith %}
           </td>
-          <!-- ======================== -->
+          
           {% url 'mantenimiento:historial_producto' p.pk as historial_url %}
           <td style="text-align: center">
             {% include "mantenimiento/partials/_action_icon_button.html" with href=historial_url title="Ver historial" icon="history" %}

@@ -9,201 +9,306 @@
 
 {% include "mantenimiento/partials/_cabecera.html" with titulo=titulo subtitulo=subtitulo url_cancelar=url_cancelar %}
 
+ 
+{% if form.non_field_errors %}
+<div class="container-fluid mb-3" style="max-width: 980px">
+  <div class="alert alert-danger d-flex align-items-start" role="alert">
+    <strong class="me-3">⚠️ Error en el formulario:</strong>
+    <div>
+      {% for error in form.non_field_errors %}
+        <p class="mb-1">{{ error }}</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="card" style="max-width: 980px">
   <div class="card-body" style="padding: 1.5rem">
-    <div style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--navy); border-bottom: 1px solid rgba(9, 77, 146, 0.18); padding-bottom: 0.4rem; margin-bottom: 1.25rem;">
-      Formulario prellenado para edición con trazabilidad
-    </div>
+    {% if not mantenimiento %}
+      <div style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--navy); border-bottom: 1px solid rgba(9, 77, 146, 0.18); padding-bottom: 0.4rem; margin-bottom: 1.25rem;">
+        📋 Nuevo Registro de Mantenimiento
+      </div>
+    {% else %}
+      <div style="font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--navy); border-bottom: 1px solid rgba(9, 77, 146, 0.18); padding-bottom: 0.4rem; margin-bottom: 1.25rem;">
+        ✏️ Formulario prellenado para edición con trazabilidad
+      </div>
+    {% endif %}
 
     <form id="mantenimientoEditForm" method="post" enctype="multipart/form-data" class="row g-3" novalidate>
       {% csrf_token %}
 
-      {% if form.non_field_errors %}
+      
       <div class="col-12">
-        {% for error in form.non_field_errors %}
-        <div class="alert alert-danger py-2">{{ error }}</div>
-        {% endfor %}
+        <h6 class="text-primary fw-bold mb-3">
+          <span class="badge bg-primary me-2">1</span>Información Básica
+        </h6>
       </div>
-      {% endif %}
 
-      <div class="col-md-4">
-        <label class="form-label">{{ form.tipo_mantenimiento.label }}</label>
+      
+      <div class="col-12">
+        <label class="form-label fw-bold">{{ form.producto_busqueda.label }} <span class="text-danger">*</span></label>
+        <div class="input-group">
+          <span class="input-group-text">🔍</span>
+          {% if form.producto_busqueda.errors %}
+            {{ form.producto_busqueda|add_class:"form-control is-invalid" }}
+          {% else %}
+            {{ form.producto_busqueda|add_class:"form-control" }}
+          {% endif %}
+        </div>
+        {% if form.producto_busqueda.errors %}
+          {% for e in form.producto_busqueda.errors %}
+            <div class="invalid-feedback d-block mt-1">
+              {{ e }}
+            </div>
+          {% endfor %}
+        {% endif %}
+        <small class="form-text text-muted d-block mt-1">
+          💡 Escribe el código SKU, nombre o serie del ítem. Se mostrarán sugerencias conforme escribas.
+        </small>
+        {{ form.producto }}
+      </div>
+
+      
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.tipo_mantenimiento.label }} <span class="text-danger">*</span></label>
         {% if form.tipo_mantenimiento.errors %}
           {{ form.tipo_mantenimiento|add_class:"form-select is-invalid" }}
           {% for e in form.tipo_mantenimiento.errors %}
-            <div class="invalid-feedback d-block">{{ e }}</div>
+            <div class="invalid-feedback d-block mt-1">{{ e }}</div>
           {% endfor %}
         {% else %}
           {{ form.tipo_mantenimiento|add_class:"form-select" }}
         {% endif %}
       </div>
-      <div class="col-md-4">
-        <label class="form-label">{{ form.prioridad.label }}</label>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.prioridad.label }} <span class="text-danger">*</span></label>
         {% if form.prioridad.errors %}
           {{ form.prioridad|add_class:"form-select is-invalid" }}
-          {% for e in form.prioridad.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.prioridad.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.prioridad|add_class:"form-select" }}
         {% endif %}
       </div>
-      <div class="col-md-4">
-        <label class="form-label">{{ form.estado_registro.label }}</label>
+
+      
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.tipo_estado.label }} <span class="text-danger">*</span></label>
+        {% if form.tipo_estado.errors %}
+          {{ form.tipo_estado|add_class:"form-select is-invalid" }}
+          {% for e in form.tipo_estado.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+        {% else %}
+          {{ form.tipo_estado|add_class:"form-select" }}
+        {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.estado_registro.label }} <span class="text-danger">*</span></label>
         {% if form.estado_registro.errors %}
           {{ form.estado_registro|add_class:"form-select is-invalid" }}
-          {% for e in form.estado_registro.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.estado_registro.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.estado_registro|add_class:"form-select" }}
         {% endif %}
       </div>
 
-      <div class="col-md-6">
-        <label class="form-label">{{ form.tipo_estado.label }}</label>
-        {% if form.tipo_estado.errors %}
-          {{ form.tipo_estado|add_class:"form-select is-invalid" }}
-          {% for e in form.tipo_estado.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-        {% else %}
-          {{ form.tipo_estado|add_class:"form-select" }}
-        {% endif %}
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">{{ form.responsable.label }}</label>
+      
+      <div class="col-12">
+        <label class="form-label fw-bold">{{ form.responsable.label }} <span class="text-danger">*</span></label>
         {% if form.responsable.errors %}
           {{ form.responsable|add_class:"form-select is-invalid" }}
-          {% for e in form.responsable.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.responsable.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.responsable|add_class:"form-select" }}
         {% endif %}
       </div>
 
-      <div class="col-md-3">
-        <label class="form-label">{{ form.fecha_reporte.label }}</label>
+      
+      <div class="col-12 pt-3">
+        <h6 class="text-primary fw-bold mb-3">
+          <span class="badge bg-primary me-2">2</span>Fechas
+        </h6>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.fecha_reporte.label }} <span class="text-danger">*</span></label>
         {% if form.fecha_reporte.errors %}
           {{ form.fecha_reporte|add_class:"form-control is-invalid" }}
-          {% for e in form.fecha_reporte.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.fecha_reporte.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.fecha_reporte|add_class:"form-control" }}
         {% endif %}
       </div>
-      <div class="col-md-3">
-        <label class="form-label">{{ form.fecha_inicio.label }}</label>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.fecha_inicio.label }} <span class="text-danger">*</span></label>
         {% if form.fecha_inicio.errors %}
           {{ form.fecha_inicio|add_class:"form-control is-invalid" }}
-          {% for e in form.fecha_inicio.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.fecha_inicio.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.fecha_inicio|add_class:"form-control" }}
         {% endif %}
       </div>
-      <div class="col-md-3">
-        <label class="form-label">{{ form.fecha_fin_estimada.label }}</label>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.fecha_fin_estimada.label }}</label>
         {% if form.fecha_fin_estimada.errors %}
           {{ form.fecha_fin_estimada|add_class:"form-control is-invalid" }}
-          {% for e in form.fecha_fin_estimada.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.fecha_fin_estimada.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.fecha_fin_estimada|add_class:"form-control" }}
         {% endif %}
+        <small class="form-text text-muted">Opcional: cuándo se estima terminar</small>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">{{ form.fecha_fin_real.label }}</label>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold">{{ form.fecha_fin_real.label }}</label>
         {% if form.fecha_fin_real.errors %}
           {{ form.fecha_fin_real|add_class:"form-control is-invalid" }}
-          {% for e in form.fecha_fin_real.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.fecha_fin_real.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.fecha_fin_real|add_class:"form-control" }}
         {% endif %}
+        <small class="form-text text-muted">Opcional: cuándo se terminó realmente</small>
+      </div>
+
+      
+      <div class="col-12 pt-3">
+        <h6 class="text-primary fw-bold mb-3">
+          <span class="badge bg-primary me-2">3</span>Descripción y Detalles
+        </h6>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-bold">{{ form.descripcion_problema.label }} <span class="text-danger">*</span></label>
+        {% if form.descripcion_problema.errors %}
+          {{ form.descripcion_problema|add_class:"form-control is-invalid" }}
+          {% for e in form.descripcion_problema.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+        {% else %}
+          {{ form.descripcion_problema|add_class:"form-control" }}
+        {% endif %}
+        <small class="form-text text-muted">Describe en detalle qué falla presenta el equipo (mín. 10 caracteres)</small>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-bold">{{ form.acciones_realizadas.label }}</label>
+        {% if form.acciones_realizadas.errors %}
+          {{ form.acciones_realizadas|add_class:"form-control is-invalid" }}
+          {% for e in form.acciones_realizadas.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+        {% else %}
+          {{ form.acciones_realizadas|add_class:"form-control" }}
+        {% endif %}
+        <small class="form-text text-muted">Describe las acciones que se realizaron o planifican</small>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-bold">{{ form.materiales_usados.label }}</label>
+        {% if form.materiales_usados.errors %}
+          {{ form.materiales_usados|add_class:"form-control is-invalid" }}
+          {% for e in form.materiales_usados.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+        {% else %}
+          {{ form.materiales_usados|add_class:"form-control" }}
+        {% endif %}
+        <small class="form-text text-muted">Ej: Lubricante ISO 32 (100ml), Tornillos M6 (5 unidades)</small>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-bold">{{ form.notas_adicionales.label }}</label>
+        {% if form.notas_adicionales.errors %}
+          {{ form.notas_adicionales|add_class:"form-control is-invalid" }}
+          {% for e in form.notas_adicionales.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+        {% else %}
+          {{ form.notas_adicionales|add_class:"form-control" }}
+        {% endif %}
+        <small class="form-text text-muted">Cualquier información adicional relevante</small>
+      </div>
+
+      
+      <div class="col-12 pt-3">
+        <h6 class="text-primary fw-bold mb-3">
+          <span class="badge bg-primary me-2">4</span>Costos y Tiempo
+        </h6>
       </div>
 
       <div class="col-md-4">
-        <label class="form-label">{{ form.tiempo_empleado_horas.label }}</label>
+        <label class="form-label fw-bold">{{ form.tiempo_empleado_horas.label }}</label>
         {% if form.tiempo_empleado_horas.errors %}
           {{ form.tiempo_empleado_horas|add_class:"form-control is-invalid" }}
-          {% for e in form.tiempo_empleado_horas.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.tiempo_empleado_horas.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.tiempo_empleado_horas|add_class:"form-control" }}
         {% endif %}
+        <small class="form-text text-muted">Ej: 2.5 (2 horas 30 min)</small>
       </div>
+
       <div class="col-md-4">
-        <label class="form-label">{{ form.costo_estimado.label }}</label>
+        <label class="form-label fw-bold">{{ form.costo_estimado.label }}</label>
         {% if form.costo_estimado.errors %}
           {{ form.costo_estimado|add_class:"form-control is-invalid" }}
-          {% for e in form.costo_estimado.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.costo_estimado.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.costo_estimado|add_class:"form-control" }}
         {% endif %}
       </div>
+
       <div class="col-md-4">
-        <label class="form-label">{{ form.costo_real.label }}</label>
+        <label class="form-label fw-bold">{{ form.costo_real.label }}</label>
         {% if form.costo_real.errors %}
           {{ form.costo_real|add_class:"form-control is-invalid" }}
-          {% for e in form.costo_real.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.costo_real.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.costo_real|add_class:"form-control" }}
         {% endif %}
       </div>
 
-      <div class="col-12">
-        <label class="form-label">{{ form.descripcion_problema.label }}</label>
-        {% if form.descripcion_problema.errors %}
-          {{ form.descripcion_problema|add_class:"form-control is-invalid" }}
-          {% for e in form.descripcion_problema.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-        {% else %}
-          {{ form.descripcion_problema|add_class:"form-control" }}
-        {% endif %}
-      </div>
-      <div class="col-12">
-        <label class="form-label">{{ form.acciones_realizadas.label }}</label>
-        {% if form.acciones_realizadas.errors %}
-          {{ form.acciones_realizadas|add_class:"form-control is-invalid" }}
-          {% for e in form.acciones_realizadas.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-        {% else %}
-          {{ form.acciones_realizadas|add_class:"form-control" }}
-        {% endif %}
-      </div>
-      <div class="col-12">
-        <label class="form-label">{{ form.materiales_usados.label }}</label>
-        {% if form.materiales_usados.errors %}
-          {{ form.materiales_usados|add_class:"form-control is-invalid" }}
-          {% for e in form.materiales_usados.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-        {% else %}
-          {{ form.materiales_usados|add_class:"form-control" }}
-        {% endif %}
-      </div>
-      <div class="col-12">
-        <label class="form-label">{{ form.notas_adicionales.label }}</label>
-        {% if form.notas_adicionales.errors %}
-          {{ form.notas_adicionales|add_class:"form-control is-invalid" }}
-          {% for e in form.notas_adicionales.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-        {% else %}
-          {{ form.notas_adicionales|add_class:"form-control" }}
-        {% endif %}
+      
+      <div class="col-12 pt-3">
+        <h6 class="text-primary fw-bold mb-3">
+          <span class="badge bg-primary me-2">5</span>Evidencia
+        </h6>
       </div>
 
       <div class="col-12">
-        <label class="form-label">{{ form.evidencia_adicional.label }}</label>
+        <label class="form-label fw-bold">{{ form.evidencia_adicional.label }}</label>
         {% if form.evidencia_adicional.errors %}
           {{ form.evidencia_adicional|add_class:"form-control is-invalid" }}
-          {% for e in form.evidencia_adicional.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.evidencia_adicional.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.evidencia_adicional|add_class:"form-control" }}
         {% endif %}
+        <small class="form-text text-muted">Foto, PDF o documento (máx. 5 MB)</small>
         {% if mantenimiento.evidencia_adicional %}
-        <div class="form-text">Evidencia actual: <a href="{{ mantenimiento.evidencia_adicional.url }}" target="_blank">ver archivo</a></div>
+        <div class="mt-2">
+          <strong>📎 Evidencia actual:</strong>
+          <a href="{{ mantenimiento.evidencia_adicional.url }}" target="_blank" class="ms-2">Descargar/Ver archivo</a>
+        </div>
         {% endif %}
       </div>
 
+      
+      {% if mantenimiento and mantenimiento.pk %}
+      <div class="col-12 pt-3">
+        <h6 class="text-primary fw-bold mb-3">
+          <span class="badge bg-primary me-2">6</span>Registro de Cambios
+        </h6>
+      </div>
+
       <div class="col-md-6">
-        <label class="form-label">{{ form.motivo_edicion.label }}</label>
+        <label class="form-label fw-bold">{{ form.motivo_edicion.label }} <span class="text-danger">*</span></label>
         {% if form.motivo_edicion.errors %}
           {{ form.motivo_edicion|add_class:"form-select is-invalid" }}
-          {% for e in form.motivo_edicion.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.motivo_edicion.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.motivo_edicion|add_class:"form-select" }}
         {% endif %}
       </div>
+
       <div class="col-md-6">
-        <label class="form-label">{{ form.detalle_motivo.label }}</label>
+        <label class="form-label fw-bold">{{ form.detalle_motivo.label }}</label>
         {% if form.detalle_motivo.errors %}
           {{ form.detalle_motivo|add_class:"form-control is-invalid" }}
-          {% for e in form.detalle_motivo.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% for e in form.detalle_motivo.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
         {% else %}
           {{ form.detalle_motivo|add_class:"form-control" }}
         {% endif %}
@@ -220,73 +325,60 @@
             {{ form.confirmar_cambios.label }}
           </label>
         </div>
-        {% for e in form.confirmar_cambios.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+        {% for e in form.confirmar_cambios.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
       </div>
 
       {% if solo_campos_tecnico %}
       <div class="col-12">
-        <div class="alert alert-info py-2">
-          Modo técnico: solo puedes editar acciones realizadas, materiales, notas, tiempo y evidencia.
+        <div class="alert alert-info py-2 mb-0">
+          ℹ️ <strong>Modo técnico:</strong> Solo puedes editar acciones realizadas, materiales, notas, tiempo y evidencia.
         </div>
       </div>
       {% endif %}
+      {% endif %}
 
-      <div class="col-12 pt-2" style="display:flex; gap:.6rem;">
-        <button type="button" id="btnConfirmarEdicion" class="btn-primary-mine">Guardar cambios</button>
-        <a href="{% url 'mantenimiento:mantenimiento_detalle' mantenimiento.pk %}" class="btn-outline-mine">Cancelar</a>
+      
+      <div class="col-12 pt-4 border-top" style="display:flex; gap:.6rem; flex-wrap: wrap;">
+        <button type="submit" id="btnGuardar" class="btn-primary-mine">
+          <span>✅ {{ boton_texto }}</span>
+        </button>
+        <a href="{% if mantenimiento %}{% url 'mantenimiento:mantenimiento_detalle' mantenimiento.pk %}{% else %}{% url 'mantenimiento:mantenimiento_lista' %}{% endif %}" class="btn-outline-mine">
+          ❌ Cancelar
+        </a>
       </div>
     </form>
-  </div>
-</div>
-
-<div class="modal fade" id="modalConfirmarEdicion" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Confirmar cambios</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        ¿Deseas guardar los cambios en esta orden de mantenimiento?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" id="btnGuardarConfirmado" class="btn-primary-mine">Sí, guardar</button>
-      </div>
-    </div>
   </div>
 </div>
 
 {% endblock %}
 
 {% block js %}
+<script src="{% static 'js/mantenimiento.js' %}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    var form = document.getElementById('mantenimientoEditForm');
-    var btnConfirmar = document.getElementById('btnConfirmarEdicion');
-    var btnGuardarConfirmado = document.getElementById('btnGuardarConfirmado');
-    var modalEl = document.getElementById('modalConfirmarEdicion');
-    var modalConfirmacion = new bootstrap.Modal(modalEl);
-
-    btnConfirmar.addEventListener('click', function () {
-      if (form.checkValidity()) {
-        modalConfirmacion.show();
-      } else {
-        form.reportValidity();
-        // focus first invalid field if present
-        var firstInvalid = form.querySelector('.is-invalid');
-        if (firstInvalid) {
-          firstInvalid.scrollIntoView({behavior: 'smooth', block: 'center'});
-          try { firstInvalid.focus(); } catch (e) {}
-        }
-      }
-    });
-
-    btnGuardarConfirmado.addEventListener('click', function () {
-      modalConfirmacion.hide();
-      form.submit();
-    });
+    // Mostrar notificaciones toast
+    {% if messages %}
+    {% for message in messages %}
+    const toast = document.createElement('div');
+    toast.className = 'toast position-fixed bottom-0 end-0 m-3';
+    toast.setAttribute('role', 'alert');
+    toast.style.zIndex = '9999';
+    const bgClass = '{% if message.tags %}bg-{{ message.tags }}{% else %}bg-info{% endif %}';
+    toast.innerHTML = `
+      <div class="toast-header {{ bgClass }} text-white">
+        <strong class="me-auto">Notificación</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body">
+        {{ message }}
+      </div>
+    `;
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    setTimeout(() => toast.remove(), 5000);
+    {% endfor %}
+    {% endif %}
   });
 </script>
-
 {% endblock %}

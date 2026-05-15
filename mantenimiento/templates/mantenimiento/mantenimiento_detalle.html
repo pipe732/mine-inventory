@@ -8,7 +8,7 @@ Detalle de Mantenimiento
 {% include "mantenimiento/partials/_cabecera.html" with titulo="Detalle de Mantenimiento" subtitulo=m.producto.nombre url_cancelar=url_cancelar %}
 
 <div class="row g-4">
-  <!-- Columna principal -->
+  
   <div class="col-md-8">
     <div class="card mb-3">
       <div class="card-body" style="padding: 1.25rem">
@@ -203,10 +203,7 @@ Detalle de Mantenimiento
         <div class="d-flex flex-column gap-2" style="font-size: 0.85rem">
           <div class="d-flex justify-content-between">
             <span style="color: var(--text-muted)">Estimado</span>
-            <span style="font-family: var(--font-mono)">
-              {% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{%
-              endif %}
-            </span>
+            <span style="font-family: var(--font-mono)">{% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{% endif %}</span>
           </div>
           <div class="d-flex justify-content-between">
             <span style="color: var(--text-muted)">Real</span>

@@ -29,7 +29,7 @@
     {% include "mantenimiento/partials/_count_badge.html" with total=tipos.paginator.count|default:0 singular="tipo" plural="tipos" %}
   </div>
 
-  <!-- Filtros y búsqueda -->
+  
   <div class="card-search-filters" style="padding: 1rem; border-bottom: 1px solid rgba(0,0,0,.08);">
     <form method="get" class="row g-2 align-items-end">
       <div class="col-auto">
@@ -159,7 +159,7 @@
     </table>
   </div>
 
-  <!-- Paginación -->
+  
   {% if is_paginated %}
   <div class="pagination" style="padding: 1rem; border-top: 1px solid rgba(0,0,0,.08); display: flex; justify-content: center; gap: 0.5rem;">
     {% if page_obj.has_previous %}
