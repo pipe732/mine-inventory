@@ -1,13 +1,9 @@
 # mantenimiento/models.py
-from django.db import models, transaction
-from django.core.exceptions import ValidationError
+from django.db import models
 from inventario.models import Producto
 from usuario.models import Usuario
 
-
-# ─────────────────────────────────────────────────────────────
 # CONSTANTES Y CHOICES CENTRALIZADOS
-# ─────────────────────────────────────────────────────────────
 
 CATEGORIA_TIPOESTADO_CHOICES = [
     ('danado', 'Dañado'),
@@ -58,9 +54,7 @@ MOTIVO_CAMBIO_CHOICES = [
 ESTADOS_MANTENIMIENTO_ACTIVOS = {'abierto', 'en_proceso'}
 IMPACTO_NO_DISPONIBLE = 'no_disponible'
 
-# ─────────────────────────────────────────────────────────────
 # TIPOS DE MANTENIMIENTO
-# ─────────────────────────────────────────────────────────────
 
 class TipoMantenimiento(models.Model):
     """
@@ -118,36 +112,18 @@ class TipoMantenimiento(models.Model):
             Q(estado_registro='abierto') | Q(estado_registro='en_proceso')
         ).exists()
 
-
-# ─────────────────────────────────────────────────────────────
 # TIPOS DE ESTADO
-# ─────────────────────────────────────────────────────────────
-
 class TipoEstado(models.Model):
-
-    CATEGORIA_CHOICES = [
-        ('danado',      'Dañado'),
-        ('reparacion',  'En reparación'),
-        ('obsoleto',    'Obsoleto'),
-        ('calibracion', 'Calibración pendiente'),
-        ('preventivo',  'Mantenimiento preventivo'),
-        ('otro',        'Otro'),
-    ]
-
-    IMPACTO_CHOICES = [
-        ('no_disponible',           'No disponible'),
-        ('parcialmente_disponible', 'Parcialmente disponible'),
-        ('disponible_restringido',  'Disponible con restricción'),
-    ]
-
+    # Se usan las constantes a nivel de módulo: CATEGORIA_TIPOESTADO_CHOICES
+    # e IMPACTO_DISPONIBILIDAD_CHOICES para evitar duplicación.
     nombre     = models.CharField(max_length=120, unique=True, verbose_name="Nombre del estado")
     codigo     = models.CharField(max_length=20,  unique=True, verbose_name="Código abreviado")
     descripcion= models.TextField(blank=True, null=True, verbose_name="Descripción breve")
-    categoria  = models.CharField(max_length=50, choices=CATEGORIA_CHOICES, verbose_name="Categoría")
+    categoria  = models.CharField(max_length=50, choices=CATEGORIA_TIPOESTADO_CHOICES, verbose_name="Categoría")
     impacto_disponibilidad = models.CharField(
         max_length=40,
-        choices=IMPACTO_CHOICES,
-        default='no_disponible',
+        choices=IMPACTO_DISPONIBILIDAD_CHOICES,
+        default=IMPACTO_NO_DISPONIBLE,
         verbose_name="Impacto en disponibilidad"
     )
     color      = models.CharField(max_length=7, blank=True, verbose_name="Color asociado")
@@ -171,28 +147,6 @@ class TipoEstado(models.Model):
 
 #registro de mantenimiento
 class Mantenimiento(models.Model):
-
-    TIPO_CHOICES = [
-        ('correctivo',         'Correctivo'),
-        ('preventivo',         'Preventivo'),
-        ('calibracion',        'Calibración'),
-        ('reparacion_externa', 'Reparación externa'),
-        ('otro',               'Otro'),
-    ]
-
-    PRIORIDAD_CHOICES = [
-        ('baja', 'Baja'),
-        ('media', 'Media'),
-        ('alta', 'Alta'),
-        ('critica', 'Crítica'),
-    ]
-
-    ESTADO_REGISTRO_CHOICES = [
-        ('abierto',    'Abierto'),
-        ('en_proceso', 'En proceso'),
-        ('cerrado',    'Cerrado'),
-        ('cancelado',  'Cancelado'),
-    ]
 
     #Relaciones
     producto    = models.ForeignKey(
@@ -230,7 +184,7 @@ class Mantenimiento(models.Model):
 
     #Campos
     estado_registro     = models.CharField(max_length=20, choices=ESTADO_REGISTRO_CHOICES, default='abierto', verbose_name="Estado del registro")
-    prioridad           = models.CharField(max_length=10, choices=PRIORIDAD_CHOICES, default='media', verbose_name="Prioridad / urgencia")
+    prioridad           = models.CharField(max_length=10, choices=PRIORIDAD_MANTENIMIENTO_CHOICES, default='media', verbose_name="Prioridad / urgencia")
     fecha_reporte       = models.DateField(verbose_name="Fecha de reporte / detección")
     fecha_inicio        = models.DateField(verbose_name="Fecha inicio mantenimiento")
     fecha_fin_estimada  = models.DateField(blank=True, null=True, verbose_name="Fecha estimada de entrega")
@@ -291,8 +245,8 @@ class Mantenimiento(models.Model):
         """
         bloqueo = Mantenimiento.objects.filter(
             producto=producto,
-            estado_registro__in=('abierto', 'en_proceso'),
-            tipo_estado__impacto_disponibilidad='no_disponible',
+            estado_registro__in=ESTADOS_MANTENIMIENTO_ACTIVOS,
+            tipo_estado__impacto_disponibilidad=IMPACTO_NO_DISPONIBLE,
         ).exists()
         return not bloqueo
 

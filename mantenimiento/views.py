@@ -2,7 +2,6 @@
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.contrib import messages
 from django.db.models import Q
-from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
@@ -11,7 +10,6 @@ from django.contrib.auth.models import User
 from common.mixins import SesionRequeridaMixin, ContextoMixin, sesion_requerida
 from .models import (
     TipoEstado, TipoMantenimiento, Mantenimiento,
-    TIPO_MANTENIMIENTO_CHOICES,
     ESTADO_REGISTRO_CHOICES,
 )
 from .forms import TipoEstadoForm, TipoMantenimientoForm, MantenimientoForm, MantenimientoUpdateForm
@@ -72,9 +70,21 @@ def _es_cambio_significativo(cambios):
     return any(campo in cambios for campo in campos_clave)
 
 
-# ══════════════════════════════════════════════
+def _filtrar_por_tipo_mantenimiento(qs, tipo):
+    """Filtra un queryset por `tipo_mantenimiento` aceptando id (digit) o nombre."""
+    if not tipo:
+        return qs
+    if tipo.isdigit():
+        return qs.filter(tipo_mantenimiento_id=tipo)
+    return qs.filter(tipo_mantenimiento__nombre__iexact=tipo)
+
+
+def _editable_ids(request, registros):
+    return {m.pk for m in registros if _puede_editar_mantenimiento(request, m)}
+
+
+
 # TIPO DE ESTADO
-# ══════════════════════════════════════════════
 
 class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     model               = TipoEstado
@@ -125,9 +135,7 @@ class TipoEstadoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
         return response
 
 
-# ══════════════════════════════════════════════
 # TIPO MANTENIMIENTO
-# ══════════════════════════════════════════════
 
 class TipoMantenimientoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     """Lista de tipos de mantenimiento con búsqueda y filtro activo/inactivo."""
@@ -272,9 +280,7 @@ def tipo_mantenimiento_eliminar(request, pk):
     return render(request, 'mantenimiento/tipo_mantenimiento_confirmar.html', context)
 
 
-# ══════════════════════════════════════════════
 # MANTENIMIENTO
-# ══════════════════════════════════════════════
 
 class MantenimientoListView(SesionRequeridaMixin, ListView):
     model               = Mantenimiento
@@ -297,21 +303,14 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
                 Q(descripcion_problema__icontains=q)
             )
         if tipo:
-            # Permitir filtrado por ID de TipoMantenimiento
-            if tipo.isdigit():
-                qs = qs.filter(tipo_mantenimiento_id=tipo)
-            else:
-                # Para retrocompatibilidad, intentar por nombre
-                qs = qs.filter(tipo_mantenimiento__nombre__iexact=tipo)
+            qs = _filtrar_por_tipo_mantenimiento(qs, tipo)
         if estado:
             qs = qs.filter(estado_registro=estado)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['editable_ids']  = {
-            m.pk for m in ctx['registros'] if _puede_editar_mantenimiento(self.request, m)
-        }
+        ctx['editable_ids']  = _editable_ids(self.request, ctx['registros'])
         ctx['tipos']         = TipoMantenimiento.objects.filter(activo=True).order_by('nombre')
         ctx['estado_choices']= ESTADO_REGISTRO_CHOICES
         ctx['q']             = self.request.GET.get('q', '')
@@ -443,7 +442,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
             producto=self.producto
         ).select_related(
             'tipo_estado', 'tipo_mantenimiento', 'responsable', 'creado_por'
-        ).prefetch_related('repuestos_consumidos__producto').order_by('-fecha_reporte')
+        ).order_by('-fecha_reporte')
 
         q           = self.request.GET.get('q', '').strip()
         tipo        = self.request.GET.get('tipo', '')
@@ -457,12 +456,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
                 Q(acciones_realizadas__icontains=q)
             )
         if tipo:
-            # Permitir filtrado por ID de TipoMantenimiento
-            if tipo.isdigit():
-                qs = qs.filter(tipo_mantenimiento_id=tipo)
-            else:
-                # Para retrocompatibilidad, intentar por nombre
-                qs = qs.filter(tipo_mantenimiento__nombre__iexact=tipo)
+            qs = _filtrar_por_tipo_mantenimiento(qs, tipo)
         if estado:
             qs = qs.filter(estado_registro=estado)
         if fecha_desde:
@@ -475,9 +469,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['editable_ids']   = {
-            m.pk for m in ctx['mantenimientos'] if _puede_editar_mantenimiento(self.request, m)
-        }
+        ctx['editable_ids']   = _editable_ids(self.request, ctx['mantenimientos'])
         ctx['producto']       = self.producto
         ctx['tipos']          = TipoMantenimiento.objects.filter(activo=True).order_by('nombre')
         ctx['estado_choices'] = ESTADO_REGISTRO_CHOICES

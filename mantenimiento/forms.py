@@ -5,13 +5,11 @@ from django.contrib.auth.models import User
 
 from .models import (
     TipoEstado, TipoMantenimiento, Mantenimiento, MantenimientoCambio,
-    MOTIVO_CAMBIO_CHOICES
+    
 )
 from inventario.models import Producto
 
-# ─────────────────────────────────────────────────────────────
 # TIPO MANTENIMIENTO
-# ─────────────────────────────────────────────────────────────
 
 class TipoMantenimientoForm(forms.ModelForm):
     """Formulario para crear y editar tipos de mantenimiento."""
@@ -97,6 +95,10 @@ class TipoEstadoForm(forms.ModelForm):
 
 #mantenimiento 
 class MantenimientoForm(forms.ModelForm):
+    """
+    Formulario para registrar/editar mantenimientos con validaciones mejoradas.
+    Incluye mensajes de error claros y específicos por campo.
+    """
 
     producto_busqueda = forms.CharField(
         required=False,
@@ -106,6 +108,7 @@ class MantenimientoForm(forms.ModelForm):
             'placeholder':  'Buscar por código, nombre o serie...',
             'id':           'producto_busqueda',
             'autocomplete': 'off',
+            'aria-label':   'Búsqueda de ítem o herramienta',
         }),
     )
 
@@ -120,94 +123,318 @@ class MantenimientoForm(forms.ModelForm):
         ]
         widgets = {
             'producto':           forms.HiddenInput(),
-            'tipo_mantenimiento': forms.Select(attrs={'class': 'form-select'}),
-            'tipo_estado':        forms.Select(attrs={'class': 'form-select'}),
-            'estado_registro':    forms.Select(attrs={'class': 'form-select'}),
-            'prioridad':          forms.Select(attrs={'class': 'form-select'}),
-            'responsable':        forms.Select(attrs={'class': 'form-select'}),
-            'fecha_reporte':      forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_inicio':       forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_fin_estimada': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_fin_real':     forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'descripcion_problema': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Describe el problema o falla detectada...'}),
-            'acciones_realizadas':  forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Acciones realizadas o planificadas...'}),
-            'materiales_usados':    forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Materiales, repuestos y cantidades usadas...'}),
-            'notas_adicionales':    forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Comentarios adicionales...'}),
-            'evidencia_adicional':  forms.FileInput(attrs={'class': 'form-control'}),
-            'tiempo_empleado_horas': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.25', 'min': '0'}),
-            'costo_estimado': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
-            'costo_real':     forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'tipo_mantenimiento': forms.Select(attrs={
+                'class': 'form-select',
+                'aria-label': 'Tipo de mantenimiento',
+            }),
+            'tipo_estado':        forms.Select(attrs={
+                'class': 'form-select',
+                'aria-label': 'Tipo de estado',
+            }),
+            'estado_registro':    forms.Select(attrs={
+                'class': 'form-select',
+                'aria-label': 'Estado del registro',
+            }),
+            'prioridad':          forms.Select(attrs={
+                'class': 'form-select',
+                'aria-label': 'Prioridad',
+            }),
+            'responsable':        forms.Select(attrs={
+                'class': 'form-select',
+                'aria-label': 'Técnico responsable',
+            }),
+            'fecha_reporte':      forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'aria-label': 'Fecha de reporte',
+            }),
+            'fecha_inicio':       forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'aria-label': 'Fecha de inicio',
+            }),
+            'fecha_fin_estimada': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'aria-label': 'Fecha fin estimada',
+            }),
+            'fecha_fin_real':     forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'aria-label': 'Fecha fin real',
+            }),
+            'descripcion_problema': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Describe el problema o falla detectada en detalle...',
+                'aria-label': 'Descripción del problema',
+                'minlength': '10',
+            }),
+            'acciones_realizadas':  forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describe las acciones realizadas o planificadas...',
+                'aria-label': 'Acciones realizadas',
+            }),
+            'materiales_usados':    forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Lista materiales, repuestos, cantidades y costos...',
+                'aria-label': 'Materiales usados',
+            }),
+            'notas_adicionales':    forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Comentarios, observaciones o información relevante...',
+                'aria-label': 'Notas adicionales',
+            }),
+            'evidencia_adicional':  forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*,.pdf,.doc,.docx',
+                'aria-label': 'Evidencia adjunta',
+            }),
+            'tiempo_empleado_horas': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.25',
+                'min': '0',
+                'aria-label': 'Tiempo empleado en horas',
+            }),
+            'costo_estimado': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0',
+                'aria-label': 'Costo estimado',
+            }),
+            'costo_real':     forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0',
+                'aria-label': 'Costo real',
+            }),
         }
         labels = {
-            'tipo_mantenimiento':  'Tipo de mantenimiento',
-            'tipo_estado':         'Tipo de estado actual',
-            'fecha_reporte':       'Fecha de reporte / detección',
-            'fecha_inicio':        'Fecha inicio mantenimiento',
-            'fecha_fin_estimada':  'Fecha fin estimada',
-            'fecha_fin_real':      'Fecha fin real',
-            'descripcion_problema':'Descripción del problema / falla',
-            'acciones_realizadas': 'Acciones realizadas / planificadas',
-            'materiales_usados':   'Materiales / repuestos usados',
-            'notas_adicionales':   'Notas adicionales / comentarios',
-            'evidencia_adicional': 'Evidencia adjunta',
-            'tiempo_empleado_horas': 'Tiempo empleado (horas hombre)',
-            'prioridad':           'Prioridad / urgencia',
-            'responsable':         'Responsable / Técnico',
-            'costo_estimado':      'Costo estimado',
-            'costo_real':          'Costo real',
-            'estado_registro':     'Estado del registro',
+            'tipo_mantenimiento':  '🔧 Tipo de mantenimiento *',
+            'tipo_estado':         '📊 Tipo de estado actual *',
+            'fecha_reporte':       '📅 Fecha de reporte / detección *',
+            'fecha_inicio':        '⏱️ Fecha inicio mantenimiento *',
+            'fecha_fin_estimada':  '📅 Fecha fin estimada',
+            'fecha_fin_real':      '✅ Fecha fin real',
+            'descripcion_problema':'📝 Descripción del problema / falla *',
+            'acciones_realizadas': '✏️ Acciones realizadas / planificadas',
+            'materiales_usados':   '🛠️ Materiales / repuestos usados',
+            'notas_adicionales':   '💬 Notas adicionales / comentarios',
+            'evidencia_adicional': '📎 Evidencia adjunta (fotos, PDF, etc.)',
+            'tiempo_empleado_horas': '⏳ Tiempo empleado (horas)',
+            'prioridad':           '⚠️ Prioridad / urgencia *',
+            'responsable':         '👤 Responsable / Técnico *',
+            'costo_estimado':      '💵 Costo estimado',
+            'costo_real':          '💰 Costo real',
+            'estado_registro':     '📌 Estado del registro *',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Configurar querysets
         self.fields['tipo_mantenimiento'].queryset = TipoMantenimiento.objects.filter(
             activo=True
         ).order_by('nombre')
+        self.fields['tipo_mantenimiento'].empty_label = "-- Selecciona un tipo --"
+        
         self.fields['tipo_estado'].queryset = TipoEstado.objects.filter(activo=True)
+        self.fields['tipo_estado'].empty_label = "-- Selecciona un estado --"
+        
+        self.fields['estado_registro'].empty_label = "-- Selecciona el estado --"
+        
+        self.fields['prioridad'].empty_label = "-- Selecciona la prioridad --"
+        
         self.fields['responsable'].queryset = (
             User.objects.filter(is_active=True).order_by('first_name', 'username')
         )
+        self.fields['responsable'].empty_label = "-- Selecciona un técnico --"
         self.fields['responsable'].label_from_instance = (
-            lambda u: u.get_full_name() or u.username
+            lambda u: f"{u.get_full_name() or u.username} ({u.username})"
         )
 
+        # Prellenar búsqueda de producto en caso de edición
         if self.instance.pk and self.instance.producto_id:
             p = self.instance.producto
             self.fields['producto_busqueda'].initial = f"[{p.codigo_sku}] {p.nombre}"
 
     def clean_producto(self):
+        """Valida que el producto sea obligatorio y válido."""
         producto = self.cleaned_data.get('producto')
         if not producto:
-            raise ValidationError("Debes seleccionar un ítem o herramienta válido.")
+            raise ValidationError(
+                "🚫 El ítem/herramienta es obligatorio. "
+                "Por favor busca y selecciona uno de la lista de sugerencias."
+            )
+        
+        # Validar que el producto existe
+        try:
+            Producto.objects.get(pk=producto.pk)
+        except Producto.DoesNotExist:
+            raise ValidationError(
+                "❌ El ítem/herramienta seleccionado ya no existe. "
+                "Por favor selecciona otro."
+            )
+        
         return producto
 
-    def clean(self):
-        cleaned            = super().clean()
-        fecha_reporte      = cleaned.get('fecha_reporte')
-        fecha_inicio       = cleaned.get('fecha_inicio')
-        fecha_fin_estimada = cleaned.get('fecha_fin_estimada')
-        fecha_fin_real     = cleaned.get('fecha_fin_real')
+    def clean_tipo_mantenimiento(self):
+        """Valida tipo de mantenimiento."""
+        tipo = self.cleaned_data.get('tipo_mantenimiento')
+        if not tipo:
+            raise ValidationError(
+                "🔧 Debes seleccionar un tipo de mantenimiento. "
+                "Opciones: Preventivo, Correctivo, Calibración, etc."
+            )
+        return tipo
 
+    def clean_tipo_estado(self):
+        """Valida tipo de estado."""
+        estado = self.cleaned_data.get('tipo_estado')
+        if not estado:
+            raise ValidationError(
+                "📊 Debes seleccionar el estado del equipo después del mantenimiento."
+            )
+        return estado
+
+    def clean_fecha_reporte(self):
+        """Valida fecha de reporte."""
+        fecha = self.cleaned_data.get('fecha_reporte')
+        if not fecha:
+            raise ValidationError(
+                "📅 La fecha de reporte es obligatoria. "
+                "Indica cuándo se detectó el problema."
+            )
+        
+        from datetime import date
+        if fecha > date.today():
+            raise ValidationError(
+                "⏰ La fecha de reporte no puede ser en el futuro."
+            )
+        
+        return fecha
+
+    def clean_fecha_inicio(self):
+        """Valida fecha de inicio."""
+        fecha_inicio = self.cleaned_data.get('fecha_inicio')
+        if not fecha_inicio:
+            raise ValidationError(
+                "⏱️ La fecha de inicio es obligatoria. "
+                "Indica cuándo comenzó el mantenimiento."
+            )
+        
+        fecha_reporte = self.cleaned_data.get('fecha_reporte')
+        if fecha_reporte and fecha_inicio < fecha_reporte:
+            raise ValidationError(
+                "❌ La fecha de inicio no puede ser anterior a la de reporte. "
+                f"Reporte: {fecha_reporte}, Inicio debe ser >= {fecha_reporte}"
+            )
+        
+        return fecha_inicio
+
+    def clean_descripcion_problema(self):
+        """Valida descripción del problema."""
+        desc = self.cleaned_data.get('descripcion_problema')
+        if not desc or not desc.strip():
+            raise ValidationError(
+                "📝 La descripción del problema es obligatoria. "
+                "Describe en detalle qué falla presenta el equipo."
+            )
+        
+        if len(desc.strip()) < 10:
+            raise ValidationError(
+                "✏️ La descripción es muy corta. "
+                "Mínimo 10 caracteres. Describe el problema en detalle."
+            )
+        
+        return desc
+
+    def clean_responsable(self):
+        """Valida responsable/técnico."""
+        responsable = self.cleaned_data.get('responsable')
+        if not responsable:
+            raise ValidationError(
+                "👤 Debes asignar un técnico responsable del mantenimiento."
+            )
+        return responsable
+
+    def clean_estado_registro(self):
+        """Valida estado del registro."""
+        estado = self.cleaned_data.get('estado_registro')
+        if not estado:
+            raise ValidationError(
+                "📌 El estado del registro es obligatorio."
+            )
+        return estado
+
+    def clean_prioridad(self):
+        """Valida prioridad."""
+        prioridad = self.cleaned_data.get('prioridad')
+        if not prioridad:
+            raise ValidationError(
+                "⚠️ La prioridad es obligatoria. "
+                "Selecciona: Baja, Media, Alta o Crítica."
+            )
+        return prioridad
+
+    def clean(self):
+        """Validaciones cruzadas."""
+        cleaned = super().clean()
+        
+        fecha_reporte = cleaned.get('fecha_reporte')
+        fecha_inicio = cleaned.get('fecha_inicio')
+        fecha_fin_estimada = cleaned.get('fecha_fin_estimada')
+        fecha_fin_real = cleaned.get('fecha_fin_real')
+        tiempo = cleaned.get('tiempo_empleado_horas')
+        costo_estimado = cleaned.get('costo_estimado')
+        costo_real = cleaned.get('costo_real')
+
+        # Validar fechas en orden lógico
         if fecha_reporte and fecha_inicio and fecha_inicio < fecha_reporte:
-            self.add_error('fecha_inicio', "No puede ser anterior a la fecha de reporte.")
+            self.add_error(
+                'fecha_inicio',
+                f"❌ La fecha de inicio ({fecha_inicio}) no puede ser anterior "
+                f"a la fecha de reporte ({fecha_reporte})."
+            )
 
         if fecha_inicio and fecha_fin_estimada and fecha_fin_estimada < fecha_inicio:
-            self.add_error('fecha_fin_estimada', "No puede ser anterior a la fecha de inicio.")
+            self.add_error(
+                'fecha_fin_estimada',
+                f"❌ La fecha estimada ({fecha_fin_estimada}) no puede ser anterior "
+                f"a la fecha de inicio ({fecha_inicio})."
+            )
 
         if fecha_inicio and fecha_fin_real and fecha_fin_real < fecha_inicio:
-            self.add_error('fecha_fin_real', "No puede ser anterior a la fecha de inicio.")
+            self.add_error(
+                'fecha_fin_real',
+                f"❌ La fecha real ({fecha_fin_real}) no puede ser anterior "
+                f"a la fecha de inicio ({fecha_inicio})."
+            )
 
-        tiempo = cleaned.get('tiempo_empleado_horas')
+        # Validar números
         if tiempo is not None and tiempo < 0:
-            self.add_error('tiempo_empleado_horas', "No puede ser negativo.")
+            self.add_error(
+                'tiempo_empleado_horas',
+                "⏳ El tiempo no puede ser negativo."
+            )
 
-        costo_real = cleaned.get('costo_real')
-        costo_estimado = cleaned.get('costo_estimado')
-        if costo_real is not None and costo_real < 0:
-            self.add_error('costo_real', "No puede ser negativo.")
         if costo_estimado is not None and costo_estimado < 0:
-            self.add_error('costo_estimado', "No puede ser negativo.")
+            self.add_error(
+                'costo_estimado',
+                "💵 El costo estimado no puede ser negativo."
+            )
+
+        if costo_real is not None and costo_real < 0:
+            self.add_error(
+                'costo_real',
+                "💰 El costo real no puede ser negativo."
+            )
 
         return cleaned
 

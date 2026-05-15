@@ -80,6 +80,7 @@ DATABASES = {
         'PASSWORD': 'npg_P4mVbJ6ckRad',
         'HOST': 'ep-snowy-hall-ap8oi5l1-pooler.c-7.us-east-1.aws.neon.tech',
         'PORT': '5432',
+        'CONN_MAX_AGE': 0,       
         'OPTIONS': {
             'sslmode': 'require',
         },
@@ -158,4 +159,5 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = None
  
 # Permite que JS lea la cookie CSRF (ya estaba, confirmar que existe)
 CSRF_COOKIE_HTTPONLY = False
+ 
  
