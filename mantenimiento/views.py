@@ -2,14 +2,17 @@
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.contrib import messages
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 
 from common.mixins import SesionRequeridaMixin, ContextoMixin, sesion_requerida
-from .models import TipoEstado, Mantenimiento
-from .forms import TipoEstadoForm, MantenimientoForm, MantenimientoUpdateForm
+from .models import (
+    TipoEstado, TipoMantenimiento, Mantenimiento,
+    ESTADO_REGISTRO_CHOICES,
+)
+from .forms import TipoEstadoForm, TipoMantenimientoForm, MantenimientoForm, MantenimientoUpdateForm
 from inventario.models import Producto
 
 
@@ -67,9 +70,21 @@ def _es_cambio_significativo(cambios):
     return any(campo in cambios for campo in campos_clave)
 
 
+def _filtrar_por_tipo_mantenimiento(qs, tipo):
+    """Filtra un queryset por `tipo_mantenimiento` aceptando id (digit) o nombre."""
+    if not tipo:
+        return qs
+    if tipo.isdigit():
+        return qs.filter(tipo_mantenimiento_id=tipo)
+    return qs.filter(tipo_mantenimiento__nombre__iexact=tipo)
+
+
+def _editable_ids(request, registros):
+    return {m.pk for m in registros if _puede_editar_mantenimiento(request, m)}
+
+
 
 # TIPO DE ESTADO
-
 
 class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     model               = TipoEstado
@@ -120,8 +135,152 @@ class TipoEstadoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
         return response
 
 
-# MANTENIMIENTO
+# TIPO MANTENIMIENTO
 
+class TipoMantenimientoListView(SesionRequeridaMixin, ContextoMixin, ListView):
+    """Lista de tipos de mantenimiento con búsqueda y filtro activo/inactivo."""
+    model               = TipoMantenimiento
+    template_name       = 'mantenimiento/tipo_mantenimiento_lista.html'
+    context_object_name = 'tipos'
+    paginate_by         = 20
+    titulo              = 'Catálogo de Tipos de Mantenimiento'
+    subtitulo           = 'Gestión de los tipos de mantenimiento disponibles'
+    url_accion          = reverse_lazy('mantenimiento:tipo_mantenimiento_crear')
+    label_accion        = 'Nuevo Tipo de Mantenimiento'
+
+    def get_queryset(self):
+        qs = TipoMantenimiento.objects.all().order_by('nombre')
+        
+        q      = self.request.GET.get('q', '').strip()
+        activo = self.request.GET.get('activo', '')
+        
+        if q:
+            qs = qs.filter(
+                Q(nombre__icontains=q) | Q(descripcion__icontains=q)
+            )
+        
+        if activo == 'si':
+            qs = qs.filter(activo=True)
+        elif activo == 'no':
+            qs = qs.filter(activo=False)
+        
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['q']           = self.request.GET.get('q', '')
+        ctx['activo_filtro'] = self.request.GET.get('activo', '')
+        return ctx
+
+
+class TipoMantenimientoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
+    """Crear un nuevo tipo de mantenimiento."""
+    model          = TipoMantenimiento
+    form_class     = TipoMantenimientoForm
+    template_name  = 'mantenimiento/tipo_mantenimiento_form.html'
+    success_url    = reverse_lazy('mantenimiento:tipo_mantenimiento_lista')
+    titulo         = 'Nuevo Tipo de Mantenimiento'
+    subtitulo      = 'Agrega un nuevo tipo de mantenimiento al catálogo'
+    boton_texto    = 'Guardar Tipo'
+    url_cancelar   = 'mantenimiento:tipo_mantenimiento_lista'
+
+    def form_valid(self, form):
+        # Asignar creado_por desde la sesión
+        from usuario.models import Usuario
+        doc = self.request.session.get('usuario_documento')
+        if doc:
+            try:
+                form.instance.creado_por = Usuario.objects.get(numero_documento=doc)
+            except Usuario.DoesNotExist:
+                pass
+        
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            f'Tipo de mantenimiento "{form.instance.nombre}" creado correctamente.'
+        )
+        return response
+
+
+class TipoMantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
+    """Editar un tipo de mantenimiento."""
+    model          = TipoMantenimiento
+    form_class     = TipoMantenimientoForm
+    template_name  = 'mantenimiento/tipo_mantenimiento_form.html'
+    success_url    = reverse_lazy('mantenimiento:tipo_mantenimiento_lista')
+    titulo         = 'Editar Tipo de Mantenimiento'
+    subtitulo      = 'Modifica los datos del tipo seleccionado'
+    boton_texto    = 'Guardar Cambios'
+    url_cancelar   = 'mantenimiento:tipo_mantenimiento_lista'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            f'Tipo de mantenimiento "{self.object.nombre}" actualizado correctamente.'
+        )
+        return response
+
+
+@sesion_requerida
+def tipo_mantenimiento_inactivar(request, pk):
+    """Inactivar un tipo de mantenimiento (no eliminar si ya fue usado)."""
+    tipo = get_object_or_404(TipoMantenimiento, pk=pk)
+    
+    if request.method == 'POST':
+        if not tipo.puede_inactivarse():
+            messages.error(
+                request,
+                f'No se puede inactivar "{tipo.nombre}" porque tiene órdenes de mantenimiento abiertas.'
+            )
+        else:
+            tipo.activo = False
+            tipo.save(update_fields=['activo'])
+            messages.success(
+                request,
+                f'Tipo de mantenimiento "{tipo.nombre}" inactivado correctamente.'
+            )
+        return redirect('mantenimiento:tipo_mantenimiento_lista')
+    
+    # GET: mostrar confirmación
+    context = {
+        'tipo': tipo,
+        'puede_inactivar': tipo.puede_inactivarse(),
+        'titulo': 'Confirmar inactivación',
+    }
+    return render(request, 'mantenimiento/tipo_mantenimiento_confirmar.html', context)
+
+
+@sesion_requerida
+def tipo_mantenimiento_eliminar(request, pk):
+    """Eliminar un tipo de mantenimiento (solo si nunca fue usado)."""
+    tipo = get_object_or_404(TipoMantenimiento, pk=pk)
+    
+    if request.method == 'POST':
+        if not tipo.puede_eliminarse():
+            messages.error(
+                request,
+                f'No se puede eliminar "{tipo.nombre}" porque ya fue utilizado en órdenes de mantenimiento.'
+            )
+        else:
+            nombre = tipo.nombre
+            tipo.delete()
+            messages.success(
+                request,
+                f'Tipo de mantenimiento "{nombre}" eliminado correctamente.'
+            )
+        return redirect('mantenimiento:tipo_mantenimiento_lista')
+    
+    # GET: mostrar confirmación
+    context = {
+        'tipo': tipo,
+        'puede_eliminar': tipo.puede_eliminarse(),
+        'titulo': 'Confirmar eliminación',
+    }
+    return render(request, 'mantenimiento/tipo_mantenimiento_confirmar.html', context)
+
+
+# MANTENIMIENTO
 
 class MantenimientoListView(SesionRequeridaMixin, ListView):
     model               = Mantenimiento
@@ -130,7 +289,7 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
 
     def get_queryset(self):
         qs = Mantenimiento.objects.select_related(
-            'producto', 'tipo_estado', 'responsable'
+            'producto', 'tipo_estado', 'tipo_mantenimiento', 'responsable'
         ).order_by('-fecha_reporte')
 
         q      = self.request.GET.get('q', '')
@@ -144,18 +303,16 @@ class MantenimientoListView(SesionRequeridaMixin, ListView):
                 Q(descripcion_problema__icontains=q)
             )
         if tipo:
-            qs = qs.filter(tipo_mantenimiento=tipo)
+            qs = _filtrar_por_tipo_mantenimiento(qs, tipo)
         if estado:
             qs = qs.filter(estado_registro=estado)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['editable_ids']  = {
-            m.pk for m in ctx['registros'] if _puede_editar_mantenimiento(self.request, m)
-        }
-        ctx['tipo_choices']  = Mantenimiento.TIPO_CHOICES
-        ctx['estado_choices']= Mantenimiento.ESTADO_REGISTRO_CHOICES
+        ctx['editable_ids']  = _editable_ids(self.request, ctx['registros'])
+        ctx['tipos']         = TipoMantenimiento.objects.filter(activo=True).order_by('nombre')
+        ctx['estado_choices']= ESTADO_REGISTRO_CHOICES
         ctx['q']             = self.request.GET.get('q', '')
         ctx['tipo_filtro']   = self.request.GET.get('tipo', '')
         ctx['estado_filtro'] = self.request.GET.get('estado_registro', '')
@@ -284,7 +441,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
         qs = Mantenimiento.objects.filter(
             producto=self.producto
         ).select_related(
-            'tipo_estado', 'responsable', 'creado_por'
+            'tipo_estado', 'tipo_mantenimiento', 'responsable', 'creado_por'
         ).order_by('-fecha_reporte')
 
         q           = self.request.GET.get('q', '').strip()
@@ -299,7 +456,7 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
                 Q(acciones_realizadas__icontains=q)
             )
         if tipo:
-            qs = qs.filter(tipo_mantenimiento=tipo)
+            qs = _filtrar_por_tipo_mantenimiento(qs, tipo)
         if estado:
             qs = qs.filter(estado_registro=estado)
         if fecha_desde:
@@ -312,12 +469,10 @@ class HistorialProductoView(SesionRequeridaMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['editable_ids']   = {
-            m.pk for m in ctx['mantenimientos'] if _puede_editar_mantenimiento(self.request, m)
-        }
+        ctx['editable_ids']   = _editable_ids(self.request, ctx['mantenimientos'])
         ctx['producto']       = self.producto
-        ctx['tipo_choices']   = Mantenimiento.TIPO_CHOICES
-        ctx['estado_choices'] = Mantenimiento.ESTADO_REGISTRO_CHOICES
+        ctx['tipos']          = TipoMantenimiento.objects.filter(activo=True).order_by('nombre')
+        ctx['estado_choices'] = ESTADO_REGISTRO_CHOICES
         ctx['q']              = self.request.GET.get('q', '')
         ctx['tipo_filtro']    = self.request.GET.get('tipo', '')
         ctx['estado_filtro']  = self.request.GET.get('estado_registro', '')

@@ -8,7 +8,7 @@ Detalle de Mantenimiento
 {% include "mantenimiento/partials/_cabecera.html" with titulo="Detalle de Mantenimiento" subtitulo=m.producto.nombre url_cancelar=url_cancelar %}
 
 <div class="row g-4">
-  <!-- Columna principal -->
+  
   <div class="col-md-8">
     <div class="card mb-3">
       <div class="card-body" style="padding: 1.25rem">
@@ -94,7 +94,7 @@ Detalle de Mantenimiento
               {% for c in cambios_auditoria %}
               <tr>
                 <td style="font-family: var(--font-mono);">{{ c.fecha_edicion|date:"d/m/Y H:i" }}</td>
-                <td>{{ c.editado_por.get_full_name|default:c.editado_por.username|default:"Sistema" }}</td>
+                <td>{{ c.editado_por.nombre_completo|default:"Sistema" }}</td>
                 <td>
                   {{ c.get_motivo_edicion_display }}
                   {% if c.detalle_motivo %}
@@ -152,11 +152,7 @@ Detalle de Mantenimiento
 
           <div class="d-flex justify-content-between align-items-center">
             <span style="color: var(--text-muted)">Responsable</span>
-            <span style="font-weight: 600">
-              {{
-              m.responsable.get_full_name|default:m.responsable.username|default:"—"
-              }}
-            </span>
+            <span style="font-weight: 600">{{ m.responsable.nombre_completo|default:"-" }}</span>
           </div>
         </div>
       </div>
@@ -208,10 +204,7 @@ Detalle de Mantenimiento
         <div class="d-flex flex-column gap-2" style="font-size: 0.85rem">
           <div class="d-flex justify-content-between">
             <span style="color: var(--text-muted)">Estimado</span>
-            <span style="font-family: var(--font-mono)">
-              {% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{%
-              endif %}
-            </span>
+            <span style="font-family: var(--font-mono)">{% if m.costo_estimado %}${{ m.costo_estimado }}{% else %}—{% endif %}</span>
           </div>
           <div class="d-flex justify-content-between">
             <span style="color: var(--text-muted)">Real</span>
@@ -233,11 +226,7 @@ Detalle de Mantenimiento
         >
           <div class="d-flex justify-content-between">
             <span>Registrado por</span>
-            <span
-              >{{
-              m.creado_por.get_full_name|default:m.creado_por.username|default:"—"
-              }}</span
-            >
+            {{ m.creado_por.nombre_completo|default:"-" }}
           </div>
           <div class="d-flex justify-content-between">
             <span>Creado el</span>
@@ -253,7 +242,7 @@ Detalle de Mantenimiento
           </div>
           <div class="d-flex justify-content-between">
             <span>Última edición por</span>
-            <span>{{ m.actualizado_por.get_full_name|default:m.actualizado_por.username|default:"—" }}</span>
+            <span>{{ m.actualizado_por.nombre_completo|default:"-" }}</span>
           </div>
         </div>
       </div>

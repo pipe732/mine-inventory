@@ -3,6 +3,7 @@ from django.db.models import Sum, Max
 from inventario.models import Producto, Categoria
 from prestamo.models import Prestamo
 from devoluciones.models import Devolucion
+from django.http import JsonResponse
 #from common.mixins import sesion_requerida 
 
 #@sesion_requerida     
@@ -22,7 +23,7 @@ def dashboard_view(request):
     prestamos_pendientes_count = Prestamo.objects.filter(estado='pendiente').count()
     prestamos_recientes       = Prestamo.objects.prefetch_related('items__producto').order_by('-fecha_prestamo')[:5]
     # ── Devoluciones ──
-    devoluciones_pendientes_count = Devolucion.objects.filter(estado='pendiente').count()
+    devoluciones_pendientes_count = Devolucion.objects.count()
     devoluciones_recientes        = Devolucion.objects.select_related('prestamo').order_by('-fecha_creacion')[:5]
     # ── Stock por categoría ──
     stock_por_categoria = (
@@ -80,6 +81,10 @@ def home_usuario_view(request):
 
     productos_disponibles = Producto.objects.filter(stock__gt=0).order_by('nombre')
 
+    # Alertas de stock bajo
+    alertas_stock = list(Producto.objects.filter(stock__lt=5).values_list('nombre', 'stock'))
+    hay_alertas = len(alertas_stock) > 0
+
     return render(request, 'home_usuario.html', {
         'usuario':               usuario,
         'all_prestamos':         all_prestamos,
@@ -88,4 +93,157 @@ def home_usuario_view(request):
         'total_prestamos':       total_prestamos,
         'vencidos_count':        vencidos_count,
         'productos_disponibles': productos_disponibles,
+        'alertas_stock':         alertas_stock,
+        'hay_alertas':           hay_alertas,
     })
+# ─────────────────────────────────────────────────────────────
+#  NOTIFICACIONES JSON — agregar a pagina_principal/views.py
+#  Importar JsonResponse si no está: from django.http import JsonResponse
+# ─────────────────────────────────────────────────────────────
+def notificaciones_json(request):
+    """Devuelve notificaciones activas para el usuario en sesión."""
+    doc = request.session.get('usuario_documento')
+    rol = (request.session.get('usuario_rol') or '').strip().lower()
+    if not doc:
+        return JsonResponse({'items': [], 'total': 0})
+
+    hoy      = timezone.localdate()
+    proximos = hoy + timezone.timedelta(days=3)
+    items    = []
+
+    # ── Para admin/administrador: notificaciones globales ────────
+    if rol in ('administrador', 'admin'):
+
+        # Préstamos activos/hechos en este momento
+        activos = Prestamo.objects.filter(estado__in=['activo', 'parcial']).count()
+        if activos:
+            items.append({
+                'tipo':  'activo',
+                'icono': 'box-seam',
+                'color': '#1D9E75',
+                'titulo': f'{activos} préstamo{"s" if activos != 1 else ""} activo{"s" if activos != 1 else ""}',
+                'desc':  'Préstamos en curso',
+                'url':   '/prestamo/?estado=activo',
+            })
+
+        # Solicitudes pendientes de aprobación
+        pend = Prestamo.objects.filter(estado='pendiente').count()
+        if pend:
+            items.append({
+                'tipo':  'pendiente',
+                'icono': 'clock',
+                'color': '#c4900a',
+                'titulo': f'{pend} solicitud{"es" if pend != 1 else ""} pendiente{"s" if pend != 1 else ""}',
+                'desc':  'Requieren aprobación',
+                'url':   '/prestamo/',
+            })
+
+        # Préstamos vencidos globales
+        venc = Prestamo.objects.filter(estado='vencido').count()
+        if venc:
+            items.append({
+                'tipo':  'vencido',
+                'icono': 'exclamation-circle',
+                'color': '#98473E',
+                'titulo': f'{venc} préstamo{"s" if venc != 1 else ""} vencido{"s" if venc != 1 else ""}',
+                'desc':  'Requieren atención inmediata',
+                'url':   '/prestamos/?estado=vencido',
+            })
+
+        # Próximos a vencer (globales)
+        prox = Prestamo.objects.filter(
+            estado__in=['activo', 'parcial'],
+            fecha_vencimiento__lte=proximos,
+            fecha_vencimiento__gte=hoy,
+        ).count()
+        if prox:
+            items.append({
+                'tipo':  'proximo',
+                'icono': 'alarm',
+                'color': '#c4900a',
+                'titulo': f'{prox} préstamo{"s" if prox != 1 else ""} próximo{"s" if prox != 1 else ""} a vencer',
+                'desc':  'Vencen en los próximos 3 días',
+                'url':   '/prestamo/?vencidos=1',
+            })
+
+        # Devoluciones registradas sin procesar
+        devs = Devolucion.objects.count()
+        if devs:
+            items.append({
+                'tipo':  'devolucion',
+                'icono': 'arrow-counterclockwise',
+                'color': '#094D92',
+                'titulo': f'{devs} devolución{"es" if devs != 1 else ""} registrada{"s" if devs != 1 else ""}',
+                'desc':  'Revisar en módulo de devoluciones',
+                'url':   '/devoluciones/',
+            })
+
+        # Stock bajo (bajo stock pero no sin stock)
+        bajo = Producto.objects.filter(stock__gt=0, stock__lt=5).count()
+        if bajo:
+            items.append({
+                'tipo':  'stock_bajo',
+                'icono': 'exclamation-circle',
+                'color': '#c4900a',
+                'titulo': f'{bajo} herramienta{"s" if bajo != 1 else ""} con stock bajo',
+                'desc':  'Menos de 5 unidades disponibles',
+                'url':   '/inventario/',
+            })
+
+        # Stock crítico (sin stock)
+        sin_stock = Producto.objects.filter(stock=0).count()
+        if sin_stock:
+            items.append({
+                'tipo':  'stock',
+                'icono': 'box-seam',
+                'color': '#71816D',
+                'titulo': f'{sin_stock} producto{"s" if sin_stock != 1 else ""} sin stock',
+                'desc':  'Verificar inventario',
+                'url':   '/inventario/',
+            })
+
+    else:
+        # ── Para usuario normal: solo sus préstamos ──────────────
+
+        # Sus préstamos vencidos
+        venc_u = Prestamo.objects.filter(usuario=doc, estado='vencido').count()
+        if venc_u:
+            items.append({
+                'tipo':  'vencido',
+                'icono': 'exclamation-circle',
+                'color': '#98473E',
+                'titulo': f'{venc_u} préstamo{"s" if venc_u != 1 else ""} vencido{"s" if venc_u != 1 else ""}',
+                'desc':  'Contacta al administrador',
+                'url':   '/prestamo/usuario/',
+            })
+
+        # Sus préstamos próximos a vencer
+        prox_u = Prestamo.objects.filter(
+            usuario=doc,
+            estado__in=['activo', 'parcial'],
+            fecha_vencimiento__lte=proximos,
+            fecha_vencimiento__gte=hoy,
+        ).count()
+        if prox_u:
+            items.append({
+                'tipo':  'proximo',
+                'icono': 'alarm',
+                'color': '#c4900a',
+                'titulo': f'{prox_u} préstamo{"s" if prox_u != 1 else ""} vence{"n" if prox_u != 1 else ""} pronto',
+                'desc':  'En los próximos 3 días',
+                'url':   '/prestamo/usuario/',
+            })
+
+        # Solicitudes pendientes de aprobación propias
+        pend_u = Prestamo.objects.filter(usuario=doc, estado='pendiente').count()
+        if pend_u:
+            items.append({
+                'tipo':  'pendiente',
+                'icono': 'hourglass-split',
+                'color': '#094D92',
+                'titulo': f'{pend_u} solicitud{"es" if pend_u != 1 else ""} en espera',
+                'desc':  'Pendiente de aprobación del administrador',
+                'url':   '/prestamo/usuario/',
+            })
+
+    return JsonResponse({'items': items, 'total': len(items)})

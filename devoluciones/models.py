@@ -4,11 +4,6 @@ from prestamo.models import Prestamo, ItemPrestamo
 
 
 class Devolucion(models.Model):
-    ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
-        ('aprobada',  'Aprobada'),
-        ('rechazada', 'Rechazada'),
-    ]
 
     numero_orden = models.CharField(max_length=100, default='', blank=True)
     producto = models.CharField(max_length=255, default='', blank=True)
@@ -30,7 +25,6 @@ class Devolucion(models.Model):
         help_text='True = todas las herramientas; False = devolución parcial',
     )
     motivo = models.TextField()
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     fecha_creacion      = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

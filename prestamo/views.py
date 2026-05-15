@@ -277,6 +277,11 @@ def prestamos_view(request):
             messages.success(request, f'"{item.producto.nombre}" devuelto correctamente.')
             return redirect('prestamo')
 
+        # ── Iniciar devolución ─────────────────────────────────────────────
+        elif accion == 'iniciar_devolucion':
+            prestamo_id = request.POST.get('prestamo_pk')
+            return redirect(f'/devoluciones/?prestamo={prestamo_id}')
+
         # ── Crear nuevo préstamo (admin directo) ───────────────────────────
         else:
             form = PrestamoForm(request.POST)
@@ -545,11 +550,29 @@ def prestamo_api(request, pk):
                 'serial_entregado': item.serial_entregado,
                 'producto': {
                     'id':        item.producto.pk,
-                    'nombre':    item.producto.nombre,
-                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
+                    'nombre':    item.producto.nombre,                    'sku':       item.producto.codigo_sku,                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
                 }
             }
             for item in p.items.all()
         ]
     }
     return JsonResponse(data)
+
+
+# ── API JSON de usuario ─────────────────────────────────────────────────
+def usuario_api(request):
+    doc = request.GET.get('doc', '').strip()
+    if not doc:
+        return JsonResponse({'error': 'Documento requerido'}, status=400)
+
+    from usuario.models import Usuario
+    try:
+        usuario = Usuario.objects.get(numero_documento=doc)
+        data = {
+            'doc': doc,
+            'nombre': usuario.nombre_completo,
+            'tipo': usuario.tipo_documento,
+        }
+        return JsonResponse(data)
+    except Usuario.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)

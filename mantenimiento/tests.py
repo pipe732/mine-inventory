@@ -1,13 +1,9 @@
 from datetime import date
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-
 from inventario.models import Producto
 from .forms import MantenimientoUpdateForm
-from .models import Mantenimiento, MantenimientoCambio, TipoEstado
-
-
+from .models import Mantenimiento, MantenimientoCambio, TipoEstado, TipoMantenimiento
 class MantenimientoDisponibilidadTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -21,28 +17,44 @@ class MantenimientoDisponibilidadTests(TestCase):
             disponible=True,
             ubicacion='A1',
         )
-        self.estado_no_disponible = TipoEstado.objects.create(
-            nombre='Dañado severo',
-            codigo='DS',
-            categoria='danado',
-            impacto_disponibilidad='no_disponible',
-            activo=True,
+    
+        self.tipo_mantenimiento_correctivo, _ = TipoMantenimiento.objects.get_or_create(
+            nombre='Correctivo',
+            defaults={
+                'descripcion': 'Tipo de mantenimiento correctivo usado en pruebas',
+                'color': '#d9534f',
+                'activo': True,
+                'creado_por': self.user,
+            },
         )
-        self.estado_restringido = TipoEstado.objects.create(
-            nombre='Uso restringido',
+        self.estado_no_disponible, _ = TipoEstado.objects.get_or_create(
+            codigo='DS',
+            defaults={
+                'nombre': 'Dañado severo',
+                'categoria': 'danado',
+                'impacto_disponibilidad': 'no_disponible',
+                'activo': True,
+            },
+        )
+        self.estado_restringido, _ = TipoEstado.objects.get_or_create(
             codigo='UR',
-            categoria='otro',
-            impacto_disponibilidad='disponible_restringido',
-            activo=True,
+            defaults={
+                'nombre': 'Uso restringido',
+                'categoria': 'otro',
+                'impacto_disponibilidad': 'disponible_restringido',
+                'activo': True,
+            },
         )
 
     def _crear_mantenimiento(self, estado='abierto', tipo_estado=None):
+        # El campo tipo_mantenimiento ya es ForeignKey, así que debemos pasar
+        # una instancia real del catálogo y no una cadena de texto.
         return Mantenimiento.objects.create(
             producto=self.producto,
             tipo_estado=tipo_estado or self.estado_no_disponible,
             responsable=self.user,
             creado_por=self.user,
-            tipo_mantenimiento='correctivo',
+            tipo_mantenimiento=self.tipo_mantenimiento_correctivo,
             estado_registro=estado,
             fecha_reporte=date(2026, 4, 10),
             fecha_inicio=date(2026, 4, 10),
@@ -106,7 +118,7 @@ class MantenimientoDisponibilidadTests(TestCase):
         form = MantenimientoUpdateForm(
             data={
                 'producto': self.producto.pk,
-                'tipo_mantenimiento': 'correctivo',
+                'tipo_mantenimiento': self.tipo_mantenimiento_correctivo.pk,
                 'tipo_estado': self.estado_no_disponible.pk,
                 'fecha_reporte': '2026-04-10',
                 'fecha_inicio': '2026-04-10',
