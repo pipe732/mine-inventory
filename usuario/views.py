@@ -133,15 +133,11 @@ def logout_view(request):
 #  REGISTRO
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
-    # ROLES siempre disponible para el template
-    ctx_base = {
-        'roles':          ROLES,
-        'tipo_documento': 'CC',
-        'username':       '',
-        'email':          '',
-        'documento':      '',
-    }
-
+    # Todos los roles disponibles para el registro
+    """
+    linea comentada temporal
+    roles_disponibles = Rol.objects.all()
+    """
     if request.method == 'POST':
         username       = request.POST.get('username', '').strip()
         email          = request.POST.get('email', '').strip().lower()

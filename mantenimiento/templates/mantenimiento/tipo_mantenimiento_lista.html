@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %} 
+{% block title %}
+{{ titulo }}
+{%endblock %} 
+{% block content %}
+
+{% include "mantenimiento/partials/_cabecera.html" with titulo=titulo subtitulo=subtitulo url_accion=url_accion label_accion=label_accion %}
+
+<div class="card table-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span class="card-title">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59
+                 8.59a2 2 0 0 1 0 2.82z"
+        />
+        <line x1="7" y1="7" x2="7.01" y2="7" />
+      </svg>
+      Tipos de mantenimiento registrados
+    </span>
+    {% include "mantenimiento/partials/_count_badge.html" with total=tipos.paginator.count|default:0 singular="tipo" plural="tipos" %}
+  </div>
+
+  
+  <div class="card-search-filters" style="padding: 1rem; border-bottom: 1px solid rgba(0,0,0,.08);">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.3rem">Búsqueda</label>
+        <input 
+          type="text" 
+          name="q" 
+          class="form-control" 
+          placeholder="Nombre o descripción..." 
+          value="{{ q }}"
+          style="font-size: 0.9rem; width: 220px;"
+        />
+      </div>
+
+      <div class="col-auto">
+        <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.3rem">Estado</label>
+        <select name="activo" class="form-select" style="font-size: 0.9rem; width: 140px;">
+          <option value="">Todos</option>
+          <option value="si" {% if activo_filtro == 'si' %}selected{% endif %}>Activos</option>
+          <option value="no" {% if activo_filtro == 'no' %}selected{% endif %}>Inactivos</option>
+        </select>
+      </div>
+
+      <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-outline-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          Filtrar
+        </button>
+        {% if q or activo_filtro %}
+        <a href="{% url 'mantenimiento:tipo_mantenimiento_lista' %}" class="btn btn-sm btn-outline-secondary">
+          Limpiar
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="table-responsive">
+    <table
+      class="table-app"
+      style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
+    >
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th style="text-align: center; width: 100px">Color</th>
+          <th style="text-align: center; width: 80px">Usado en</th>
+          <th style="text-align: center; width: 80px">Activo</th>
+          <th style="text-align: center; width: 120px">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tipo in tipos %}
+        <tr>
+          <td style="font-weight: 600">{{ tipo.nombre }}</td>
+          <td style="color: var(--text-muted); font-size: 0.85rem">
+            {{ tipo.descripcion|default:"—" }}
+          </td>
+          <td style="text-align: center">
+            {% if tipo.color %}
+            <span
+              style="display:inline-block; width:24px; height:24px;
+                           border-radius:4px; background:{{ tipo.color }};
+                           border:1px solid rgba(0,0,0,.12);
+                           vertical-align:middle;"
+              title="{{ tipo.color }}"
+            ></span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="text-align: center; font-family: var(--font-mono); font-size: 0.85rem">
+            {{ tipo.mantenimientos.count }}
+          </td>
+          <td style="text-align: center">
+            {% if tipo.activo %}
+            <span class="badge-state badge-aprobada">Activo</span>
+            {% else %}
+            <span class="badge-state badge-rechazada">Inactivo</span>
+            {% endif %}
+          </td>
+          <td style="text-align: center; display: flex; gap: 0.4rem; justify-content: center; align-items: center;">
+            {% url 'mantenimiento:tipo_mantenimiento_editar' tipo.pk as editar_url %}
+            {% include "mantenimiento/partials/_action_icon_button.html" with href=editar_url title="Editar" icon="edit" %}
+            
+            {% if tipo.puede_inactivarse %}
+              {% url 'mantenimiento:tipo_mantenimiento_inactivar' tipo.pk as inactivar_url %}
+              <a 
+                href="{{ inactivar_url }}" 
+                class="icon-button"
+                title="Inactivar"
+                style="color: var(--warning); transition: all 0.2s ease;"
+                onmouseover="this.style.color='var(--warning)'; this.style.opacity='0.7'"
+                onmouseout="this.style.color='var(--warning)'; this.style.opacity='1'"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="1"></circle>
+                  <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24"></path>
+                </svg>
+              </a>
+            {% endif %}
+            
+            {% if tipo.puede_eliminarse %}
+              {% url 'mantenimiento:tipo_mantenimiento_eliminar' tipo.pk as eliminar_url %}
+              <a 
+                href="{{ eliminar_url }}" 
+                class="icon-button"
+                title="Eliminar"
+                style="color: var(--danger); transition: all 0.2s ease;"
+                onmouseover="this.style.color='var(--danger)'; this.style.opacity='0.7'"
+                onmouseout="this.style.color='var(--danger)'; this.style.opacity='1'"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+          {% include "mantenimiento/partials/_tabla_empty.html" with colspan=6 empty_mensaje="Aún no hay tipos de mantenimiento registrados." empty_hint="Usa <strong>Nuevo Tipo de Mantenimiento</strong> para agregar uno." %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  
+  {% if is_paginated %}
+  <div class="pagination" style="padding: 1rem; border-top: 1px solid rgba(0,0,0,.08); display: flex; justify-content: center; gap: 0.5rem;">
+    {% if page_obj.has_previous %}
+    <a href="?page=1" class="btn btn-sm btn-outline-secondary">Primera</a>
+    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-secondary">Anterior</a>
+    {% endif %}
+
+    <span style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+      Página <strong>{{ page_obj.number }}</strong> de <strong>{{ page_obj.paginator.num_pages }}</strong>
+    </span>
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-secondary">Siguiente</a>
+    <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-sm btn-outline-secondary">Última</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
