@@ -506,18 +506,20 @@
           </td>
           <td>
             {% if producto.estante %}
-              <span class="badge-ubicacion">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+              <button class="btn btn-outline-secondary btn-sm btn-reg-action btn-ver-ubicacion"
+                      data-almacen-nombre="{{ producto.estante.almacen.nombre|escapejs }}"
+                      data-almacen-pk="{{ producto.estante.almacen.pk }}"
+                      data-estante-codigo="{{ producto.estante.codigo|escapejs }}"
+                      data-estante-pk="{{ producto.estante.pk }}"
+                      data-producto-nombre="{{ producto.nombre|escapejs }}"
+                      title="Ver ubicación">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
                 </svg>
-                AL{{ producto.estante.almacen.pk }}-ES{{ producto.estante.pk }}
-              </span>
-              <div style="font-size:.7rem; color:var(--text-muted); margin-top:2px; line-height:1.2;">
-                {{ producto.estante.almacen.nombre }}<br>
-                <span style="opacity:.7;">{{ producto.estante.codigo }}</span>
-              </div>
+                Ver
+              </button>
             {% else %}
               <span style="color:var(--text-muted); font-size:.82rem;">—</span>
             {% endif %}
@@ -595,6 +597,49 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+</div>
+<!-- ══ MODAL — Ver Ubicación ══ -->
+<div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Ubicación de la herramienta
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:1.25rem 1.5rem;">
+        <div class="detalle-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--row-border, #e0d8cf);">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Herramienta</span>
+          <span style="font-size:13px; text-align:right; flex:1;" id="ubi_producto_nombre">—</span>
+        </div>
+        <div class="detalle-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--row-border, #e0d8cf);">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Almacén</span>
+          <span style="font-size:13px; text-align:right; flex:1;" id="ubi_almacen_nombre">—</span>
+        </div>
+        <div class="detalle-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--row-border, #e0d8cf);">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Código almacén</span>
+          <span style="font-size:13px; text-align:right; flex:1; font-family:var(--font-mono);" id="ubi_almacen_pk">—</span>
+        </div>
+        <div class="detalle-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--row-border, #e0d8cf);">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Estante</span>
+          <span style="font-size:13px; text-align:right; flex:1; font-family:var(--font-mono);" id="ubi_estante_codigo">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0;">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Referencia</span>
+          <span style="font-size:13px; text-align:right; flex:1; font-family:var(--font-mono);" id="ubi_referencia">—</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
   </div>
 </div>
  
@@ -1206,6 +1251,19 @@
     ],
     {% endfor %}
   };
+  // ── Modal Ver Ubicación ──
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-ver-ubicacion').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('ubi_producto_nombre').textContent = btn.dataset.productoNombre;
+        document.getElementById('ubi_almacen_nombre').textContent  = btn.dataset.almacenNombre;
+        document.getElementById('ubi_almacen_pk').textContent      = 'AL' + btn.dataset.almacenPk;
+        document.getElementById('ubi_estante_codigo').textContent  = btn.dataset.estanteCodigo;
+        document.getElementById('ubi_referencia').textContent      = 'AL' + btn.dataset.almacenPk + '-ES' + btn.dataset.estantePk;
+        new bootstrap.Modal(document.getElementById('modalUbicacion')).show();
+      });
+    });
+  });
  
   // FIX: puebla el selector de estantes según almacén seleccionado
   function llenarEstantes(almacenPk, selectorEstante, estanteSeleccionado) {
