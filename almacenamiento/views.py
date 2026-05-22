@@ -84,7 +84,9 @@ def vista_estantes(request):
         'form': form,
         'form_editar': form_editar,
         'show_modal': bool(form.errors),
-        'show_modal_editar': show_modal_editar,   # ← nuevo
+        'show_modal_editar': show_modal_editar,
+        'total_estantes': estantes.count(),           # ← agregar
+        'total_almacenes': Almacen.objects.count(),   # ← agregar
     })
 
 
