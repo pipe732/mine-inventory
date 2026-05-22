@@ -142,6 +142,16 @@
       var _panelOpen = false;
       var _fetching  = false;
 
+      // Detectar contexto de página actual
+      var _currentPage = '';
+      var _path = window.location.pathname.toLowerCase();
+      if (_path.indexOf('/home/admin') !== -1 || _path === '/home/' || _path.indexOf('/home/usuario') !== -1) {
+        _currentPage = 'principal';
+      } else if (_path.indexOf('/inventario') !== -1) {
+        _currentPage = 'inventario';
+      }
+      var _notifUrl = '/home/notificaciones/' + (_currentPage ? '?page=' + _currentPage : '');
+
       // Iconos por tipo de notificación
       var ICONS = {
         'clock': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
@@ -182,7 +192,7 @@
         notifItems.innerHTML = '';
         notifEmpty.style.display = 'none';
 
-        fetch('/home/notificaciones/', {
+        fetch(_notifUrl, {
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'same-origin',
         })
@@ -447,6 +457,16 @@
   var _lastCount    = 0;
   var _fetching     = false;
 
+  // Detectar contexto de página actual
+  var _currentPage2 = '';
+  var _path2 = window.location.pathname.toLowerCase();
+  if (_path2.indexOf('/home/admin') !== -1 || _path2 === '/home/' || _path2.indexOf('/home/usuario') !== -1) {
+    _currentPage2 = 'principal';
+  } else if (_path2.indexOf('/inventario') !== -1) {
+    _currentPage2 = 'inventario';
+  }
+  var _notifUrl2 = '/home/notificaciones/' + (_currentPage2 ? '?page=' + _currentPage2 : '');
+
   // ── Iconos SVG por tipo ─────────────────────────────────────
   var ICONS = {
     'clock': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
@@ -524,7 +544,7 @@
       notifEmpty.style.display   = 'none';
     }
 
-    fetch('/home/notificaciones/', {
+    fetch(_notifUrl2, {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
       credentials: 'same-origin',
     })
@@ -611,7 +631,7 @@
 
   // ── Polling cada 90 segundos para actualizar el badge ──────
   function pollBadge() {
-    fetch('/home/notificaciones/', {
+    fetch(_notifUrl2, {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
       credentials: 'same-origin',
     })
