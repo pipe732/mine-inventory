@@ -96,6 +96,21 @@ class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     url_accion          = reverse_lazy('mantenimiento:tipo_estado_nuevo')
     label_accion        = 'Nuevo Tipo de Estado'
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        modal_form_data = self.request.session.pop('modal_form_data', None)
+        self.request.session.pop('modal_open', None)
+
+        if modal_form_data:
+            tipo_estado_form = TipoEstadoForm(modal_form_data)
+            tipo_estado_form.is_valid()
+        else:
+            tipo_estado_form = TipoEstadoForm()
+
+        ctx['tipo_estado_form'] = tipo_estado_form
+        return ctx
+
 
 class TipoEstadoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
     model          = TipoEstado
@@ -148,6 +163,23 @@ class TipoMantenimientoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     url_accion          = reverse_lazy('mantenimiento:tipo_mantenimiento_crear')
     label_accion        = 'Nuevo Tipo de Mantenimiento'
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        modal_form_data = self.request.session.pop('modal_form_data', None)
+        self.request.session.pop('modal_open', None)
+
+        if modal_form_data:
+            tipo_mantenimiento_form = TipoMantenimientoForm(modal_form_data)
+            tipo_mantenimiento_form.is_valid()
+        else:
+            tipo_mantenimiento_form = TipoMantenimientoForm()
+
+        ctx['tipo_mantenimiento_form'] = tipo_mantenimiento_form
+        ctx['q'] = self.request.GET.get('q', '')
+        ctx['activo_filtro'] = self.request.GET.get('activo', '')
+        return ctx
+
     def get_queryset(self):
         qs = TipoMantenimiento.objects.all().order_by('nombre')
         
@@ -165,12 +197,6 @@ class TipoMantenimientoListView(SesionRequeridaMixin, ContextoMixin, ListView):
             qs = qs.filter(activo=False)
         
         return qs
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['q']           = self.request.GET.get('q', '')
-        ctx['activo_filtro'] = self.request.GET.get('activo', '')
-        return ctx
 
 
 class TipoMantenimientoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
