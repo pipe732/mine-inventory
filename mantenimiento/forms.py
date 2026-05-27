@@ -315,7 +315,7 @@ class MantenimientoForm(forms.ModelForm):
         from datetime import date
         if fecha > date.today():
             raise ValidationError(
-                "⏰ La fecha de reporte no puede ser en el futuro."
+                "La fecha de reporte no puede ser en el futuro."
             )
         
         return fecha
@@ -325,14 +325,14 @@ class MantenimientoForm(forms.ModelForm):
         fecha_inicio = self.cleaned_data.get('fecha_inicio')
         if not fecha_inicio:
             raise ValidationError(
-                "⏱️ La fecha de inicio es obligatoria. "
+                "La fecha de inicio es obligatoria. "
                 "Indica cuándo comenzó el mantenimiento."
             )
         
         fecha_reporte = self.cleaned_data.get('fecha_reporte')
         if fecha_reporte and fecha_inicio < fecha_reporte:
             raise ValidationError(
-                "❌ La fecha de inicio no puede ser anterior a la de reporte. "
+                "La fecha de inicio no puede ser anterior a la de reporte. "
                 f"Reporte: {fecha_reporte}, Inicio debe ser >= {fecha_reporte}"
             )
         
@@ -343,13 +343,13 @@ class MantenimientoForm(forms.ModelForm):
         desc = self.cleaned_data.get('descripcion_problema')
         if not desc or not desc.strip():
             raise ValidationError(
-                "📝 La descripción del problema es obligatoria. "
+                "La descripción del problema es obligatoria. "
                 "Describe en detalle qué falla presenta el equipo."
             )
         
         if len(desc.strip()) < 10:
             raise ValidationError(
-                "✏️ La descripción es muy corta. "
+                "La descripción es muy corta. "
                 "Mínimo 10 caracteres. Describe el problema en detalle."
             )
         
@@ -360,7 +360,7 @@ class MantenimientoForm(forms.ModelForm):
         responsable = self.cleaned_data.get('responsable')
         if not responsable:
             raise ValidationError(
-                "👤 Debes asignar un técnico responsable del mantenimiento."
+                "Debes asignar un técnico responsable del mantenimiento."
             )
         return responsable
 
@@ -369,7 +369,7 @@ class MantenimientoForm(forms.ModelForm):
         estado = self.cleaned_data.get('estado_registro')
         if not estado:
             raise ValidationError(
-                "📌 El estado del registro es obligatorio."
+                "El estado del registro es obligatorio."
             )
         return estado
 
@@ -378,7 +378,7 @@ class MantenimientoForm(forms.ModelForm):
         prioridad = self.cleaned_data.get('prioridad')
         if not prioridad:
             raise ValidationError(
-                "⚠️ La prioridad es obligatoria. "
+                "La prioridad es obligatoria. "
                 "Selecciona: Baja, Media, Alta o Crítica."
             )
         return prioridad
@@ -399,21 +399,21 @@ class MantenimientoForm(forms.ModelForm):
         if fecha_reporte and fecha_inicio and fecha_inicio < fecha_reporte:
             self.add_error(
                 'fecha_inicio',
-                f"❌ La fecha de inicio ({fecha_inicio}) no puede ser anterior "
+                f"La fecha de inicio ({fecha_inicio}) no puede ser anterior "
                 f"a la fecha de reporte ({fecha_reporte})."
             )
 
         if fecha_inicio and fecha_fin_estimada and fecha_fin_estimada < fecha_inicio:
             self.add_error(
                 'fecha_fin_estimada',
-                f"❌ La fecha estimada ({fecha_fin_estimada}) no puede ser anterior "
+                f"La fecha estimada ({fecha_fin_estimada}) no puede ser anterior "
                 f"a la fecha de inicio ({fecha_inicio})."
             )
 
         if fecha_inicio and fecha_fin_real and fecha_fin_real < fecha_inicio:
             self.add_error(
                 'fecha_fin_real',
-                f"❌ La fecha real ({fecha_fin_real}) no puede ser anterior "
+                f"La fecha real ({fecha_fin_real}) no puede ser anterior "
                 f"a la fecha de inicio ({fecha_inicio})."
             )
 
@@ -421,19 +421,19 @@ class MantenimientoForm(forms.ModelForm):
         if tiempo is not None and tiempo < 0:
             self.add_error(
                 'tiempo_empleado_horas',
-                "⏳ El tiempo no puede ser negativo."
+                "El tiempo no puede ser negativo."
             )
 
         if costo_estimado is not None and costo_estimado < 0:
             self.add_error(
                 'costo_estimado',
-                "💵 El costo estimado no puede ser negativo."
+                "El costo estimado no puede ser negativo."
             )
 
         if costo_real is not None and costo_real < 0:
             self.add_error(
                 'costo_real',
-                "💰 El costo real no puede ser negativo."
+                "El costo real no puede ser negativo."
             )
 
         return cleaned
