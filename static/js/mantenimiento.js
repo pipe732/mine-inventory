@@ -300,13 +300,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Muestra una notificación temporal en la esquina inferior derecha
     function showToastError(message) {
+        showToast(message, 'bg-danger text-white', 'Error de validación');
+    }
+
+    function showToast(message, headerClass, title) {
         const toast = document.createElement('div');
         toast.className = 'toast position-fixed bottom-0 end-0 m-3';
         toast.setAttribute('role', 'alert');
         toast.style.zIndex = '9999';
         toast.innerHTML = `
-            <div class="toast-header bg-danger text-white">
-                <strong class="me-auto">Error de validación</strong>
+            <div class="toast-header ${headerClass}">
+                <strong class="me-auto">${title}</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>
             <div class="toast-body">${message}</div>
@@ -316,6 +320,20 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => toast.remove(), 5000);
     }
 
+    function renderQueuedMessages() {
+        const messageHost = document.getElementById('mantenimiento-messages');
+        if (!messageHost) return;
+
+        messageHost.querySelectorAll('[data-message]').forEach(function (node) {
+            const message = node.dataset.message || '';
+            const tag = (node.dataset.tag || 'info').trim() || 'info';
+            const headerClass = tag === 'error' ? 'bg-danger text-white' : `bg-${tag} text-white`;
+            showToast(message, headerClass, 'Notificación');
+        });
+        messageHost.remove();
+    }
+
     // Estado inicial del botón
     updateSubmitButton();
+    renderQueuedMessages();
 });
