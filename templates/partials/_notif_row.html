@@ -1,13 +1,468 @@
-<div style="display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.85rem 1rem; border-radius:var(--radius-md); background:rgba(9,77,146,.04); border:1px solid rgba(9,77,146,.1);">
-  <div style="min-width:0;">
-    <div style="font-weight:700; color:var(--text-main); font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-      {{ label }}
+{# templates/partials/_notif_row.html — campanita del aside #}
+
+<div id="aside-notif-widget" style="padding:.35rem .75rem .15rem; position:relative;">
+
+  <button id="aside-notif-btn" type="button" aria-label="Notificaciones" aria-expanded="false" style="width:100%; display:flex; align-items:center; gap:.65rem;
+                 padding:.48rem .75rem;
+                 background:rgba(255,255,255,.04);
+                 border:1px solid rgba(255,255,255,.07);
+                 border-radius:.5rem;
+                 color:rgba(239,236,202,.72);
+                 font-family:var(--font-ui);
+                 font-size:.86rem;
+                 cursor:pointer;
+                 transition:background .15s;
+                 position:relative;">
+
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+      style="flex-shrink:0; opacity:.7;">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+
+    <span class="flex-grow-1 text-start">Notificaciones</span>
+
+    <span id="aside-notif-badge" style="display:none;
+                 min-width:18px; height:18px;
+                 padding:0 5px;
+                 border-radius:20px;
+                 background:var(--rust);
+                 color:#fff;
+                 font-family:var(--font-mono);
+                 font-size:.62rem;
+                 font-weight:700;
+                 line-height:18px;
+                 text-align:center;
+                 flex-shrink:0;">
+      0
+    </span>
+  </button>
+
+  <div id="aside-notif-panel" style="display:none;
+              position:fixed;
+              bottom:5.5rem;
+              left:calc(var(--aside-w) + .5rem);
+              width:320px;
+              max-height:min(480px, calc(100vh - 8rem));
+              background:var(--bg-surface);
+              border:1px solid var(--border-color);
+              border-radius:var(--radius-lg);
+              box-shadow:0 8px 32px rgba(27,32,33,.18);
+              z-index:99995;
+              overflow:hidden;
+              flex-direction:column;">
+
+    <div style="padding:.72rem 1rem;
+                background:var(--dark);
+                border-bottom:2px solid var(--rust);
+                display:flex; align-items:center; justify-content:space-between;
+                flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:.5rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="1.8"
+          opacity=".8">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span style="font-family:var(--font-ui); font-weight:700; font-size:.85rem;
+                     color:var(--cream); letter-spacing:.04em;">Notificaciones</span>
+        <span id="aside-panel-count" style="font-family:var(--font-mono); font-size:.65rem;
+                     background:rgba(152,71,62,.3); color:var(--cream);
+                     padding:.1rem .45rem; border-radius:20px; margin-left:.25rem;
+                     display:none;">
+          0
+        </span>
+      </div>
+      <button id="aside-notif-close" type="button" aria-label="Cerrar notificaciones" style="background:none; border:none; cursor:pointer;
+                     color:rgba(239,236,202,.4); padding:0; line-height:1;
+                     font-size:1.1rem; transition:color .15s;" onmouseover="this.style.color='var(--cream)'"
+        onmouseout="this.style.color='rgba(239,236,202,.4)'">
+        ✕
+      </button>
     </div>
-    <div style="font-size:.78rem; color:var(--text-muted); margin-top:.22rem;">
-      {% if activa %}Recibirás notificaciones para este evento.{% else %}No recibirás notificaciones para este evento.{% endif %}
+
+    <div id="aside-notif-list" style="flex:1; overflow-y:auto; padding:.5rem .6rem;
+                max-height:380px;
+                scrollbar-width:thin;
+                scrollbar-color:rgba(9,77,146,.2) transparent;">
+    </div>
+
+    <div id="aside-notif-loading" style="padding:2rem; text-align:center;
+                color:var(--text-muted); font-family:var(--font-ui); font-size:.82rem;">
+      <div style="display:inline-flex; gap:.25rem; align-items:center; margin-bottom:.4rem;">
+        <span class="notif-dot-anim"></span>
+        <span class="notif-dot-anim" style="animation-delay:.18s"></span>
+        <span class="notif-dot-anim" style="animation-delay:.36s"></span>
+      </div>
+      <div>Cargando…</div>
+    </div>
+
+    <div id="aside-notif-empty" style="display:none; padding:2.5rem 1rem; text-align:center;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.2"
+        style="opacity:.3; display:block; margin:0 auto .65rem;">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+      <p style="font-family:var(--font-ui); color:var(--text-muted);
+                font-size:.82rem; font-weight:600; margin:0 0 .2rem;">
+        Sin notificaciones
+      </p>
+      <p style="font-family:var(--font-ui); color:var(--text-muted);
+                font-size:.72rem; margin:0; opacity:.7;">
+        Todo está en orden
+      </p>
+    </div>
+
+    <div style="padding:.5rem .9rem;
+                border-top:1px solid var(--border-color);
+                background:rgba(27,32,33,.03);
+                display:flex; align-items:center; justify-content:space-between;
+                flex-shrink:0;">
+      <span id="aside-notif-ts" style="font-family:var(--font-mono); font-size:.62rem; color:var(--text-muted);">
+        —
+      </span>
+      <button id="aside-notif-refresh" type="button" aria-label="Actualizar notificaciones" style="background:none; border:none; cursor:pointer;
+                     color:var(--text-muted); font-family:var(--font-ui);
+                     font-size:.72rem; font-weight:600; padding:0;
+                     display:flex; align-items:center; gap:.3rem;
+                     transition:color .15s;" onmouseover="this.style.color='var(--navy)'"
+        onmouseout="this.style.color='var(--text-muted)'">
+        <svg id="aside-refresh-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+        </svg>
+        Actualizar
+      </button>
     </div>
   </div>
-  <span style="font-size:.78rem; font-weight:700; color:{% if activa %}var(--sage){% else %}var(--text-muted){% endif %};">
-    {% if activa %}Activo{% else %}Inactivo{% endif %}
-  </span>
 </div>
+
+<style>
+  .notif-dot-anim {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--navy);
+    opacity: .5;
+    animation: notifDotPulse .9s ease-in-out infinite;
+  }
+
+  @keyframes notifDotPulse {
+
+    0%,
+    80%,
+    100% {
+      transform: scale(.7);
+      opacity: .3
+    }
+
+    40% {
+      transform: scale(1);
+      opacity: .9
+    }
+  }
+
+  .aside-notif-card {
+    display: flex;
+    align-items: flex-start;
+    gap: .7rem;
+    padding: .68rem .8rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    margin-bottom: .38rem;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: background .14s, border-color .14s, transform .1s;
+    cursor: pointer;
+    animation: notifCardIn .22s ease both;
+  }
+
+  .aside-notif-card:hover {
+    background: rgba(9, 77, 146, .04);
+    border-color: rgba(9, 77, 146, .18);
+    transform: translateX(2px);
+  }
+
+  .aside-notif-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .aside-notif-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .aside-notif-title {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: .81rem;
+    color: var(--text-main);
+    line-height: 1.25;
+    margin-bottom: .14rem;
+  }
+
+  .aside-notif-desc {
+    font-family: var(--font-ui);
+    font-size: .72rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+
+  .aside-notif-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    opacity: .2;
+    color: var(--text-main);
+    transition: opacity .14s, transform .14s;
+    align-self: center;
+  }
+
+  .aside-notif-card:hover .aside-notif-arrow {
+    opacity: .6;
+    transform: translateX(2px);
+  }
+
+  @keyframes notifCardIn {
+    from {
+      opacity: 0;
+      transform: translateX(-8px)
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0)
+    }
+  }
+
+  @keyframes bellShake {
+
+    0%,
+    100% {
+      transform: rotate(0)
+    }
+
+    15% {
+      transform: rotate(18deg)
+    }
+
+    30% {
+      transform: rotate(-16deg)
+    }
+
+    45% {
+      transform: rotate(10deg)
+    }
+
+    60% {
+      transform: rotate(-6deg)
+    }
+
+    75% {
+      transform: rotate(3deg)
+    }
+
+    90% {
+      transform: rotate(-1deg)
+    }
+  }
+
+  .bell-shake-anim {
+    animation: bellShake .55s ease;
+  }
+
+  body.dark-mode #aside-notif-panel {
+    background: #182225 !important;
+    border-color: rgba(239, 236, 202, .07) !important;
+  }
+
+  body.dark-mode .aside-notif-card {
+    background: #1e2a2d !important;
+    border-color: rgba(239, 236, 202, .07) !important;
+  }
+
+  body.dark-mode .aside-notif-card:hover {
+    background: #243033 !important;
+  }
+
+  aside[data-acc-dark] #aside-notif-btn {
+    color: rgba(27, 32, 33, .6) !important;
+  }
+
+  aside[data-acc-dark] #aside-notif-btn:hover {
+    background: rgba(27, 32, 33, .06) !important;
+    color: #1B2021 !important;
+  }
+</style>
+
+<script>
+  (function () {
+    var btn = document.getElementById('aside-notif-btn');
+    var panel = document.getElementById('aside-notif-panel');
+    var badge = document.getElementById('aside-notif-badge');
+    var count = document.getElementById('aside-panel-count');
+    var list = document.getElementById('aside-notif-list');
+    var loading = document.getElementById('aside-notif-loading');
+    var empty = document.getElementById('aside-notif-empty');
+    var ts = document.getElementById('aside-notif-ts');
+    var refresh = document.getElementById('aside-notif-refresh');
+    var closeBtn = document.getElementById('aside-notif-close');
+    var refIcon = document.getElementById('aside-refresh-icon');
+
+    if (!btn || !panel) return;
+
+    var _open = false;
+    var _lastCount = 0;
+    var _fetching = false;
+
+    var _path = window.location.pathname.toLowerCase();
+    var _page = '';
+    if (_path.indexOf('/home/admin') !== -1 || _path === '/home/' || _path.indexOf('/home/usuario') !== -1) {
+      _page = 'principal';
+    } else if (_path.indexOf('/inventario') !== -1) {
+      _page = 'inventario';
+    }
+    var _url = '/home/notificaciones/' + (_page ? '?page=' + _page : '');
+
+    var ICONOS = {
+      'clock': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      'exclamation-circle': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      'alarm': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M5 3 2 6M22 6l-3-3M12 9v4l2 2"/><line x1="12" y1="1" x2="12" y2="3"/></svg>',
+      'arrow-counterclockwise': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>',
+      'box-seam': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+      'hourglass-split': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>',
+    };
+
+    function hexToRgba(hex, a) {
+      if (!hex || !hex.startsWith('#')) return 'rgba(9,77,146,' + a + ')';
+      var r = parseInt(hex.slice(1, 3), 16),
+        g = parseInt(hex.slice(3, 5), 16),
+        b = parseInt(hex.slice(5, 7), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+    }
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function openPanel() {
+      _open = true;
+      panel.style.display = 'flex';
+      btn.setAttribute('aria-expanded', 'true');
+      fetchNotifs();
+    }
+    function closePanel() {
+      _open = false;
+      panel.style.display = 'none';
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      _open ? closePanel() : openPanel();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', closePanel);
+    document.addEventListener('click', function (e) {
+      var widget = document.getElementById('aside-notif-widget');
+      if (_open && widget && !widget.contains(e.target)) closePanel();
+    });
+
+    if (refresh) refresh.addEventListener('click', function () {
+      if (_fetching) return;
+      refIcon.style.transition = 'transform .5s ease';
+      refIcon.style.transform = 'rotate(360deg)';
+      setTimeout(function () { refIcon.style.transform = 'rotate(0)'; }, 550);
+      fetchNotifs(true);
+    });
+
+    function fetchNotifs(force) {
+      if (_fetching && !force) return;
+      _fetching = true;
+
+      if (!list.children.length || force) {
+        loading.style.display = 'block';
+        empty.style.display = 'none';
+        list.innerHTML = '';
+      }
+
+      fetch(_url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { renderItems(data.items || [], data.total || 0); updateBadge(data.total || 0); })
+        .catch(function () {
+          loading.style.display = 'none';
+          empty.style.display = 'block';
+        })
+        .finally(function () { _fetching = false; });
+    }
+
+    function renderItems(items, total) {
+      loading.style.display = 'none';
+      list.innerHTML = '';
+
+      if (!items.length) {
+        empty.style.display = 'block';
+        if (count) count.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      if (count) { count.textContent = total; count.style.display = 'inline'; }
+
+      items.forEach(function (item, idx) {
+        var a = document.createElement('a');
+        a.href = item.url || '#';
+        a.className = 'aside-notif-card';
+        a.style.animationDelay = (idx * 45) + 'ms';
+
+        var icono = ICONOS[item.icono] || ICONOS['alarm'];
+        a.innerHTML =
+          '<div class="aside-notif-icon" style="background:' + hexToRgba(item.color, '.1') + ';border:1px solid ' + hexToRgba(item.color, '.2') + ';color:' + item.color + ';">' + icono + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+          '<div class="aside-notif-title">' + esc(item.titulo) + '</div>' +
+          '<div class="aside-notif-desc">' + esc(item.desc) + '</div>' +
+          '</div>' +
+          '<div class="aside-notif-arrow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>';
+
+        list.appendChild(a);
+      });
+
+      if (ts) {
+        var now = new Date();
+        ts.textContent = 'Actualizado ' + now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    function updateBadge(total) {
+      if (!badge) return;
+      var prev = _lastCount;
+      if (total > 0) {
+        badge.textContent = total > 99 ? '99+' : total;
+        badge.style.display = 'inline-block';
+        if (total > prev) {
+          var bell = btn.querySelector('svg');
+          if (bell) { bell.classList.add('bell-shake-anim'); setTimeout(function () { bell.classList.remove('bell-shake-anim'); }, 600); }
+        }
+      } else {
+        badge.style.display = 'none';
+      }
+      _lastCount = total;
+    }
+
+    function pollBadge() {
+      fetch(_url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          updateBadge(data.total || 0);
+          if (_open) renderItems(data.items || [], data.total || 0);
+        })
+        .catch(function () { });
+    }
+
+    setTimeout(pollBadge, 1200);
+    setInterval(pollBadge, 90000);
+  })();
+</script>
