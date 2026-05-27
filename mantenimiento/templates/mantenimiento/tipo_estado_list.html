@@ -13,6 +13,7 @@
   <button
     type="button"
     class="btn-primary-mine"
+    title="Nuevo Tipo de Estado"
     data-bs-toggle="modal"
     data-bs-target="#modalNuevoEstado"
     style="white-space: nowrap"
@@ -29,7 +30,7 @@
       <line x1="12" y1="8" x2="12" y2="16" />
       <line x1="8" y1="12" x2="16" y2="12" />
     </svg>
-    {{ label_accion }}
+    Nuevo Tipo de Estado
   </button>
 </div>
 
@@ -224,6 +225,15 @@
       </form>
     </div>
   </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('modalNuevoEstado');
+    if (modal && modal.dataset.hasErrors === 'true') {
+      new bootstrap.Modal(modal).show();
+    }
+  });
+</script>
 <script src="{% static 'js/modals.js' %}"></script>
 
 {% endblock %}
