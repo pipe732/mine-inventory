@@ -12,7 +12,7 @@ urlpatterns = [
     
     # /mantenimiento/tipos-mantenimiento/crear/
     path('tipos-mantenimiento/crear/',
-         views.TipoMantenimientoCreateView.as_view(),
+         views.tipo_mantenimiento_crear,
          name='tipo_mantenimiento_crear'),
     
     # /mantenimiento/tipos-mantenimiento/<int:pk>/editar/
@@ -38,7 +38,7 @@ urlpatterns = [
     
     # /mantenimiento/tipo-estado/nuevo/
     path('tipo-estado/nuevo/',
-         views.TipoEstadoCreateView.as_view(),
+         views.tipo_estado_crear,
          name='tipo_estado_nuevo'),
     
     # /mantenimiento/tipo-estado/editar/<int:pk>/

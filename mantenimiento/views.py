@@ -1,5 +1,5 @@
 # mantenimiento/views.py
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
+from django.views.generic import ListView, UpdateView, DetailView
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -93,8 +93,6 @@ class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     ordering            = ['nombre']
     titulo              = 'Catálogo de Tipos de Estado'
     subtitulo           = 'Gestión del catálogo de estados de mantenimiento'
-    url_accion          = reverse_lazy('mantenimiento:tipo_estado_nuevo')
-    label_accion        = 'Nuevo Tipo de Estado'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -112,29 +110,28 @@ class TipoEstadoListView(SesionRequeridaMixin, ContextoMixin, ListView):
         return ctx
 
 
-class TipoEstadoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
-    model          = TipoEstado
-    form_class     = TipoEstadoForm
-    template_name  = 'mantenimiento/tipo_estado_form.html'
-    success_url    = reverse_lazy('mantenimiento:tipo_estado_lista')
-    titulo         = 'Nuevo Tipo de Estado'
-    subtitulo      = 'Agrega un nuevo estado al catálogo'
-    boton_texto    = 'Guardar Tipo de Estado'
-    url_cancelar   = 'mantenimiento:tipo_estado_lista'
+@sesion_requerida
+def tipo_estado_crear(request):
+    if request.method != 'POST':
+        return redirect('mantenimiento:tipo_estado_lista')
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(
-            self.request,
-            f'Tipo de estado "{form.cleaned_data["nombre"]}" registrado correctamente.'
-        )
-        return response
+    form = TipoEstadoForm(request.POST)
+
+    if form.is_valid():
+        tipo_estado = form.save()
+        messages.success(request, f'Tipo de estado "{tipo_estado.nombre}" registrado correctamente.')
+        return redirect('mantenimiento:tipo_estado_lista')
+
+    request.session['modal_form_data'] = request.POST.dict()
+    request.session['modal_open'] = 'modalNuevoEstado'
+    messages.error(request, 'Revisa los errores del formulario.')
+    return redirect('mantenimiento:tipo_estado_lista')
 
 
 class TipoEstadoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
     model          = TipoEstado
     form_class     = TipoEstadoForm
-    template_name  = 'mantenimiento/tipo_estado_form.html'
+    template_name  = 'mantenimiento/tipo_estado_editar.html'
     success_url    = reverse_lazy('mantenimiento:tipo_estado_lista')
     titulo         = 'Editar Tipo de Estado'
     subtitulo      = 'Modifica los datos del estado seleccionado'
@@ -160,8 +157,6 @@ class TipoMantenimientoListView(SesionRequeridaMixin, ContextoMixin, ListView):
     paginate_by         = 20
     titulo              = 'Catálogo de Tipos de Mantenimiento'
     subtitulo           = 'Gestión de los tipos de mantenimiento disponibles'
-    url_accion          = reverse_lazy('mantenimiento:tipo_mantenimiento_crear')
-    label_accion        = 'Nuevo Tipo de Mantenimiento'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -199,33 +194,30 @@ class TipoMantenimientoListView(SesionRequeridaMixin, ContextoMixin, ListView):
         return qs
 
 
-class TipoMantenimientoCreateView(SesionRequeridaMixin, ContextoMixin, CreateView):
-    """Crear un nuevo tipo de mantenimiento."""
-    model          = TipoMantenimiento
-    form_class     = TipoMantenimientoForm
-    template_name  = 'mantenimiento/tipo_mantenimiento_form.html'
-    success_url    = reverse_lazy('mantenimiento:tipo_mantenimiento_lista')
-    titulo         = 'Nuevo Tipo de Mantenimiento'
-    subtitulo      = 'Agrega un nuevo tipo de mantenimiento al catálogo'
-    boton_texto    = 'Guardar Tipo'
-    url_cancelar   = 'mantenimiento:tipo_mantenimiento_lista'
+@sesion_requerida
+def tipo_mantenimiento_crear(request):
+    if request.method != 'POST':
+        return redirect('mantenimiento:tipo_mantenimiento_lista')
 
-    def form_valid(self, form):
-        # Asignar creado_por desde la sesión
+    form = TipoMantenimientoForm(request.POST)
+
+    if form.is_valid():
         from usuario.models import Usuario
-        doc = self.request.session.get('usuario_documento')
+        tipo = form.save(commit=False)
+        doc = request.session.get('usuario_documento')
         if doc:
             try:
-                form.instance.creado_por = Usuario.objects.get(numero_documento=doc)
+                tipo.creado_por = Usuario.objects.get(numero_documento=doc)
             except Usuario.DoesNotExist:
                 pass
-        
-        response = super().form_valid(form)
-        messages.success(
-            self.request,
-            f'Tipo de mantenimiento "{form.instance.nombre}" creado correctamente.'
-        )
-        return response
+        tipo.save()
+        messages.success(request, f'Tipo de mantenimiento "{tipo.nombre}" creado correctamente.')
+        return redirect('mantenimiento:tipo_mantenimiento_lista')
+
+    request.session['modal_form_data'] = request.POST.dict()
+    request.session['modal_open'] = 'modalNuevoTipoMantenimiento'
+    messages.error(request, 'Revisa los errores del formulario.')
+    return redirect('mantenimiento:tipo_mantenimiento_lista')
 
 
 class TipoMantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
