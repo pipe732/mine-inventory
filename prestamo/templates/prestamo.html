@@ -70,24 +70,6 @@
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if prestamos_pendientes > 0 %}border-color:rgba(196,144,10,.4);{% endif %}"
-         data-kpi-delay="160">
-      <div class="kpi-accent-bar" style="background:#c4900a;"></div>
-      {% if prestamos_pendientes > 0 %}
-      <span class="kpi-trend warn">⏳ pendientes</span>
-      {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if prestamos_pendientes > 0 %}5rem{% else %}0{% endif %};">Pendientes</div>
-      <div class="kpi-number" data-target="{{ prestamos_pendientes }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if prestamos_pendientes > 0 %}#c4900a{% else %}var(--text-main){% endif %};
-                  line-height:1;">0</div>
-      <div class="kpi-label">por aprobar</div>
-    </div>
-  </div>
-  <div class="col-6 col-md-2">
     <div class="card h-100 kpi-card" style="padding:.9rem 1rem;" data-kpi-delay="240">
       <div class="kpi-accent-bar" style="background:var(--sage);"></div>
       <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
@@ -135,23 +117,6 @@
     </div>
   </div>
 </div>
-
-{# ══ ALERTA PENDIENTES ══ #}
-{% if prestamos_pendientes > 0 %}
-<div class="d-flex align-items-center gap-3 mb-3 px-4 py-3"
-     style="background:rgba(196,144,10,.07); border:1px solid rgba(196,144,10,.3);
-            border-radius:var(--radius-md); font-family:var(--font-ui);">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4900a" stroke-width="2.2" style="flex-shrink:0;">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-  </svg>
-  <span style="font-size:.88rem; color:#7a5500;">
-    Hay <strong>{{ prestamos_pendientes }} solicitud{{ prestamos_pendientes|pluralize:"es" }}</strong>
-    pendiente{{ prestamos_pendientes|pluralize:"s" }} de aprobación.
-    Haz clic en <strong>Aprobar</strong> en la fila correspondiente para revisarla.
-  </span>
-</div>
-{% endif %}
 
 {# ══ FILTROS ══ #}
 <div class="card mb-3">

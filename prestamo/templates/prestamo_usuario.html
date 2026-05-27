@@ -132,15 +132,6 @@
         </span>
         {% endif %}
       </button>
-      {% if pendientes_aprobacion %}
-      <button class="pu-filter-btn" data-filter="pendiente" onclick="puFiltrar('pendiente', this)">
-        Pendientes
-        <span style="font-family:var(--font-mono); font-size:.65rem; background:rgba(196,144,10,.15);
-                     color:#7a5500; padding:.05rem .4rem; border-radius:10px; margin-left:.25rem;">
-          {{ pendientes_aprobacion }}
-        </span>
-      </button>
-      {% endif %}
       <button class="pu-filter-btn" data-filter="devuelto" onclick="puFiltrar('devuelto', this)">Devueltos</button>
       {% if vencidos_count %}
       <button class="pu-filter-btn" data-filter="vencido" onclick="puFiltrar('vencido', this)">

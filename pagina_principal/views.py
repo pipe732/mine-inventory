@@ -20,7 +20,6 @@ def dashboard_view(request):
     # ── Préstamos ──
     prestamos_activos_count   = Prestamo.objects.filter(estado='activo').count()
     prestamos_vencidos_count  = Prestamo.objects.filter(estado='vencido').count()
-    prestamos_pendientes_count = Prestamo.objects.filter(estado='pendiente').count()
     prestamos_recientes       = Prestamo.objects.prefetch_related('items__producto').order_by('-fecha_prestamo')[:5]
     # ── Devoluciones ──
     devoluciones_pendientes_count = Devolucion.objects.count()
@@ -41,7 +40,6 @@ def dashboard_view(request):
         'total_categorias':               total_categorias,
         'prestamos_activos_count':        prestamos_activos_count,
         'prestamos_vencidos_count':       prestamos_vencidos_count,
-        'prestamos_pendientes_count':     prestamos_pendientes_count,
         'devoluciones_pendientes_count':  devoluciones_pendientes_count,
         'prestamos_recientes':            prestamos_recientes,
         'devoluciones_recientes':         devoluciones_recientes,
@@ -137,17 +135,8 @@ def notificaciones_json(request):
                 })
 
         # ─── SOLICITUDES PENDIENTES ───
-        if page not in ('principal', 'inventario'):
-            pend = Prestamo.objects.filter(estado='pendiente').count()
-            if pend:
-                items.append({
-                    'tipo':  'pendiente',
-                    'icono': 'clock',
-                    'color': '#c4900a',
-                    'titulo': f'{pend} solicitud{"es" if pend != 1 else ""} pendiente{"s" if pend != 1 else ""}',
-                    'desc':  'Requieren aprobación',
-                    'url':   '/prestamo/',
-                })
+        # Se omiten las notificaciones generales de préstamos pendientes de aprobación
+        # para evitar alertas redundantes que no se desean mostrar en la campana.
 
         # ─── PRÉSTAMOS VENCIDOS (en principal y en "todas") ───
         if page != 'inventario':
@@ -276,15 +265,6 @@ def notificaciones_json(request):
             })
 
         # Solicitudes pendientes de aprobación propias
-        pend_u = Prestamo.objects.filter(usuario=doc, estado='pendiente').count()
-        if pend_u:
-            items.append({
-                'tipo':  'pendiente',
-                'icono': 'hourglass-split',
-                'color': '#094D92',
-                'titulo': f'{pend_u} solicitud{"es" if pend_u != 1 else ""} en espera',
-                'desc':  'Pendiente de aprobación del administrador',
-                'url':   '/prestamo/usuario/',
-            })
+        # No se generan notificaciones en la campana para solicitudes pendientes.
 
     return JsonResponse({'items': items, 'total': len(items)})
