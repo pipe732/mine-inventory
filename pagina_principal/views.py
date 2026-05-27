@@ -4,6 +4,7 @@ from inventario.models import Producto, Categoria
 from prestamo.models import Prestamo
 from devoluciones.models import Devolucion
 from django.http import JsonResponse
+from django.utils import timezone
 #from common.mixins import sesion_requerida 
 
 #@sesion_requerida     
