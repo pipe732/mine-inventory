@@ -8,6 +8,7 @@ from .forms import ProductoForm, CategoriaForm, FiltroInventarioForm
 from mantenimiento.forms import MantenimientoForm
 from common.mixins import sesion_requerida    
 
+
 @sesion_requerida
 def inventario(request):
     form_filtro = FiltroInventarioForm(request.GET or None)

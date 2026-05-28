@@ -1,6 +1,10 @@
 # usuario/urls.py
 from django.urls import path
 from . import views
+from django.urls import path
+from . import views
+from django.urls import path
+from . import views
 
 urlpatterns = [
     path('',                                        views.login_view,            name='login'),
@@ -13,4 +17,6 @@ urlpatterns = [
     path('usuarios/<str:numero_documento>/json/',   views.detalle_usuario_json,  name='detalle_usuario_json'),
     # Perfil propio
     path('perfil/',                                 views.perfil_view,           name='perfil'),
+    
+    path('registro/qr-pdf/', views.registro_qr_pdf, name='registro_qr_pdf'),
 ]

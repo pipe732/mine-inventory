@@ -18,6 +18,47 @@ from usuario.decorators import admin_required, login_required
 
 from .models import Usuario, validar_numero_documento
 from common.mixins import sesion_requerida
+import qrcode
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from django.http import HttpResponse
+from django.conf import settings
+
+def registro_qr_pdf(request):
+    # URL de registro — usa tu dominio real en producción
+    url_registro = request.build_absolute_uri('/usuario/registro/')
+
+    # Generar el QR en memoria
+    qr = qrcode.make(url_registro)
+    qr_buffer = io.BytesIO()
+    qr.save(qr_buffer, format='PNG')
+    qr_buffer.seek(0)
+
+    # Crear el PDF
+    pdf_buffer = io.BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=A4)
+    ancho, alto = A4
+
+    # Título
+    c.setFont("Helvetica-Bold", 20)
+    c.drawCentredString(ancho / 2, alto - 5 * cm, "Registro de Usuarios")
+
+    # Insertar QR en el PDF
+    from reportlab.lib.utils import ImageReader
+    qr_img = ImageReader(qr_buffer)
+    c.drawImage(qr_img, ancho / 2 - 5 * cm, alto / 2 - 3 * cm, width=10 * cm, height=10 * cm)
+
+    # Instrucción debajo del QR
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(ancho / 2, alto / 2 - 4 * cm, "Escanea para registrarte")
+
+    c.save()
+    pdf_buffer.seek(0)
+
+    return HttpResponse(pdf_buffer, content_type='application/pdf',
+                        headers={'Content-Disposition': 'inline; filename="registro_qr.pdf"'})
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
