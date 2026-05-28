@@ -115,82 +115,7 @@
         </div>
     </form>
 </div>
-<<<<<<< HEAD
-<div class="card border-0 shadow-sm bg-white overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light text-muted uppercase fs-7">
-                <tr>
-                    <th class="ps-3" style="width: 15%;">SKU / Código</th>
-                    <th style="width: 30%;">Nombre de Herramienta</th>
-                    <th style="width: 20%;">Categoría</th>
-                    <th class="text-center" style="width: 15%;">Stock Actual</th>
-                    <th class="text-end pe-3" style="width: 20%;">Acciones</th>
-                </tr>
-            </thead>
-            
-            <tbody>
-                {% for prod in productos %}
-                <tr>
-                    <td class="ps-3 fw-mono text-secondary fs-7">{{ prod.codigo_sku }}</td>
-                    
-                    <td>
-                        <div class="fw-bold text-dark">{{ prod.nombre }}</div>
-                        {% if prod.descripcion %}
-                            <div class="text-muted fs-7 text-truncate" style="max-width: 300px;" title="{{ prod.descripcion }}">{{ prod.descripcion }}</div>
-                        {% endif %}
-                    </td>
-                    
-                    <td>
-                        {% if prod.categoria %}
-                            <span class="badge bg-light-secondary text-secondary rounded-pill px-2.5 py-1 fs-7">
-                                {{ prod.categoria.nombre }}
-                            </span>
-                        {% else %}
-                            <span class="text-muted fs-7 italic">Sin Categoría</span>
-                        {% endif %}
-                    </td>
-                    
-                    <td class="text-center">
-                        {% if prod.stock == 0 %}
-                            <span class="badge bg-danger rounded-pill px-3 py-1.5 fs-7">Agotado</span>
-                        {% elif prod.stock <= 5 %}
-                            <span class="badge bg-warning text-dark rounded-pill px-3 py-1.5 fs-7">{{ prod.stock }} (Bajo)</span>
-                        {% else %}
-                            <span class="badge bg-success rounded-pill px-3 py-1.5 fs-7">{{ prod.stock }}</span>
-                        {% endif %}
-                    </td>
-                    
-                    <td class="text-end pe-3">
-                        <div class="d-inline-flex gap-1">
-                            <button type="button" class="btn btn-sm btn-outline-warning border-0" 
-                                    title="Enviar a Mantenimiento"
-                                    onclick="abrirMantenimiento('{{ prod.pk }}', '{{ prod.codigo_sku|escapejs }}', '{{ prod.nombre|escapejs }}')">
-                                <i class="bi bi-wrench"></i>
-                            </button>
-                            
-                            <button type="button" class="btn btn-sm btn-outline-primary border-0" 
-                                    title="Editar Herramienta"
-                                    onclick="abrirEditar('{{ prod.pk }}', '{{ prod.codigo_sku|escapejs }}', '{{ prod.nombre|escapejs }}', '{{ prod.descripcion|escapejs }}', '{{ prod.stock }}', '{{ prod.categoria.pk|default:'' }}')">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            
-                            <button type="button" class="btn btn-sm btn-outline-danger border-0" 
-                                    title="Eliminar Herramienta"
-                                    onclick="abrirEliminar('{{ prod.pk }}', '{{ prod.nombre|escapejs }}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
-                        <i class="bi bi-box-seam display-6 d-block mb-3 text-light"></i>
-                        No se encontraron herramientas en el inventario.
-                    </td>
-                </tr>
-=======
+<<<<<<<<< Temporary merge branch 1
  
  
 <!-- ══ TABLA INVENTARIO ══ -->
@@ -349,42 +274,16 @@
               </svg>
               Mantenimiento
             </button>
-            <button type="button" class="btn-ghost" title="Eliminar"
-                    style="color:var(--rust);"
-                    onclick="abrirEliminar('{{ producto.pk }}', '{{ producto.nombre|escapejs }}')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2.2">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-              Eliminar
+            
+            <a href="{% url 'inventario:inventario' %}" class="btn btn-outline-secondary" title="Limpiar Filtros">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
+            
+            <button type="button" class="btn btn-success ms-auto ms-md-0" data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta">
+                <i class="bi bi-plus-lg me-1"></i>Nueva Herramienta
             </button>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="7" style="text-align:center; padding:3.5rem 1rem;">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-                 stroke="var(--text-muted)" stroke-width="1.3"
-                 style="opacity:.35; display:block; margin:0 auto .75rem;">
-              <path d="M22 12H16L14 15H10L8 12H2"/>
-              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-            </svg>
-            <p style="font-family:var(--font-ui); color:var(--text-muted);
-                      font-size:.88rem; margin:0;">
-              No hay herramientas registradas aún.<br>
-              <span style="font-size:.8rem;">
-                Usa <strong>Nueva Herramienta</strong> para agregar una.
-              </span>
-            </p>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+        </div>
+    </form>
 </div>
 <!-- ══ MODAL — Ver Ubicación ══ -->
 <div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
@@ -509,7 +408,82 @@
                     {% if cat.pk|stringformat:"s" == post_categoria %}selected{% endif %}>
                     {{ cat.nombre }}
                   </option>
->>>>>>> main
+=========
+<div class="card border-0 shadow-sm bg-white overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted uppercase fs-7">
+                <tr>
+                    <th class="ps-3" style="width: 15%;">SKU / Código</th>
+                    <th style="width: 30%;">Nombre de Herramienta</th>
+                    <th style="width: 20%;">Categoría</th>
+                    <th class="text-center" style="width: 15%;">Stock Actual</th>
+                    <th class="text-end pe-3" style="width: 20%;">Acciones</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                {% for prod in productos %}
+                <tr>
+                    <td class="ps-3 fw-mono text-secondary fs-7">{{ prod.codigo_sku }}</td>
+                    
+                    <td>
+                        <div class="fw-bold text-dark">{{ prod.nombre }}</div>
+                        {% if prod.descripcion %}
+                            <div class="text-muted fs-7 text-truncate" style="max-width: 300px;" title="{{ prod.descripcion }}">{{ prod.descripcion }}</div>
+                        {% endif %}
+                    </td>
+                    
+                    <td>
+                        {% if prod.categoria %}
+                            <span class="badge bg-light-secondary text-secondary rounded-pill px-2.5 py-1 fs-7">
+                                {{ prod.categoria.nombre }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted fs-7 italic">Sin Categoría</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="text-center">
+                        {% if prod.stock == 0 %}
+                            <span class="badge bg-danger rounded-pill px-3 py-1.5 fs-7">Agotado</span>
+                        {% elif prod.stock <= 5 %}
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-1.5 fs-7">{{ prod.stock }} (Bajo)</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill px-3 py-1.5 fs-7">{{ prod.stock }}</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="text-end pe-3">
+                        <div class="d-inline-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-outline-warning border-0" 
+                                    title="Enviar a Mantenimiento"
+                                    onclick="abrirMantenimiento('{{ prod.pk }}', '{{ prod.codigo_sku|escapejs }}', '{{ prod.nombre|escapejs }}')">
+                                <i class="bi bi-wrench"></i>
+                            </button>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-primary border-0" 
+                                    title="Editar Herramienta"
+                                    onclick="abrirEditar('{{ prod.pk }}', '{{ prod.codigo_sku|escapejs }}', '{{ prod.nombre|escapejs }}', '{{ prod.descripcion|escapejs }}', '{{ prod.stock }}', '{{ prod.categoria.pk|default:'' }}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-danger border-0" 
+                                    title="Eliminar Herramienta"
+                                    onclick="abrirEliminar('{{ prod.pk }}', '{{ prod.nombre|escapejs }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-box-seam display-6 d-block mb-3 text-light"></i>
+                        No se encontraron herramientas en el inventario.
+                    </td>
+                </tr>
+>>>>>>>>> Temporary merge branch 2
                 {% endfor %}
             </tbody>
         </table>
@@ -760,13 +734,7 @@
 
 {% block js %}
 <script>
-<<<<<<< HEAD
-  /**
-   * FUNCION 1: Transfiere la data de la fila al Modal de Edición
-   * Captura los atributos del backend y los inyecta en los valores de los inputs correspondientes.
-   */
-  function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId) {
-=======
+<<<<<<<<< Temporary merge branch 1
   // ── Datos estantes por almacén (para selector encadenado) ──
   const estantesPorAlmacen = {
     {% for almacen in almacenes_lista %}
@@ -819,7 +787,13 @@
  
   // ── Abrir modal editar con datos precargados ──
   function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId, almacenPk, estantePk) {
->>>>>>> main
+=========
+  /**
+   * FUNCION 1: Transfiere la data de la fila al Modal de Edición
+   * Captura los atributos del backend y los inyecta en los valores de los inputs correspondientes.
+   */
+  function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId) {
+>>>>>>>>> Temporary merge branch 2
     document.getElementById('edit_producto_id').value = pk;
     document.getElementById('edit_sku').value         = sku;
     document.getElementById('edit_nombre').value      = nombre;
