@@ -5,41 +5,41 @@
 
 {# ══ MENSAJES ══ #}
 {% if messages %}
-  {% for message in messages %}
-  <div class="alert alert-dismissible fade show d-flex align-items-center gap-2 mb-3"
-       style="background:{% if message.tags == 'error' %}rgba(152,71,62,.1){% else %}rgba(58,122,66,.1){% endif %};
-              border:1px solid {% if message.tags == 'error' %}rgba(152,71,62,.25){% else %}rgba(58,122,66,.25){% endif %};
-              border-radius:var(--radius-md); color:var(--text-main); font-family:var(--font-ui);" role="alert">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-         stroke="{% if message.tags == 'error' %}#98473E{% else %}#3a7a42{% endif %}" stroke-width="2.2">
-      {% if message.tags == 'error' %}
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-      {% else %}
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-      {% endif %}
-    </svg>
-    {{ message }}
-    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" style="filter:opacity(.4);"></button>
-  </div>
-  {% endfor %}
+{% for message in messages %}
+<div class="alert alert-dismissible fade show d-flex align-items-center gap-2 mb-3
+              {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="alert">
+  {% if message.tags == 'error' %}
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+    class="text-danger flex-shrink-0">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+  {% else %}
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+    class="text-success flex-shrink-0">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+  {% endif %}
+  {{ message }}
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
 {% endif %}
 
 {# ══ CABECERA ══ #}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
-    <h5 style="font-family:var(--font-ui); font-weight:700; font-size:1rem;
-               color:var(--text-main); letter-spacing:.03em; margin:0;">
-      Préstamos
-    </h5>
-    <p style="font-family:var(--font-ui); font-size:.8rem; color:var(--text-muted); margin:0;">
-      Gestión de préstamos de herramientas e inventario
-    </p>
+    <h5 class="fw-bold fs-6 mb-0">Préstamos</h5>
+    <p class="text-muted small mb-0">Gestión de préstamos de herramientas e inventario</p>
   </div>
-  <button class="btn-primary-mine" data-bs-toggle="modal" data-bs-target="#modalCrearPrestamo">
+  <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
+    data-bs-target="#modalCrearPrestamo">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/>
-      <line x1="8" y1="12" x2="16" y2="12"/>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="16" />
+      <line x1="8" y1="12" x2="16" y2="12" />
     </svg>
     Nuevo Préstamo
   </button>
@@ -48,90 +48,66 @@
 {# ══ KPI CARDS ══ #}
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card" style="padding:.9rem 1rem;" data-kpi-delay="0">
-      <div class="kpi-accent-bar" style="background:var(--text-muted);"></div>
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Total</div>
-      <div class="kpi-number" data-target="{{ total_prestamos }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:var(--text-main); line-height:1;">0</div>
-      <div class="kpi-label">registros</div>
+    <div class="card h-100 p-3 kpi-card" data-kpi-delay="0">
+      <div class="text-uppercase text-muted small fw-semibold mb-1" style="font-size:.65rem; letter-spacing:.1em;">Total
+      </div>
+      <div class="kpi-number fs-3 fw-bold lh-1" data-target="{{ total_prestamos }}">0</div>
+      <div class="text-muted small mt-1">registros</div>
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card" style="padding:.9rem 1rem;" data-kpi-delay="80">
-      <div class="kpi-accent-bar" style="background:var(--navy);"></div>
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Activos</div>
-      <div class="kpi-number" data-target="{{ prestamos_activos }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:var(--navy); line-height:1;">0</div>
-      <div class="kpi-label">en curso</div>
+    <div class="card h-100 p-3 kpi-card" data-kpi-delay="80">
+      <div class="text-uppercase text-muted small fw-semibold mb-1" style="font-size:.65rem; letter-spacing:.1em;">
+        Activos</div>
+      <div class="kpi-number fs-3 fw-bold lh-1 text-primary" data-target="{{ prestamos_activos }}">0</div>
+      <div class="text-muted small mt-1">en curso</div>
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if prestamos_pendientes > 0 %}border-color:rgba(196,144,10,.4);{% endif %}"
-         data-kpi-delay="160">
-      <div class="kpi-accent-bar" style="background:#c4900a;"></div>
+    <div class="card h-100 p-3 kpi-card {% if prestamos_pendientes > 0 %}border-warning{% endif %}"
+      data-kpi-delay="160">
       {% if prestamos_pendientes > 0 %}
-      <span class="kpi-trend warn">⏳ pendientes</span>
+      <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2" style="font-size:.6rem;">⏳
+        pendientes</span>
       {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if prestamos_pendientes > 0 %}5rem{% else %}0{% endif %};">Pendientes</div>
-      <div class="kpi-number" data-target="{{ prestamos_pendientes }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if prestamos_pendientes > 0 %}#c4900a{% else %}var(--text-main){% endif %};
-                  line-height:1;">0</div>
-      <div class="kpi-label">por aprobar</div>
+      <div class="text-uppercase text-muted small fw-semibold mb-1" style="font-size:.65rem; letter-spacing:.1em;">
+        Pendientes</div>
+      <div class="kpi-number fs-3 fw-bold lh-1 {% if prestamos_pendientes > 0 %}text-warning{% endif %}"
+        data-target="{{ prestamos_pendientes }}">0</div>
+      <div class="text-muted small mt-1">por aprobar</div>
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card" style="padding:.9rem 1rem;" data-kpi-delay="240">
-      <div class="kpi-accent-bar" style="background:var(--sage);"></div>
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Devueltos</div>
-      <div class="kpi-number" data-target="{{ prestamos_devueltos }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:var(--sage); line-height:1;">0</div>
-      <div class="kpi-label">completados</div>
+    <div class="card h-100 p-3 kpi-card" data-kpi-delay="240">
+      <div class="text-uppercase text-muted small fw-semibold mb-1" style="font-size:.65rem; letter-spacing:.1em;">
+        Devueltos</div>
+      <div class="kpi-number fs-3 fw-bold lh-1 text-success" data-target="{{ prestamos_devueltos }}">0</div>
+      <div class="text-muted small mt-1">completados</div>
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if prestamos_vencidos > 0 %}border-color:rgba(152,71,62,.35);{% endif %}"
-         data-kpi-delay="320">
-      <div class="kpi-accent-bar" style="background:var(--rust);"></div>
+    <div class="card h-100 p-3 kpi-card {% if prestamos_vencidos > 0 %}border-danger{% endif %}" data-kpi-delay="320">
       {% if prestamos_vencidos > 0 %}
-      <span class="kpi-trend down">↑ vencidos</span>
+      <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="font-size:.6rem;">↑ vencidos</span>
       {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if prestamos_vencidos > 0 %}5rem{% else %}0{% endif %};">Vencidos</div>
-      <div class="kpi-number" data-target="{{ prestamos_vencidos }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if prestamos_vencidos > 0 %}var(--rust){% else %}var(--text-main){% endif %};
-                  line-height:1;">0</div>
-      <div class="kpi-label">requieren atención</div>
+      <div class="text-uppercase text-muted small fw-semibold mb-1" style="font-size:.65rem; letter-spacing:.1em;">
+        Vencidos</div>
+      <div class="kpi-number fs-3 fw-bold lh-1 {% if prestamos_vencidos > 0 %}text-danger{% endif %}"
+        data-target="{{ prestamos_vencidos }}">0</div>
+      <div class="text-muted small mt-1">requieren atención</div>
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if proximos_vencer > 0 %}border-color:rgba(196,144,10,.3);{% endif %}"
-         data-kpi-delay="400">
-      <div class="kpi-accent-bar" style="background:rgba(196,144,10,.7);"></div>
+    <div class="card h-100 p-3 kpi-card {% if proximos_vencer > 0 %}border-warning{% endif %}" data-kpi-delay="400">
       {% if proximos_vencer > 0 %}
-      <span class="kpi-trend warn">⚡ urgente</span>
+      <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2" style="font-size:.6rem;">⚡
+        urgente</span>
       {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if proximos_vencer > 0 %}5rem{% else %}0{% endif %};">Próx. vencer</div>
-      <div class="kpi-number" data-target="{{ proximos_vencer }}"
-           style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if proximos_vencer > 0 %}#c4900a{% else %}var(--text-main){% endif %};
-                  line-height:1;">0</div>
-      <div class="kpi-label">en 3 días</div>
+      <div class="text-uppercase text-muted small fw-semibold mb-1" style="font-size:.65rem; letter-spacing:.1em;">Próx.
+        vencer</div>
+      <div class="kpi-number fs-3 fw-bold lh-1 {% if proximos_vencer > 0 %}text-warning{% endif %}"
+        data-target="{{ proximos_vencer }}">0</div>
+      <div class="text-muted small mt-1">en 3 días</div>
     </div>
   </div>
 </div>
@@ -155,102 +131,99 @@
 
 {# ══ FILTROS ══ #}
 <div class="card mb-3">
-  <div class="card-body" style="padding:.85rem 1.2rem;">
-    <form method="get" class="d-flex gap-3 align-items-end flex-wrap">
-      <div style="flex:2; min-width:180px;">
-        <label class="form-label">Buscar</label>
-        <input type="text" name="q" class="form-control" value="{{ filtro_q }}"
-               placeholder="Usuario, nombre, producto…">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-12 col-md">
+        <label class="form-label small fw-semibold mb-1">Buscar</label>
+        <input type="text" name="q" class="form-control form-control-sm" value="{{ filtro_q }}"
+          placeholder="Usuario, nombre, producto…">
       </div>
-      <div style="flex:1; min-width:140px;">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select">
+      <div class="col-6 col-md-auto" style="min-width:140px;">
+        <label class="form-label small fw-semibold mb-1">Estado</label>
+        <select name="estado" class="form-select form-select-sm">
           <option value="">Todos</option>
-          <option value="pendiente"  {% if filtro_estado == 'pendiente'  %}selected{% endif %}>Pendiente</option>
-          <option value="activo"     {% if filtro_estado == 'activo'     %}selected{% endif %}>Activo</option>
-          <option value="parcial"    {% if filtro_estado == 'parcial'    %}selected{% endif %}>Parcial</option>
-          <option value="devuelto"   {% if filtro_estado == 'devuelto'   %}selected{% endif %}>Devuelto</option>
-          <option value="vencido"    {% if filtro_estado == 'vencido'    %}selected{% endif %}>Vencido</option>
-          <option value="rechazado"  {% if filtro_estado == 'rechazado'  %}selected{% endif %}>Rechazado</option>
+          <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+          <option value="activo" {% if filtro_estado == 'activo' %}selected{% endif %}>Activo</option>
+          <option value="parcial" {% if filtro_estado == 'parcial' %}selected{% endif %}>Parcial</option>
+          <option value="devuelto" {% if filtro_estado == 'devuelto' %}selected{% endif %}>Devuelto</option>
+          <option value="vencido" {% if filtro_estado == 'vencido' %}selected{% endif %}>Vencido</option>
+          <option value="rechazado" {% if filtro_estado == 'rechazado' %}selected{% endif %}>Rechazado</option>
         </select>
       </div>
-      <div style="flex:1; min-width:130px;">
-        <label class="form-label">Vencidos</label>
-        <select name="vencidos" class="form-select">
+      <div class="col-6 col-md-auto" style="min-width:140px;">
+        <label class="form-label small fw-semibold mb-1">Vencidos</label>
+        <select name="vencidos" class="form-select form-select-sm">
           <option value="">Todos</option>
           <option value="1" {% if filtro_vencidos == '1' %}selected{% endif %}>Solo vencidos</option>
         </select>
       </div>
-      <div style="display:flex; gap:.4rem;">
-        <button type="submit" class="btn-primary-mine">
+      <div class="col-auto d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           Filtrar
         </button>
-        <a href="{% url 'prestamo' %}" class="btn-outline-mine">✕</a>
+        <a href="{% url 'prestamo' %}" class="btn btn-outline-secondary btn-sm">✕</a>
       </div>
     </form>
   </div>
 </div>
 
 {# ══ TABLA ══ #}
-<div class="card table-card">
-  <div class="card-header d-flex align-items-center justify-content-between">
-    <span class="card-title">
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between py-2">
+    <span class="fw-semibold small d-flex align-items-center gap-2">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+        <polyline points="9 10 4 15 9 20" />
+        <path d="M20 4v7a4 4 0 0 1-4 4H4" />
       </svg>
       Registro de préstamos
     </span>
-    <span style="font-family:var(--font-mono); font-size:.72rem; background:rgba(9,77,146,.08);
-                 color:var(--navy); padding:.18rem .6rem; border-radius:20px;
-                 border:1px solid rgba(9,77,146,.18);">
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:.72rem;">
       {{ prestamos|length }} registro{{ prestamos|length|pluralize:",s" }}
     </span>
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.88rem;">
-      <thead>
+    <table class="table table-hover table-sm align-middle mb-0" style="font-size:.88rem;">
+      <thead class="table-light">
         <tr>
           <th style="width:36px;"></th>
-          <th>#</th>
-          <th>Usuario</th>
-          <th>Herramientas</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-          <th>Vencimiento</th>
-          <th style="text-align:center;">Acciones</th>
+          <th class="fw-semibold">#</th>
+          <th class="fw-semibold">Usuario</th>
+          <th class="fw-semibold">Herramientas</th>
+          <th class="fw-semibold">Estado</th>
+          <th class="fw-semibold">Fecha</th>
+          <th class="fw-semibold">Vencimiento</th>
+          <th class="fw-semibold text-center">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for p in prestamos %}
-        <tr style="{% if p.estado == 'pendiente' %}background:rgba(196,144,10,.04);{% endif %}">
-          <td style="padding:.5rem .5rem .5rem 1rem;">
-            <button type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#detail-p-{{ p.pk }}"
-                    style="background:none; border:none; cursor:pointer; padding:0; color:var(--text-muted);">
-              <svg class="row-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;">
-                <polyline points="9 18 15 12 9 6"/>
+        <tr class="{% if p.estado == 'pendiente' %}table-warning bg-opacity-25{% endif %}">
+          <td class="ps-3">
+            <button type="button" data-bs-toggle="collapse" data-bs-target="#detail-p-{{ p.pk }}"
+              class="btn btn-sm p-0 border-0 text-muted">
+              <svg class="row-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" style="transition:transform .2s;">
+                <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
           </td>
           <td>
-            <span style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">#{{ p.pk }}</span>
+            <span class="text-muted font-monospace" style="font-size:.78rem;">#{{ p.pk }}</span>
           </td>
           <td>
-            <div style="font-weight:600; font-size:.88rem;">{{ p.nombre_usuario|default:p.usuario }}</div>
-            <div style="font-family:var(--font-mono); font-size:.72rem; color:var(--text-muted);">{{ p.usuario }}</div>
+            <div class="fw-semibold">{{ p.nombre_usuario|default:p.usuario }}</div>
+            <div class="text-muted font-monospace" style="font-size:.72rem;">{{ p.usuario }}</div>
           </td>
           <td>
-            <div style="display:flex; flex-wrap:wrap; gap:.25rem;">
+            <div class="d-flex flex-wrap gap-1">
               {% for item in p.items.all %}
-              <span style="font-size:.72rem; padding:.1rem .45rem; border-radius:12px;
-                           background:rgba(9,77,146,.08); color:var(--navy);
-                           font-family:var(--font-ui); font-weight:600;">
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold"
+                style="font-size:.72rem;">
                 {{ item.producto.nombre }} ×{{ item.cantidad }}
               </span>
               {% endfor %}
@@ -258,80 +231,72 @@
           </td>
           <td>
             {% if p.estado == 'pendiente' %}
-              <span class="badge-state" style="background:rgba(196,144,10,.12); color:#7a5500;">
-                <span style="width:5px; height:5px; border-radius:50%; background:#c4900a; display:inline-block;"></span>
-                Pendiente
-              </span>
+            <span class="badge bg-warning text-dark d-inline-flex align-items-center gap-1">
+              <span class="rounded-circle bg-dark d-inline-block" style="width:5px;height:5px;"></span>
+              Pendiente
+            </span>
             {% elif p.estado == 'activo' %}
-              <span class="badge-state badge-aprobada">Activo</span>
+            <span class="badge bg-success">Activo</span>
             {% elif p.estado == 'parcial' %}
-              <span class="badge-state badge-pendiente">Parcial</span>
+            <span class="badge bg-warning text-dark">Parcial</span>
             {% elif p.estado == 'devuelto' %}
-              <span class="badge-state" style="background:rgba(9,77,146,.08); color:var(--navy);">
-                <span style="width:5px; height:5px; border-radius:50%; background:var(--navy); display:inline-block;"></span>
-                Devuelto
-              </span>
+            <span class="badge bg-primary">Devuelto</span>
             {% elif p.estado == 'vencido' %}
-              <span class="badge-state badge-rechazada">Vencido</span>
+            <span class="badge bg-danger">Vencido</span>
             {% elif p.estado == 'rechazado' %}
-              <span class="badge-state badge-rechazada">Rechazado</span>
+            <span class="badge bg-danger">Rechazado</span>
             {% endif %}
           </td>
-          <td style="font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted);">
+          <td class="text-muted font-monospace" style="font-size:.78rem;">
             {{ p.fecha_prestamo|date:"d/m/Y" }}
           </td>
           <td>
             {% if p.fecha_vencimiento %}
-              <span style="font-family:var(--font-mono); font-size:.78rem;
-                {% if p.urgencia == 'vencido' %}color:var(--rust); font-weight:700;
-                {% elif p.urgencia == 'proximo' %}color:#c4900a; font-weight:600;
-                {% else %}color:var(--text-muted);{% endif %}">
-                {{ p.fecha_vencimiento|date:"d/m/Y" }}
-                {% if p.dias_restantes is not None and p.dias_restantes >= 0 %}
-                  <span style="font-size:.68rem;">({{ p.dias_restantes }}d)</span>
-                {% endif %}
-              </span>
+            <span
+              class="font-monospace {% if p.urgencia == 'vencido' %}text-danger fw-bold{% elif p.urgencia == 'proximo' %}text-warning fw-semibold{% else %}text-muted{% endif %}"
+              style="font-size:.78rem;">
+              {{ p.fecha_vencimiento|date:"d/m/Y" }}
+              {% if p.dias_restantes is not None and p.dias_restantes >= 0 %}
+              <span style="font-size:.68rem;">({{ p.dias_restantes }}d)</span>
+              {% endif %}
+            </span>
             {% else %}
-              <span style="color:var(--text-muted); font-size:.8rem;">—</span>
+            <span class="text-muted small">—</span>
             {% endif %}
           </td>
-          <td style="text-align:center;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:.3rem; flex-wrap:wrap;">
+          <td class="text-center">
+            <div class="d-flex align-items-center justify-content-center gap-1 flex-wrap">
               {% if p.estado == 'pendiente' %}
-              <button type="button" class="btn-ghost"
-                      style="background:rgba(196,144,10,.1); color:#7a5500;
-                             border-color:rgba(196,144,10,.3); font-size:.78rem;"
-                      onclick="abrirAprobar(
-                        {{ p.pk }},
-                        '{{ p.nombre_usuario|default:p.usuario|escapejs }}',
-                        '{{ p.usuario|escapejs }}',
-                        '{{ p.motivo_solicitud|default:''|escapejs }}',
-                        '{{ p.fecha_prestamo|date:'d/m/Y H:i' }}',
-                        [{% for item in p.items.all %}{id:{{ item.pk }},nombre:'{{ item.producto.nombre|escapejs }}',sku:'{{ item.producto.codigo_sku|escapejs }}',cantidad:{{ item.cantidad }},stock:{{ item.producto.stock }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+              <button type="button" class="btn btn-warning btn-sm d-flex align-items-center gap-1" onclick="abrirAprobar(
+                        `{{ p.pk }}`,
+                        `{{ p.nombre_usuario|default:p.usuario|escapejs }}`,
+                        `{{ p.usuario|escapejs }}`,
+                        `{{ p.motivo_solicitud|escapejs }}`,
+                        `{{ p.fecha_prestamo|date:'d/m/Y H:i' }}`,
+                        `[{% for item in p.items.all %}{id:{{ item.pk }},nombre:'{{ item.producto.nombre|escapejs }}',sku:'{{ item.producto.codigo_sku|escapejs }}',cantidad:{{ item.cantidad }},stock:{{ item.producto.stock }}}{% if not forloop.last %},{% endif %}{% endfor %}]`
                       )">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12"/>
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Aprobar
               </button>
               {% endif %}
               {% if p.estado in 'activo,parcial' %}
-              <button type="button" class="btn-ghost" style="font-size:.78rem;"
-                      onclick="abrirDevolver({{ p.pk }}, '{{ p.nombre_usuario|default:p.usuario|escapejs }}')">
+              <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                onclick="abrirDevolver(`{{ p.pk }}`, `{{ p.nombre_usuario|default:p.usuario|escapejs }}`)">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="1 4 1 10 7 10"/>
-                  <path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
                 </svg>
                 Devolver
               </button>
               {% endif %}
-              <button type="button" class="btn-ghost" style="font-size:.78rem;"
-                      data-bs-toggle="modal" data-bs-target="#modalEditarPrestamo"
-                      data-pk="{{ p.pk }}"
-                      data-observaciones="{{ p.observaciones|escapejs }}">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+                data-bs-target="#modalEditarPrestamo" data-pk="{{ p.pk }}"
+                data-observaciones="{{ p.observaciones|escapejs }}">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
             </div>
@@ -340,80 +305,63 @@
 
         {# ── Fila de detalle colapsable ── #}
         <tr class="collapse" id="detail-p-{{ p.pk }}">
-          <td colspan="8" style="padding:0; border-bottom:2px solid rgba(9,77,146,.1);">
-            <div style="padding:1rem 1.4rem; background:rgba(9,77,146,.03);">
+          <td colspan="8" class="p-0 border-bottom border-primary border-opacity-25">
+            <div class="p-3 bg-primary bg-opacity-10">
               <div class="row g-3">
                 <div class="col-md-6">
-                  <div style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.1em;
-                               text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem;">
-                    Herramientas
-                  </div>
+                  <div class="text-uppercase text-muted fw-semibold mb-2"
+                    style="font-size:.62rem; letter-spacing:.1em;">Herramientas</div>
                   {% for item in p.items.all %}
-                  <div style="display:flex; align-items:center; gap:.65rem; margin-bottom:.4rem;
-                               padding:.45rem .75rem; border-radius:var(--radius-sm);
-                               background:{% if item.devuelto %}rgba(58,122,66,.07){% else %}rgba(9,77,146,.05){% endif %};
-                               border:1px solid {% if item.devuelto %}rgba(58,122,66,.15){% else %}rgba(9,77,146,.1){% endif %};">
-                    <div style="flex:1;">
-                      <div style="font-weight:600; font-size:.85rem;">{{ item.producto.nombre }}</div>
-                      <div style="font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted);">
+                  <div class="d-flex align-items-center gap-2 mb-2 px-3 py-2 rounded border
+                              {% if item.devuelto %}bg-success bg-opacity-10 border-success border-opacity-25
+                              {% else %}bg-primary bg-opacity-10 border-primary border-opacity-25{% endif %}">
+                    <div class="flex-grow-1">
+                      <div class="fw-semibold" style="font-size:.85rem;">{{ item.producto.nombre }}</div>
+                      <div class="text-muted font-monospace" style="font-size:.7rem;">
                         {{ item.producto.codigo_sku }}
                         {% if item.serial_entregado %}· Serial: <strong>{{ item.serial_entregado }}</strong>{% endif %}
                       </div>
                     </div>
-                    <div style="font-family:var(--font-mono); font-size:.85rem; font-weight:700;
-                                 color:{% if item.devuelto %}var(--sage){% else %}var(--navy){% endif %};">
+                    <div
+                      class="fw-bold font-monospace {% if item.devuelto %}text-success{% else %}text-primary{% endif %}">
                       ×{{ item.cantidad }}
                     </div>
-                    <span style="font-size:.7rem; padding:.1rem .4rem; border-radius:10px; font-weight:700;
-                                  background:{% if item.devuelto %}rgba(58,122,66,.12){% else %}rgba(9,77,146,.1){% endif %};
-                                  color:{% if item.devuelto %}var(--sage){% else %}var(--navy){% endif %};">
+                    <span class="badge {% if item.devuelto %}bg-success{% else %}bg-primary{% endif %} fw-semibold"
+                      style="font-size:.7rem;">
                       {% if item.devuelto %}✓ Devuelto{% else %}En préstamo{% endif %}
                     </span>
                   </div>
                   {% endfor %}
                 </div>
                 <div class="col-md-3">
-                  <div style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.1em;
-                               text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem;">
-                    Detalles
-                  </div>
+                  <div class="text-uppercase text-muted fw-semibold mb-2"
+                    style="font-size:.62rem; letter-spacing:.1em;">Detalles</div>
                   {% if p.observaciones %}
-                  <div style="font-size:.82rem; color:var(--text-main); margin-bottom:.35rem;">
-                    <span style="color:var(--text-muted);">Obs:</span> {{ p.observaciones }}
-                  </div>
+                  <div class="small mb-2"><span class="text-muted">Obs:</span> {{ p.observaciones }}</div>
                   {% endif %}
                   {% if p.motivo_solicitud %}
-                  <div style="font-size:.82rem; color:var(--text-main); margin-bottom:.35rem;">
-                    <span style="color:var(--text-muted);">Motivo:</span> {{ p.motivo_solicitud }}
-                  </div>
+                  <div class="small mb-2"><span class="text-muted">Motivo:</span> {{ p.motivo_solicitud }}</div>
                   {% endif %}
                   {% if p.motivo_rechazo %}
-                  <div style="font-size:.82rem; color:var(--rust);">
-                    <span style="color:var(--text-muted);">Rechazo:</span> {{ p.motivo_rechazo }}
-                  </div>
+                  <div class="small text-danger"><span class="text-muted">Rechazo:</span> {{ p.motivo_rechazo }}</div>
                   {% endif %}
                   {% if not p.observaciones and not p.motivo_solicitud and not p.motivo_rechazo %}
-                  <div style="font-size:.8rem; color:var(--text-muted);">Sin observaciones.</div>
+                  <div class="small text-muted">Sin observaciones.</div>
                   {% endif %}
                 </div>
                 {% if p.estado in 'activo,parcial' %}
                 <div class="col-md-3">
-                  <div style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.1em;
-                               text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem;">
-                    Devolver ítem
-                  </div>
+                  <div class="text-uppercase text-muted fw-semibold mb-2"
+                    style="font-size:.62rem; letter-spacing:.1em;">Devolver ítem</div>
                   {% for item in p.items.all %}
                   {% if not item.devuelto %}
-                  <form method="post" action="{% url 'prestamo' %}"
-                        style="display:flex; align-items:center; gap:.4rem; margin-bottom:.4rem;">
+                  <form method="post" action="{% url 'prestamo' %}" class="d-flex align-items-center gap-2 mb-2">
                     {% csrf_token %}
                     <input type="hidden" name="accion" value="devolver_item">
                     <input type="hidden" name="item_pk" value="{{ item.pk }}">
-                    <span style="font-size:.8rem; flex:1; overflow:hidden; text-overflow:ellipsis;
-                                  white-space:nowrap;">{{ item.producto.nombre }}</span>
-                    <button type="submit" class="btn-ghost"
-                            style="font-size:.72rem; padding:.18rem .5rem; white-space:nowrap;"
-                            onclick="return confirm('¿Confirmas la devolución de {{ item.producto.nombre|escapejs }}?')">
+                    <span class="small flex-grow-1 text-truncate">{{ item.producto.nombre }}</span>
+                    <button type="submit" class="btn btn-outline-secondary btn-sm"
+                      onclick="return confirm('¿Confirmas la devolución de {{ item.producto.nombre|escapejs }}?')">
                       Devolver
                     </button>
                   </form>
@@ -427,14 +375,13 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="8" style="text-align:center; padding:4rem 1rem;">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)"
-                 stroke-width="1.3" style="opacity:.3; display:block; margin:0 auto .75rem;">
-              <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+          <td colspan="8" class="text-center py-5">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+              class="text-muted opacity-25 d-block mx-auto mb-3">
+              <polyline points="9 10 4 15 9 20" />
+              <path d="M20 4v7a4 4 0 0 1-4 4H4" />
             </svg>
-            <p style="font-family:var(--font-ui); color:var(--text-muted); font-size:.88rem; margin:0;">
-              No hay préstamos que coincidan con los filtros.
-            </p>
+            <p class="text-muted small mb-0">No hay préstamos que coincidan con los filtros.</p>
           </td>
         </tr>
         {% endfor %}
@@ -447,11 +394,10 @@
 <div class="modal fade" id="modalAprobarPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header" style="padding:.9rem 1.35rem;">
+      <div class="modal-header">
         <div>
           <h5 class="modal-title" id="apr-titulo">Aprobar solicitud</h5>
-          <div style="font-family:var(--font-mono); font-size:.7rem; color:rgba(239,236,202,.5);
-                      margin-top:.15rem;" id="apr-subtitulo"></div>
+          <div class="text-muted small mt-1" id="apr-subtitulo"></div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -459,67 +405,58 @@
         {% csrf_token %}
         <input type="hidden" name="accion" value="aprobar_pendiente_modal">
         <input type="hidden" name="prestamo_pk" id="apr-pk">
-        <div class="modal-body" style="padding:1.5rem;">
-          <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.2rem;
-                      padding:.9rem 1rem; border-radius:var(--radius-md);
-                      background:rgba(9,77,146,.04); border:1px solid rgba(9,77,146,.1);">
-            <div style="flex:1; min-width:150px;">
-              <div style="font-size:.62rem; text-transform:uppercase; letter-spacing:.08em;
-                          color:var(--text-muted); font-weight:600; margin-bottom:.15rem;">Solicitante</div>
-              <div style="font-weight:700; font-size:.95rem; color:var(--text-main);" id="apr-nombre"></div>
+        <div class="modal-body">
+          <div class="row g-3 mb-3 p-3 rounded border bg-primary bg-opacity-10 border-primary border-opacity-25">
+            <div class="col">
+              <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size:.62rem; letter-spacing:.08em;">
+                Solicitante</div>
+              <div class="fw-bold" id="apr-nombre"></div>
             </div>
-            <div>
-              <div style="font-size:.62rem; text-transform:uppercase; letter-spacing:.08em;
-                          color:var(--text-muted); font-weight:600; margin-bottom:.15rem;">Documento</div>
-              <div style="font-family:var(--font-mono); font-size:.88rem;" id="apr-doc"></div>
+            <div class="col-auto">
+              <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size:.62rem; letter-spacing:.08em;">
+                Documento</div>
+              <div class="font-monospace small" id="apr-doc"></div>
             </div>
-            <div>
-              <div style="font-size:.62rem; text-transform:uppercase; letter-spacing:.08em;
-                          color:var(--text-muted); font-weight:600; margin-bottom:.15rem;">Fecha</div>
-              <div style="font-family:var(--font-mono); font-size:.82rem;" id="apr-fecha"></div>
+            <div class="col-auto">
+              <div class="text-uppercase text-muted fw-semibold mb-1" style="font-size:.62rem; letter-spacing:.08em;">
+                Fecha</div>
+              <div class="font-monospace small" id="apr-fecha"></div>
             </div>
           </div>
-          <div id="apr-motivo-wrap" style="display:none; margin-bottom:1.2rem;">
-            <div style="font-size:.62rem; text-transform:uppercase; letter-spacing:.08em;
-                        color:var(--text-muted); font-weight:600; margin-bottom:.3rem;">Motivo de la solicitud</div>
-            <div id="apr-motivo"
-                 style="font-family:var(--font-ui); font-size:.88rem; color:var(--text-main);
-                        padding:.65rem 1rem; background:rgba(9,77,146,.03);
-                        border:1px solid rgba(9,77,146,.08); border-radius:var(--radius-md);"></div>
+          <div id="apr-motivo-wrap" class="mb-3 d-none">
+            <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.62rem; letter-spacing:.08em;">
+              Motivo de la solicitud</div>
+            <div id="apr-motivo" class="small p-3 rounded border bg-light"></div>
           </div>
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
-                      border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1rem;">
+          <div class="text-uppercase text-primary fw-bold border-bottom border-primary border-opacity-25 pb-2 mb-3"
+            style="font-size:.65rem; letter-spacing:.13em;">
             Registra el serial de cada herramienta a entregar
           </div>
           <div id="apr-items-container"></div>
-          <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                      text-transform:uppercase; color:var(--navy);
-                      border-bottom:1px solid rgba(9,77,146,.18);
-                      padding-bottom:.4rem; margin-bottom:1rem; margin-top:1.2rem;">
+          <div class="text-uppercase text-primary fw-bold border-bottom border-primary border-opacity-25 pb-2 mb-3 mt-4"
+            style="font-size:.65rem; letter-spacing:.13em;">
             Fecha límite de devolución (opcional)
           </div>
           <div style="max-width:240px;">
-            <label class="form-label">Fecha de vencimiento</label>
-            <input type="date" name="fecha_vencimiento" id="apr-fecha-venc" class="form-control">
-            <div style="font-size:.72rem; color:var(--text-muted); margin-top:.25rem;">Dejar vacío si no aplica.</div>
+            <label class="form-label small fw-semibold">Fecha de vencimiento</label>
+            <input type="date" name="fecha_vencimiento" id="apr-fecha-venc" class="form-control form-control-sm">
+            <div class="text-muted mt-1" style="font-size:.72rem;">Dejar vacío si no aplica.</div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn-outline-mine"
-                  style="color:var(--rust); border-color:rgba(152,71,62,.35);"
-                  onclick="abrirRechazar()">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1"
+            onclick="abrirRechazar()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
             Rechazar
           </button>
-          <button type="submit" name="accion_aprobacion" value="aprobar" class="btn-primary-mine"
-                  style="background:rgba(58,122,66,.85);" id="apr-btn-aprobar">
+          <button type="submit" name="accion_aprobacion" value="aprobar"
+            class="btn btn-success d-flex align-items-center gap-1" id="apr-btn-aprobar">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             Aprobar y entregar
           </button>
@@ -531,7 +468,7 @@
 
 {# ══ MODAL RECHAZAR ══ #}
 <div class="modal fade" id="modalRechazarPrestamo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="z-index:1060;">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Rechazar solicitud <span id="rch-id"></span></h5>
@@ -541,16 +478,14 @@
         {% csrf_token %}
         <input type="hidden" name="accion" value="rechazar_pendiente">
         <input type="hidden" name="prestamo_pk" id="rch-pk">
-        <div class="modal-body" style="padding:1.5rem;">
-          <label class="form-label">Motivo del rechazo *</label>
+        <div class="modal-body">
+          <label class="form-label fw-semibold">Motivo del rechazo *</label>
           <textarea name="motivo_rechazo" class="form-control" rows="3"
-                    placeholder="Explica por qué se rechaza esta solicitud…" required></textarea>
+            placeholder="Explica por qué se rechaza esta solicitud…" required></textarea>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-primary-mine" style="background:var(--rust);">
-            Confirmar rechazo
-          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Confirmar rechazo</button>
         </div>
       </form>
     </div>
@@ -565,20 +500,18 @@
         <h5 class="modal-title">Devolución — <span id="dev-usuario"></span></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" style="padding:1.5rem;">
-        <p style="font-family:var(--font-ui); font-size:.88rem; color:var(--text-muted); margin-bottom:1rem;">
+      <div class="modal-body">
+        <p class="small text-muted mb-3">
           Usa los botones <strong>Devolver</strong> en la fila expandida de este préstamo
           para registrar cada herramienta individualmente.
         </p>
-        <div style="padding:.75rem 1rem; background:rgba(9,77,146,.05);
-                    border:1px solid rgba(9,77,146,.12); border-radius:var(--radius-md);
-                    font-size:.82rem; color:var(--text-main);">
+        <div class="alert alert-primary small mb-0">
           Expande la fila #<span id="dev-pk"></span> en la tabla y haz clic en
           <strong>Devolver</strong> junto a cada herramienta.
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-primary-mine" onclick="abrirDevoluciones()">Entendido</button>
+        <button type="button" class="btn btn-primary" onclick="abrirDevoluciones()">Entendido</button>
       </div>
     </div>
   </div>
@@ -596,14 +529,14 @@
         {% csrf_token %}
         <input type="hidden" name="accion" value="editar">
         <input type="hidden" name="prestamo_pk" id="edit_pk">
-        <div class="modal-body" style="padding:1.5rem;">
-          <label class="form-label">Observaciones</label>
-          <textarea name="observaciones" id="edit_observaciones"
-                    class="form-control" rows="4" placeholder="Notas sobre el préstamo..."></textarea>
+        <div class="modal-body">
+          <label class="form-label fw-semibold">Observaciones</label>
+          <textarea name="observaciones" id="edit_observaciones" class="form-control" rows="4"
+            placeholder="Notas sobre el préstamo..."></textarea>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-outline-mine" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-primary-mine">Guardar cambios</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
         </div>
       </form>
     </div>
@@ -613,42 +546,34 @@
 {# ══ MODAL NUEVO PRÉSTAMO (WIZARD) ══ #}
 <div class="modal fade" id="modalCrearPrestamo" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-    <div class="modal-content" style="display:flex; flex-direction:column; max-height:90vh;">
-
-      <div class="modal-header" style="flex-shrink:0;">
+    <div class="modal-content">
+      <div class="modal-header">
         <div>
           <h5 class="modal-title" id="wizard-title">Paso 1: Responsable del préstamo</h5>
-          <div style="font-family:var(--font-mono); font-size:.7rem; color:rgba(239,236,202,.5);
-                      margin-top:.15rem;" id="wizard-subtitle">Selecciona el usuario responsable</div>
+          <div class="text-muted small mt-1" id="wizard-subtitle">Selecciona el usuario responsable</div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <form method="post" action="{% url 'prestamo' %}" id="wizardForm" novalidate
-            style="display:flex; flex-direction:column; flex:1; overflow:hidden; min-height:0;">
+      <form method="post" action="{% url 'prestamo' %}" id="wizardForm" novalidate>
         {% csrf_token %}
 
         {# Progress #}
-        <div style="padding:1rem 1.5rem; background:rgba(9,77,146,.02);
-                    border-bottom:1px solid rgba(9,77,146,.1); flex-shrink:0;">
-          <div id="wizard-progress-bar" style="display:flex; align-items:flex-start; gap:.5rem;"></div>
+        <div class="px-4 pt-3 pb-0 border-bottom bg-light">
+          <div id="wizard-progress-bar" class="d-flex align-items-start gap-2 pb-2"></div>
         </div>
 
-        {# Scroll body #}
-        <div class="modal-body" style="flex:1; overflow-y:auto; padding:1.5rem; min-height:0;
-                                       overscroll-behavior:contain;">
+        <div class="modal-body">
 
           {# PASO 1 #}
           <div id="step-1" class="wizard-step">
-            <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                        text-transform:uppercase; color:var(--navy);
-                        border-bottom:1px solid rgba(9,77,146,.18);
-                        padding-bottom:.4rem; margin-bottom:1.1rem;">
+            <div class="text-uppercase text-primary fw-bold border-bottom border-primary border-opacity-25 pb-2 mb-3"
+              style="font-size:.65rem; letter-spacing:.13em;">
               Responsable del préstamo
             </div>
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Usuario *</label>
+                <label class="form-label fw-semibold">Usuario *</label>
                 <select name="usuario" id="id_usuario" class="form-select" required>
                   <option value="">— Selecciona usuario —</option>
                   {% for u in usuarios_sistema %}
@@ -659,19 +584,16 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Nombre completo</label>
-                <input type="text" name="nombre_usuario" class="form-control"
-                       placeholder="Se autocompletará">
+                <label class="form-label fw-semibold">Nombre completo</label>
+                <input type="text" name="nombre_usuario" class="form-control" placeholder="Se autocompletará">
               </div>
             </div>
           </div>
 
           {# PASO 2 #}
-          <div id="step-2" class="wizard-step" style="display:none;">
-            <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                        text-transform:uppercase; color:var(--navy);
-                        border-bottom:1px solid rgba(9,77,146,.18);
-                        padding-bottom:.4rem; margin-bottom:1.1rem;">
+          <div id="step-2" class="wizard-step d-none">
+            <div class="text-uppercase text-primary fw-bold border-bottom border-primary border-opacity-25 pb-2 mb-3"
+              style="font-size:.65rem; letter-spacing:.13em;">
               Selecciona herramientas a prestar
             </div>
             <div id="crear-items-container">
@@ -685,151 +607,118 @@
                     </option>
                     {% endfor %}
                   </select>
-                  <div id="stock-info" class="d-none mt-1 px-2 py-1 rounded"
-                       style="font-size:.78rem; display:flex; align-items:center; gap:.4rem;">
-                    <svg id="stock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                      <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    <span id="stock-label"></span>
-                  </div>
-                  <div id="stock-alert" class="d-none mt-1 px-2 py-1 rounded"
-                       style="font-size:.78rem; background:rgba(152,71,62,.08);
-                              border:1px solid rgba(152,71,62,.2); color:var(--rust);">
+                  <div class="d-none mt-1 px-2 py-1 rounded small" id="stock-info"></div>
+                  <div class="d-none mt-1 alert alert-danger py-1 px-2 small mb-0" id="stock-alert">
                     ⚠ Sin stock disponible
                   </div>
                 </div>
                 <div class="col-auto" style="width:90px;">
-                  <input type="number" name="cantidad[]" class="form-control text-center"
-                         min="1" value="1" placeholder="Cant." required>
+                  <input type="number" name="cantidad[]" class="form-control text-center" min="1" value="1"
+                    placeholder="Cant." required>
                 </div>
                 <div class="col-auto">
-                  <button type="button" class="btn-ghost crear-del-btn disabled"
-                          style="width:36px; height:36px; padding:0; display:flex;
-                                 align-items:center; justify-content:center;">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <button type="button" class="btn btn-outline-secondary crear-del-btn disabled"
+                    style="width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center;">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
               </div>
             </div>
-            <button type="button" id="crear-add-item" class="btn-outline-mine"
-                    style="font-size:.8rem; margin-top:.4rem;">
+            <button type="button" id="crear-add-item"
+              class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 mt-2">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
               Añadir otra herramienta
             </button>
           </div>
 
           {# PASO 3 #}
-          <div id="step-3" class="wizard-step" style="display:none;">
-            <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                        text-transform:uppercase; color:var(--navy);
-                        border-bottom:1px solid rgba(9,77,146,.18);
-                        padding-bottom:.4rem; margin-bottom:1.1rem;">
+          <div id="step-3" class="wizard-step d-none">
+            <div class="text-uppercase text-primary fw-bold border-bottom border-primary border-opacity-25 pb-2 mb-3"
+              style="font-size:.65rem; letter-spacing:.13em;">
               Detalles del préstamo
             </div>
-            <div style="display:flex; flex-direction:column; gap:0.7rem;">
+            <div class="d-flex flex-column gap-3">
               <div>
-                <label class="form-label" style="margin-bottom:0.25rem;">Fecha de vencimiento</label>
-                <input type="date" name="fecha_vencimiento" class="form-control" style="font-size:0.9rem;">
-                <div style="font-size:.65rem; color:var(--text-muted); margin-top:0.1rem;">Opcional — Plazo para devolver</div>
+                <label class="form-label fw-semibold small mb-1">Fecha de vencimiento</label>
+                <input type="date" name="fecha_vencimiento" class="form-control form-control-sm">
+                <div class="text-muted mt-1" style="font-size:.65rem;">Opcional — Plazo para devolver</div>
               </div>
               <div>
-                <label class="form-label" style="margin-bottom:0.25rem;">Observaciones</label>
-                <textarea name="observaciones" class="form-control" rows="1" style="font-size:0.9rem; min-height:32px;"
-                          placeholder="Notas internas sobre el préstamo"></textarea>
+                <label class="form-label fw-semibold small mb-1">Observaciones</label>
+                <textarea name="observaciones" class="form-control form-control-sm" rows="2"
+                  placeholder="Notas internas sobre el préstamo"></textarea>
               </div>
               <div>
-                <label class="form-label" style="margin-bottom:0.25rem;">Motivo de la solicitud</label>
-                <textarea name="motivo_solicitud" class="form-control" rows="1" style="font-size:0.9rem; min-height:32px;"
-                          placeholder="¿Por qué se solicita este préstamo?"></textarea>
+                <label class="form-label fw-semibold small mb-1">Motivo de la solicitud</label>
+                <textarea name="motivo_solicitud" class="form-control form-control-sm" rows="2"
+                  placeholder="¿Por qué se solicita este préstamo?"></textarea>
               </div>
-              <div style="padding:0.6rem 0.8rem; border-radius:var(--radius-md);
-                          background:rgba(196,144,10,.05); border:1px solid rgba(196,144,10,.15); margin-top:0.3rem;">
-                <div style="font-size:.7rem; color:#7a5500; font-weight:600;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                       style="vertical-align:middle; margin-right:.25rem;">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                  </svg>
-                  Revisa los datos antes de confirmar
-                </div>
+              <div class="alert alert-warning py-2 px-3 small mb-0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  class="me-1" style="vertical-align:middle;">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                </svg>
+                Revisa los datos antes de confirmar
               </div>
             </div>
           </div>
 
-          {# PASO 4 — RESUMEN con scroll interno #}
-          <div id="step-4" class="wizard-step" style="display:none;">
-            <div style="font-family:var(--font-mono); font-size:.65rem; letter-spacing:.13em;
-                        text-transform:uppercase; color:var(--navy);
-                        border-bottom:1px solid rgba(9,77,146,.18);
-                        padding-bottom:.4rem; margin-bottom:1.1rem;">
+          {# PASO 4 #}
+          <div id="step-4" class="wizard-step d-none">
+            <div class="text-uppercase text-primary fw-bold border-bottom border-primary border-opacity-25 pb-2 mb-3"
+              style="font-size:.65rem; letter-spacing:.13em;">
               Resumen del préstamo
             </div>
-
-            {# Info responsable #}
-            <div style="margin-bottom:1rem; padding:.9rem 1rem; border-radius:var(--radius-md);
-                        background:rgba(9,77,146,.04); border:1px solid rgba(9,77,146,.1);">
-              <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em;
-                          color:var(--text-muted); font-weight:600; margin-bottom:.35rem;">Responsable</div>
-              <div id="summary-usuario" style="font-weight:700; font-size:.95rem; color:var(--text-main);">—</div>
-              <div id="summary-vencimiento" style="font-size:.8rem; color:var(--text-muted); margin-top:.25rem;"></div>
+            <div class="p-3 rounded border bg-primary bg-opacity-10 border-primary border-opacity-25 mb-3">
+              <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.65rem; letter-spacing:.08em;">
+                Responsable</div>
+              <div id="summary-usuario" class="fw-bold">—</div>
+              <div id="summary-vencimiento" class="small text-muted mt-1"></div>
             </div>
-
-            {# Lista herramientas — con scroll si son muchas #}
-            <div style="margin-bottom:1rem;">
-              <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em;
-                          color:var(--text-muted); font-weight:600; margin-bottom:.5rem;">
-                Herramientas a prestar
-              </div>
-              <div id="summary-items"
-                   style="display:flex; flex-direction:column; gap:.5rem;
-                          max-height:220px; overflow-y:auto;
-                          padding-right:.3rem;
-                          scrollbar-width:thin;
-                          scrollbar-color:rgba(9,77,146,.2) transparent;">
-              </div>
+            <div class="mb-3">
+              <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.65rem; letter-spacing:.08em;">
+                Herramientas a prestar</div>
+              <div id="summary-items" class="d-flex flex-column gap-2" style="max-height:220px; overflow-y:auto;"></div>
             </div>
-
-            <div style="padding:.85rem 1rem; border-radius:var(--radius-md);
-                        background:rgba(58,122,66,.05); border:1px solid rgba(58,122,66,.15);">
-              <div style="font-size:.8rem; color:var(--sage); font-weight:600;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     style="vertical-align:middle; margin-right:.3rem;">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-                Haz clic en <strong>Confirmar y registrar</strong> para guardar el préstamo
-              </div>
+            <div class="alert alert-success py-2 px-3 small mb-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="me-1" style="vertical-align:middle;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              Haz clic en <strong>Confirmar y registrar</strong> para guardar el préstamo
             </div>
           </div>
 
         </div>{# /modal-body #}
 
-        {# Footer SIEMPRE fijo al fondo #}
-        <div class="modal-footer" style="flex-shrink:0; border-top:1px solid var(--border-color);">
-          <button type="button" class="btn-outline-mine" id="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn-outline-mine" id="btn-prev" style="display:none;">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="btn-cancel"
+            data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-outline-secondary d-none" id="btn-prev">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="15 18 9 12 15 6"/>
+              <polyline points="15 18 9 12 15 6" />
             </svg>
             Anterior
           </button>
-          <button type="button" id="btn-next" class="btn-primary-mine">
+          <button type="button" id="btn-next" class="btn btn-primary d-flex align-items-center gap-1">
             Siguiente
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="9 18 15 12 9 6"/>
+              <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
-          <button type="submit" id="btn-submit" class="btn-primary-mine"
-                  style="display:none; background:rgba(58,122,66,.85);">
+          <button type="submit" id="btn-submit" class="btn btn-success d-none d-flex align-items-center gap-1">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
+              <polyline points="20 6 9 17 4 12" />
             </svg>
             Confirmar y registrar
           </button>
@@ -846,568 +735,507 @@
 
 {% block js %}
 <style>
-/* ═══════════════════════════════════════════
-   KPI CARDS — mejoradas
-═══════════════════════════════════════════ */
-.kpi-card {
-  opacity: 0;
-  transform: translateY(18px) scale(.97);
-  transition: opacity .45s ease, transform .45s ease;
-  position: relative !important;
-  overflow: hidden !important;
-  cursor: default;
-}
-.kpi-card.kpi-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-.kpi-card:hover {
-  transform: translateY(-4px) scale(1.015) !important;
-  box-shadow: 0 8px 28px rgba(27,32,33,.13) !important;
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1),
-              box-shadow .18s ease !important;
-}
-.kpi-accent-bar {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: 0;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform .75s cubic-bezier(.22,1,.36,1) .15s;
-}
-.kpi-card.kpi-visible .kpi-accent-bar { transform: scaleX(1); }
-.kpi-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,.07) 0%, transparent 55%);
-  opacity: 0;
-  transition: opacity .2s;
-  pointer-events: none;
-}
-.kpi-card:hover::after { opacity: 1; }
-.kpi-number {
-  display: inline-block;
-}
-.kpi-card.kpi-visible .kpi-number {
-  animation: kpiPulse .55s ease .45s both;
-}
-@keyframes kpiPulse {
-  0%   { transform: scale(1); }
-  55%  { transform: scale(1.06); }
-  100% { transform: scale(1); }
-}
-.kpi-label {
-  font-family: var(--font-ui);
-  font-size: .7rem;
-  color: var(--text-muted);
-  margin-top: .28rem;
-  font-weight: 600;
-  letter-spacing: .03em;
-}
-.kpi-trend {
-  position: absolute;
-  top: .72rem;
-  right: .75rem;
-  font-family: var(--font-mono);
-  font-size: .58rem;
-  padding: .1rem .38rem;
-  border-radius: 20px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.kpi-trend.up   { background:rgba(58,122,66,.1);  color:#2b5430; }
-.kpi-trend.down { background:rgba(152,71,62,.1);  color:#6e2020; }
-.kpi-trend.warn { background:rgba(196,144,10,.1); color:#7a5500; }
+  /* ── KPI Cards ── */
+  .kpi-card {
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(18px) scale(.97);
+    transition: opacity .45s ease, transform .45s ease;
+    cursor: default;
+  }
 
-/* ═══════════════════════════════════════════
-   WIZARD — modal scroll fix
-═══════════════════════════════════════════ */
-#modalCrearPrestamo .modal-content {
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-#modalCrearPrestamo form {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-}
-#modalCrearPrestamo .modal-body {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  overscroll-behavior: contain;
-}
-#modalCrearPrestamo .modal-footer {
-  flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
-  background: #f9f7f3;
-  z-index: 10;
-}
-#modalCrearPrestamo #summary-items::-webkit-scrollbar { width: 4px; }
-#modalCrearPrestamo #summary-items::-webkit-scrollbar-thumb {
-  background: rgba(9,77,146,.2); border-radius: 2px;
-}
-#modalCrearPrestamo .modal-body::-webkit-scrollbar { width: 4px; }
-#modalCrearPrestamo .modal-body::-webkit-scrollbar-thumb {
-  background: rgba(27,32,33,.12); border-radius: 2px;
-}
+  .kpi-card.kpi-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 
-/* ═══════════════════════════════════════════
-   WIZARD — progress dots
-═══════════════════════════════════════════ */
-.wizard-step-dot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  position: relative;
-}
-.wizard-step-dot:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 15px;
-  left: 50%;
-  width: 100%;
-  height: 2px;
-  background: rgba(9,77,146,.12);
-  z-index: 0;
-}
-.wizard-step-dot.wizard-done:not(:last-child)::after { background: var(--navy); }
-.wizard-dot-circle {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid rgba(9,77,146,.15);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono); font-size: .85rem; font-weight: 700;
-  color: var(--text-muted);
-  position: relative; z-index: 1;
-  margin-bottom: .5rem;
-  transition: all .2s;
-}
-.wizard-step-dot.wizard-active .wizard-dot-circle {
-  background: var(--navy); color: white; border-color: var(--navy);
-  box-shadow: 0 0 0 4px rgba(9,77,146,.1);
-}
-.wizard-step-dot.wizard-done .wizard-dot-circle {
-  background: var(--navy); color: white; border-color: var(--navy);
-}
-.wizard-dot-label {
-  font-family: var(--font-ui); font-size: .7rem;
-  color: var(--text-muted); text-align: center; font-weight: 600;
-}
-.wizard-step-dot.wizard-active .wizard-dot-label { color: var(--navy); font-weight: 700; }
-.wizard-step-dot.wizard-done   .wizard-dot-label { color: var(--navy); }
+  .kpi-card:hover {
+    transform: translateY(-4px) scale(1.015) !important;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .1) !important;
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), box-shadow .18s ease !important;
+  }
 
-/* ═══════════════════════════════════════════
-   ALERTA INLINE WIZARD
-═══════════════════════════════════════════ */
-@keyframes wiz-slide-in {
-  from { opacity:0; transform:translateY(-6px); }
-  to   { opacity:1; transform:none; }
-}
-#wiz-inline-alert {
-  animation: wiz-slide-in .2s ease;
-}
+  .kpi-card.kpi-visible .kpi-number {
+    animation: kpiPulse .55s ease .45s both;
+  }
+
+  @keyframes kpiPulse {
+    0% {
+      transform: scale(1);
+    }
+
+    55% {
+      transform: scale(1.06);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* ── Wizard progress dots ── */
+  .wizard-step-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+
+  .wizard-step-dot:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: #dee2e6;
+    z-index: 0;
+  }
+
+  .wizard-step-dot.wizard-done:not(:last-child)::after {
+    background: #0d6efd;
+  }
+
+  .wizard-dot-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--bs-font-monospace, monospace);
+    font-size: .85rem;
+    font-weight: 700;
+    color: #6c757d;
+    position: relative;
+    z-index: 1;
+    margin-bottom: .5rem;
+    transition: all .2s;
+  }
+
+  .wizard-step-dot.wizard-active .wizard-dot-circle {
+    background: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, .15);
+  }
+
+  .wizard-step-dot.wizard-done .wizard-dot-circle {
+    background: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+  }
+
+  .wizard-dot-label {
+    font-size: .7rem;
+    color: #6c757d;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .wizard-step-dot.wizard-active .wizard-dot-label {
+    color: #0d6efd;
+    font-weight: 700;
+  }
+
+  .wizard-step-dot.wizard-done .wizard-dot-label {
+    color: #0d6efd;
+  }
+
+  /* ── Inline alert animation ── */
+  @keyframes wiz-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  #wiz-inline-alert {
+    animation: wiz-slide-in .2s ease;
+  }
 </style>
 
 <script>
-/* ═══════════════════════════════════════════
-   CHEVRON — filas desplegables
-═══════════════════════════════════════════ */
-document.querySelectorAll('[data-bs-target^="#detail-p-"]').forEach(function (btn) {
-  var target = document.querySelector(btn.getAttribute('data-bs-target'));
-  if (!target) return;
-  target.addEventListener('show.bs.collapse', function () {
-    var icon = btn.querySelector('.row-chevron');
-    if (icon) icon.style.transform = 'rotate(90deg)';
-  });
-  target.addEventListener('hide.bs.collapse', function () {
-    var icon = btn.querySelector('.row-chevron');
-    if (icon) icon.style.transform = 'rotate(0deg)';
-  });
-});
-
-/* ═══════════════════════════════════════════
-   MODAL APROBAR
-═══════════════════════════════════════════ */
-var _aprModal = null;
-function abrirAprobar(pk, nombre, doc, motivo, fecha, items) {
-  document.getElementById('apr-pk').value          = pk;
-  document.getElementById('apr-titulo').textContent = 'Aprobar solicitud #' + pk;
-  document.getElementById('apr-subtitulo').textContent = 'Verifica seriales antes de entregar';
-  document.getElementById('apr-nombre').textContent = nombre;
-  document.getElementById('apr-doc').textContent   = doc;
-  document.getElementById('apr-fecha').textContent  = fecha;
-  var motivoWrap = document.getElementById('apr-motivo-wrap');
-  if (motivo && motivo.trim()) {
-    document.getElementById('apr-motivo').textContent = motivo;
-    motivoWrap.style.display = 'block';
-  } else {
-    motivoWrap.style.display = 'none';
-  }
-  document.getElementById('rch-pk').value = pk;
-  document.getElementById('rch-id').textContent = '#' + pk;
-  var container = document.getElementById('apr-items-container');
-  container.innerHTML = '';
-  var hayStockInsuficiente = false;
-  items.forEach(function (item) {
-    var insuficiente = item.stock < item.cantidad;
-    if (insuficiente) hayStockInsuficiente = true;
-    var row = document.createElement('div');
-    row.style.cssText = 'margin-bottom:.85rem; padding:1rem; border-radius:var(--radius-md);' +
-      'border:1px solid ' + (insuficiente ? 'rgba(152,71,62,.25)' : 'rgba(9,77,146,.12)') + ';' +
-      'background:' + (insuficiente ? 'rgba(152,71,62,.04)' : 'rgba(9,77,146,.03)') + ';';
-    row.innerHTML =
-      '<div style="display:flex; align-items:flex-start; gap:1rem; flex-wrap:wrap;">' +
-        '<div style="flex:1; min-width:160px;">' +
-          '<div style="font-weight:700; font-size:.92rem; color:var(--text-main);">' + escapeHtml(item.nombre) + '</div>' +
-          '<div style="font-family:var(--font-mono); font-size:.72rem; color:var(--text-muted); margin-top:.1rem;">' +
-            escapeHtml(item.sku) + ' · Solicitado: ' + item.cantidad +
-            ' · Stock: <strong style="color:' + (insuficiente ? 'var(--rust)' : 'var(--sage)') + ';">' + item.stock + '</strong>' +
-          '</div>' +
-          (insuficiente ? '<div style="font-size:.74rem; color:var(--rust); margin-top:.25rem; font-weight:600;">⚠ Stock insuficiente</div>' : '') +
-        '</div>' +
-        '<div style="flex:1; min-width:180px;">' +
-          '<label style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; display:block; margin-bottom:.25rem;">Serial / N° de serie *</label>' +
-          '<input type="text" name="serial_' + item.id + '" class="form-control apr-serial-input" placeholder="Ej: SN-20240012" maxlength="200" style="font-family:var(--font-mono); font-size:.88rem;"' +
-          (insuficiente ? ' disabled' : ' required') + '>' +
-        '</div>' +
-      '</div>';
-    container.appendChild(row);
-  });
-  var btnAprobar = document.getElementById('apr-btn-aprobar');
-  btnAprobar.disabled = hayStockInsuficiente;
-  if (!_aprModal) _aprModal = new bootstrap.Modal(document.getElementById('modalAprobarPrestamo'));
-  _aprModal.show();
-}
-
-document.getElementById('formAprobar').addEventListener('submit', function (e) {
-  var inputs = document.querySelectorAll('.apr-serial-input:not([disabled])');
-  var todoOk = true;
-  inputs.forEach(function (inp) {
-    if (!inp.value.trim()) { inp.classList.add('is-invalid'); todoOk = false; }
-    else inp.classList.remove('is-invalid');
-  });
-  if (!todoOk) { e.preventDefault(); alert('Por favor ingresa el serial de todas las herramientas.'); }
-});
-
-function abrirRechazar() {
-  if (_aprModal) _aprModal.hide();
-  setTimeout(function () {
-    new bootstrap.Modal(document.getElementById('modalRechazarPrestamo')).show();
-  }, 350);
-}
-function abrirDevolver(pk, usuario) {
-  document.getElementById('dev-pk').textContent      = pk;
-  document.getElementById('dev-usuario').textContent = usuario;
-  new bootstrap.Modal(document.getElementById('modalDevolverPrestamo')).show();
-}
-function abrirDevoluciones() {
-  var pk = document.getElementById('dev-pk').textContent;
-  if (pk) window.location.href = '/devoluciones/?prestamo=' + pk;
-}
-
-document.getElementById('modalEditarPrestamo').addEventListener('show.bs.modal', function (e) {
-  var btn = e.relatedTarget;
-  document.getElementById('edit_pk').value            = btn.dataset.pk;
-  document.getElementById('edit_observaciones').value = btn.dataset.observaciones || '';
-});
-
-/* ═══════════════════════════════════════════
-   WIZARD — NUEVO PRÉSTAMO
-═══════════════════════════════════════════ */
-var currentStep = 1;
-var maxSteps    = 4;
-var productosData = {{ productos_json|safe }};
-var usuariosData  = {{ usuarios_json|safe }};
-
-var wizardSteps = [
-  { id:1, label:'Responsable' },
-  { id:2, label:'Herramientas' },
-  { id:3, label:'Detalles' },
-  { id:4, label:'Resumen' },
-];
-
-function renderWizardProgress() {
-  var bar = document.getElementById('wizard-progress-bar');
-  if (!bar) return;
-  bar.innerHTML = wizardSteps.map(function (step, idx) {
-    var cls = 'wizard-step-dot';
-    if (idx < currentStep - 1) cls += ' wizard-done';
-    if (idx === currentStep - 1) cls += ' wizard-active';
-    var inner = idx < currentStep - 1
-      ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>'
-      : step.id;
-    return '<div class="' + cls + '">' +
-             '<div class="wizard-dot-circle">' + inner + '</div>' +
-             '<div class="wizard-dot-label">' + step.label + '</div>' +
-           '</div>';
-  }).join('');
-}
-
-/* ── Alerta inline sin cambiar de paso ── */
-function mostrarAlertaInline(mensaje, tipo) {
-  var colores = {
-    error: { bg:'rgba(152,71,62,.08)', border:'rgba(152,71,62,.28)', color:'var(--rust)', icon:'✕' },
-    warn:  { bg:'rgba(196,144,10,.08)', border:'rgba(196,144,10,.28)', color:'#7a5500', icon:'⚠' },
-  };
-  var c = colores[tipo] || colores.error;
-  var prev = document.getElementById('wiz-inline-alert');
-  if (prev) prev.remove();
-  var el = document.createElement('div');
-  el.id = 'wiz-inline-alert';
-  el.setAttribute('style',
-    'display:flex; align-items:flex-start; gap:.5rem; padding:.6rem .9rem;' +
-    'border-radius:var(--radius-md); background:' + c.bg + '; border:1px solid ' + c.border + ';' +
-    'color:' + c.color + '; font-family:var(--font-ui); font-size:.83rem; font-weight:600;' +
-    'margin-top:.85rem;'
-  );
-  el.innerHTML = '<span style="flex-shrink:0; font-size:.95rem; margin-top:.05rem;">' + c.icon + '</span>' +
-                 '<span>' + mensaje + '</span>';
-  var stepActivo = document.getElementById('step-' + currentStep);
-  if (stepActivo) stepActivo.appendChild(el);
-  clearTimeout(el._t);
-  el._t = setTimeout(function () {
-    el.style.transition = 'opacity .35s';
-    el.style.opacity = '0';
-    setTimeout(function () { if (el.parentNode) el.remove(); }, 380);
-  }, 4500);
-}
-
-function limpiarAlerta() {
-  var prev = document.getElementById('wiz-inline-alert');
-  if (prev) prev.remove();
-}
-
-/* ── Validación por paso — devuelve {ok, msg, tipo} ── */
-function validarPasoActual() {
-  if (currentStep === 1) {
-    var sel = document.getElementById('id_usuario');
-    if (!sel || !sel.value) {
-      sel && sel.classList.add('is-invalid');
-      return { ok:false, msg:'Debes seleccionar un usuario responsable antes de continuar.', tipo:'error' };
-    }
-    sel.classList.remove('is-invalid');
-    return { ok:true };
-  }
-  if (currentStep === 2) {
-    var sels    = document.querySelectorAll('.crear-prod-sel');
-    var validas = 0;
-    var sinStock = [];
-    sels.forEach(function (s) {
-      if (!s.value) return;
-      var opt   = s.options[s.selectedIndex];
-      var stock = parseInt(opt.dataset.stock || '0', 10);
-      if (stock > 0) { validas++; s.classList.remove('is-invalid'); }
-      else           { s.classList.add('is-invalid'); sinStock.push(opt.text.split('—')[0].trim()); }
+  /* ── Chevron — filas desplegables ── */
+  document.querySelectorAll('[data-bs-target^="#detail-p-"]').forEach(function (btn) {
+    var target = document.querySelector(btn.getAttribute('data-bs-target'));
+    if (!target) return;
+    target.addEventListener('show.bs.collapse', function () {
+      var icon = btn.querySelector('.row-chevron');
+      if (icon) icon.style.transform = 'rotate(90deg)';
     });
-    if (validas === 0 && sinStock.length === 0)
-      return { ok:false, msg:'Selecciona al menos una herramienta disponible.', tipo:'error' };
-    if (sinStock.length > 0 && validas === 0)
-      return { ok:false, msg:'Las herramientas seleccionadas no tienen stock. Elige otras.', tipo:'warn' };
-    if (sinStock.length > 0)
-      return { ok:false, msg:'Algunas herramientas no tienen stock (' + sinStock.join(', ') + '). Cámbialas o elimínalas.', tipo:'warn' };
-    var cantInvalida = false;
-    document.querySelectorAll('#crear-items-container input[name="cantidad[]"]').forEach(function (inp) {
-      var v = parseInt(inp.value, 10);
-      if (isNaN(v) || v < 1) { inp.classList.add('is-invalid'); cantInvalida = true; }
+    target.addEventListener('hide.bs.collapse', function () {
+      var icon = btn.querySelector('.row-chevron');
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    });
+  });
+
+  /* ── Modal Aprobar ── */
+  var _aprModal = null;
+  function abrirAprobar(pk, nombre, doc, motivo, fecha, items) {
+    if (typeof items === 'string') {
+      try {
+        items = (new Function('return ' + items))();
+      } catch (e) {
+        console.error(e);
+        items = [];
+      }
+    }
+    document.getElementById('apr-pk').value = pk;
+    document.getElementById('apr-titulo').textContent = 'Aprobar solicitud #' + pk;
+    document.getElementById('apr-subtitulo').textContent = 'Verifica seriales antes de entregar';
+    document.getElementById('apr-nombre').textContent = nombre;
+    document.getElementById('apr-doc').textContent = doc;
+    document.getElementById('apr-fecha').textContent = fecha;
+    var motivoWrap = document.getElementById('apr-motivo-wrap');
+    if (motivo && motivo.trim()) {
+      document.getElementById('apr-motivo').textContent = motivo;
+      motivoWrap.classList.remove('d-none');
+    } else {
+      motivoWrap.classList.add('d-none');
+    }
+    document.getElementById('rch-pk').value = pk;
+    document.getElementById('rch-id').textContent = '#' + pk;
+    var container = document.getElementById('apr-items-container');
+    container.innerHTML = '';
+    var hayStockInsuficiente = false;
+    items.forEach(function (item) {
+      var insuficiente = item.stock < item.cantidad;
+      if (insuficiente) hayStockInsuficiente = true;
+      var row = document.createElement('div');
+      row.className = 'mb-3 p-3 rounded border ' + (insuficiente ? 'border-danger bg-danger bg-opacity-10' : 'border-primary bg-primary bg-opacity-10');
+      row.innerHTML =
+        '<div class="d-flex align-items-start gap-3 flex-wrap">' +
+        '<div class="flex-grow-1">' +
+        '<div class="fw-bold">' + escapeHtml(item.nombre) + '</div>' +
+        '<div class="text-muted font-monospace" style="font-size:.72rem;">' +
+        escapeHtml(item.sku) + ' · Solicitado: ' + item.cantidad +
+        ' · Stock: <strong class="' + (insuficiente ? 'text-danger' : 'text-success') + '">' + item.stock + '</strong>' +
+        '</div>' +
+        (insuficiente ? '<div class="text-danger small fw-semibold mt-1">⚠ Stock insuficiente</div>' : '') +
+        '</div>' +
+        '<div class="flex-grow-1" style="min-width:180px;">' +
+        '<label class="text-uppercase text-muted fw-semibold d-block mb-1" style="font-size:.62rem; letter-spacing:.08em;">Serial / N° de serie *</label>' +
+        '<input type="text" name="serial_' + item.id + '" class="form-control form-control-sm apr-serial-input font-monospace" placeholder="Ej: SN-20240012" maxlength="200"' +
+        (insuficiente ? ' disabled' : ' required') + '>' +
+        '</div>' +
+        '</div>';
+      container.appendChild(row);
+    });
+    var btnAprobar = document.getElementById('apr-btn-aprobar');
+    btnAprobar.disabled = hayStockInsuficiente;
+    if (!_aprModal) _aprModal = new bootstrap.Modal(document.getElementById('modalAprobarPrestamo'));
+    _aprModal.show();
+  }
+
+  document.getElementById('formAprobar').addEventListener('submit', function (e) {
+    var inputs = document.querySelectorAll('.apr-serial-input:not([disabled])');
+    var todoOk = true;
+    inputs.forEach(function (inp) {
+      if (!inp.value.trim()) { inp.classList.add('is-invalid'); todoOk = false; }
       else inp.classList.remove('is-invalid');
     });
-    if (cantInvalida)
-      return { ok:false, msg:'Todas las cantidades deben ser mayores a 0.', tipo:'error' };
-    return { ok:true };
-  }
-  return { ok:true };
-}
+    if (!todoOk) { e.preventDefault(); alert('Por favor ingresa el serial de todas las herramientas.'); }
+  });
 
-/* ── Navegar al paso ── */
-function goToStep(step) {
-  if (step > currentStep) {
-    var res = validarPasoActual();
-    if (!res.ok) {
-      mostrarAlertaInline(res.msg, res.tipo || 'error');
-      return;
-    }
+  function abrirRechazar() {
+    if (_aprModal) _aprModal.hide();
+    setTimeout(function () {
+      new bootstrap.Modal(document.getElementById('modalRechazarPrestamo')).show();
+    }, 350);
   }
-  limpiarAlerta();
-  document.querySelectorAll('.wizard-step').forEach(function (s) { s.style.display = 'none'; });
-  document.getElementById('step-' + step).style.display = 'block';
-  currentStep = step;
-  var titles = [
-    { title:'Paso 1: Responsable del préstamo',   subtitle:'Selecciona el usuario responsable' },
-    { title:'Paso 2: Herramientas',               subtitle:'Selecciona las herramientas a prestar' },
-    { title:'Paso 3: Detalles del préstamo',      subtitle:'Agrega información adicional' },
-    { title:'Paso 4: Resumen',                    subtitle:'Revisa todos los datos antes de confirmar' },
+  function abrirDevolver(pk, usuario) {
+    document.getElementById('dev-pk').textContent = pk;
+    document.getElementById('dev-usuario').textContent = usuario;
+    new bootstrap.Modal(document.getElementById('modalDevolverPrestamo')).show();
+  }
+  function abrirDevoluciones() {
+    var pk = document.getElementById('dev-pk').textContent;
+    if (pk) window.location.href = '/devoluciones/?prestamo=' + pk;
+  }
+
+  document.getElementById('modalEditarPrestamo').addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    document.getElementById('edit_pk').value = btn.dataset.pk;
+    document.getElementById('edit_observaciones').value = btn.dataset.observaciones || '';
+  });
+
+  /* ── Wizard ── */
+  var currentStep = 1;
+  var maxSteps = 4;
+  var productosData = JSON.parse("{{ productos_json|escapejs }}");
+  var usuariosData = JSON.parse("{{ usuarios_json|escapejs }}");
+
+  var wizardSteps = [
+    { id: 1, label: 'Responsable' },
+    { id: 2, label: 'Herramientas' },
+    { id: 3, label: 'Detalles' },
+    { id: 4, label: 'Resumen' },
   ];
-  if (titles[step - 1]) {
-    document.getElementById('wizard-title').textContent    = titles[step - 1].title;
-    document.getElementById('wizard-subtitle').textContent = titles[step - 1].subtitle;
-  }
-  renderWizardProgress();
-  document.getElementById('btn-prev').style.display   = step > 1        ? 'inline-flex' : 'none';
-  document.getElementById('btn-next').style.display   = step < maxSteps ? 'inline-flex' : 'none';
-  document.getElementById('btn-submit').style.display = step === maxSteps ? 'inline-flex' : 'none';
-  if (step === maxSteps) updateSummary();
-  /* Scroll al inicio del body del modal al cambiar paso */
-  var body = document.querySelector('#modalCrearPrestamo .modal-body');
-  if (body) body.scrollTop = 0;
-}
 
-function updateSummary() {
-  var usuarioSelect   = document.getElementById('id_usuario');
-  var nombreInput     = document.querySelector('[name="nombre_usuario"]');
-  var vencimientoInput = document.querySelector('[name="fecha_vencimiento"]');
-  var doc      = usuarioSelect ? usuarioSelect.value : '';
-  var usuario  = usuariosData.find(function (u) { return u.doc === doc; });
-  var nombreTexto = nombreInput && nombreInput.value ? nombreInput.value : (usuario ? usuario.nombre : 'No seleccionado');
-  document.getElementById('summary-usuario').textContent = nombreTexto;
-  var venc = vencimientoInput && vencimientoInput.value;
-  document.getElementById('summary-vencimiento').textContent = venc ? 'Vencimiento: ' + venc : '';
-  var container = document.getElementById('summary-items');
-  container.innerHTML = '';
-  document.querySelectorAll('#crear-items-container .crear-item-row').forEach(function (row) {
-    var sel = row.querySelector('.crear-prod-sel');
-    var qty = row.querySelector('input[name="cantidad[]"]');
-    if (!sel || !sel.value) return;
-    var prod = productosData.find(function (p) { return p.pk == sel.value; });
-    if (!prod) return;
-    var item = document.createElement('div');
-    item.style.cssText = 'padding:.65rem .85rem; border-radius:var(--radius-sm);' +
-      'background:rgba(9,77,146,.05); border:1px solid rgba(9,77,146,.1);' +
-      'display:flex; align-items:center; justify-content:space-between;';
-    item.innerHTML =
-      '<div>' +
-        '<div style="font-weight:600; font-size:.88rem;">' + escapeHtml(prod.nombre) + '</div>' +
-        '<div style="font-family:var(--font-mono); font-size:.72rem; color:var(--text-muted);">' + escapeHtml(prod.sku) + '</div>' +
-      '</div>' +
-      '<div style="font-family:var(--font-mono); font-size:.9rem; font-weight:700; color:var(--navy);">×' + (qty ? qty.value : 1) + '</div>';
-    container.appendChild(item);
-  });
-  if (container.children.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-muted); font-size:.8rem;">No hay herramientas seleccionadas</div>';
-  }
-}
-
-/* ── Generar fila de producto nueva ── */
-function crearFilaProducto() {
-  var opciones = '<option value="">— Selecciona herramienta —</option>' +
-    productosData.map(function (p) {
-      return '<option value="' + p.pk + '" data-stock="' + p.stock + '">[' +
-        escapeHtml(p.sku) + '] ' + escapeHtml(p.nombre) + ' — Stock: ' + p.stock + '</option>';
+  function renderWizardProgress() {
+    var bar = document.getElementById('wizard-progress-bar');
+    if (!bar) return;
+    bar.innerHTML = wizardSteps.map(function (step, idx) {
+      var cls = 'wizard-step-dot';
+      if (idx < currentStep - 1) cls += ' wizard-done';
+      if (idx === currentStep - 1) cls += ' wizard-active';
+      var inner = idx < currentStep - 1
+        ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>'
+        : step.id;
+      return '<div class="' + cls + '">' +
+        '<div class="wizard-dot-circle">' + inner + '</div>' +
+        '<div class="wizard-dot-label">' + step.label + '</div>' +
+        '</div>';
     }).join('');
-  var div = document.createElement('div');
-  div.className = 'crear-item-row row g-2 align-items-start mb-2';
-  div.innerHTML =
-    '<div class="col">' +
-      '<select name="producto[]" class="form-select crear-prod-sel" required>' + opciones + '</select>' +
-      '<div class="stock-info-dyn d-none mt-1 px-2 py-1 rounded" style="font-size:.78rem;display:flex;align-items:center;gap:.4rem;"></div>' +
-    '</div>' +
-    '<div class="col-auto" style="width:90px;"><input type="number" name="cantidad[]" class="form-control text-center" min="1" value="1" required></div>' +
-    '<div class="col-auto"><button type="button" class="btn-ghost crear-del-btn" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;">' +
-      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-    '</button></div>';
-  div.querySelector('.crear-prod-sel').addEventListener('change', function () {
-    var info = div.querySelector('.stock-info-dyn');
-    var opt  = this.options[this.selectedIndex];
-    info.classList.add('d-none');
-    if (!opt.value) return;
-    var s = parseInt(opt.dataset.stock, 10);
-    info.classList.remove('d-none');
-    info.style.cssText = s > 0
-      ? 'background:rgba(58,122,66,.07);border:1px solid rgba(58,122,66,.2);color:var(--sage);font-size:.78rem;display:flex;align-items:center;gap:.4rem;'
-      : 'background:rgba(152,71,62,.07);border:1px solid rgba(152,71,62,.2);color:var(--rust);font-size:.78rem;display:flex;align-items:center;gap:.4rem;';
-    info.textContent = s > 0 ? '✓ Disponible — Stock: ' + s : '⚠ Sin stock disponible';
-  });
-  return div;
-}
-
-document.getElementById('btn-next').addEventListener('click', function () {
-  if (currentStep < maxSteps) goToStep(currentStep + 1);
-});
-document.getElementById('btn-prev').addEventListener('click', function () {
-  if (currentStep > 1) goToStep(currentStep - 1);
-});
-document.getElementById('crear-add-item').addEventListener('click', function () {
-  document.getElementById('crear-items-container').appendChild(crearFilaProducto());
-  actualizarDelBtns();
-});
-document.getElementById('crear-items-container').addEventListener('click', function (e) {
-  var btn = e.target.closest('.crear-del-btn');
-  if (!btn) return;
-  var rows = document.querySelectorAll('#crear-items-container .crear-item-row');
-  if (rows.length > 1) { btn.closest('.crear-item-row').remove(); actualizarDelBtns(); }
-});
-function actualizarDelBtns() {
-  var rows = document.querySelectorAll('#crear-items-container .crear-item-row');
-  rows.forEach(function (r) {
-    var b = r.querySelector('.crear-del-btn');
-    if (b) b.classList.toggle('disabled', rows.length === 1);
-  });
-}
-
-document.getElementById('id_usuario').addEventListener('change', function () {
-  var doc = this.value;
-  var u   = usuariosData.find(function (u) { return u.doc === doc; });
-  var inp = document.querySelector('[name="nombre_usuario"]');
-  if (u && inp) inp.value = u.nombre;
-});
-
-document.getElementById('modalCrearPrestamo').addEventListener('show.bs.modal', function () {
-  currentStep = 1;
-  goToStep(1);
-  document.getElementById('wizardForm').reset();
-  document.getElementById('id_usuario').classList.remove('is-invalid');
-  var container = document.getElementById('crear-items-container');
-  while (container.children.length > 1) container.removeChild(container.lastChild);
-  actualizarDelBtns();
-});
-
-/* ═══════════════════════════════════════════
-   KPI — animación con IntersectionObserver
-═══════════════════════════════════════════ */
-(function () {
-  function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
-  function animarContador(el, target, dur) {
-    var inicio = performance.now();
-    function paso(ahora) {
-      var p    = Math.min((ahora - inicio) / dur, 1);
-      var ease = easeOutExpo(p);
-      el.textContent = Math.round(ease * target);
-      if (p < 1) requestAnimationFrame(paso);
-      else el.textContent = target;
-    }
-    requestAnimationFrame(paso);
   }
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (!entry.isIntersecting) return;
-      var card  = entry.target;
-      var delay = parseInt(card.getAttribute('data-kpi-delay') || '0', 10);
-      setTimeout(function () {
-        card.classList.add('kpi-visible');
-        card.querySelectorAll('.kpi-number').forEach(function (num) {
-          animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 1100);
-        });
-      }, delay + 80);
-      observer.unobserve(card);
-    });
-  }, { threshold: .15 });
-  document.querySelectorAll('.kpi-card').forEach(function (c) { observer.observe(c); });
-})();
 
-/* ── Util ── */
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+  function mostrarAlertaInline(mensaje, tipo) {
+    var prev = document.getElementById('wiz-inline-alert');
+    if (prev) prev.remove();
+    var el = document.createElement('div');
+    el.id = 'wiz-inline-alert';
+    el.className = 'alert mt-3 py-2 px-3 small ' + (tipo === 'error' ? 'alert-danger' : 'alert-warning');
+    el.textContent = mensaje;
+    var stepActivo = document.getElementById('step-' + currentStep);
+    if (stepActivo) stepActivo.appendChild(el);
+    clearTimeout(el._t);
+    el._t = setTimeout(function () {
+      el.style.transition = 'opacity .35s';
+      el.style.opacity = '0';
+      setTimeout(function () { if (el.parentNode) el.remove(); }, 380);
+    }, 4500);
+  }
+
+  function limpiarAlerta() {
+    var prev = document.getElementById('wiz-inline-alert');
+    if (prev) prev.remove();
+  }
+
+  function validarPasoActual() {
+    if (currentStep === 1) {
+      var sel = document.getElementById('id_usuario');
+      if (!sel || !sel.value) {
+        sel && sel.classList.add('is-invalid');
+        return { ok: false, msg: 'Debes seleccionar un usuario responsable antes de continuar.', tipo: 'error' };
+      }
+      sel.classList.remove('is-invalid');
+      return { ok: true };
+    }
+    if (currentStep === 2) {
+      var sels = document.querySelectorAll('.crear-prod-sel');
+      var validas = 0;
+      var sinStock = [];
+      sels.forEach(function (s) {
+        if (!s.value) return;
+        var opt = s.options[s.selectedIndex];
+        var stock = parseInt(opt.dataset.stock || '0', 10);
+        if (stock > 0) { validas++; s.classList.remove('is-invalid'); }
+        else { s.classList.add('is-invalid'); sinStock.push(opt.text.split('—')[0].trim()); }
+      });
+      if (validas === 0 && sinStock.length === 0)
+        return { ok: false, msg: 'Selecciona al menos una herramienta disponible.', tipo: 'error' };
+      if (sinStock.length > 0 && validas === 0)
+        return { ok: false, msg: 'Las herramientas seleccionadas no tienen stock. Elige otras.', tipo: 'warn' };
+      if (sinStock.length > 0)
+        return { ok: false, msg: 'Algunas herramientas no tienen stock (' + sinStock.join(', ') + '). Cámbialas o elimínalas.', tipo: 'warn' };
+      var cantInvalida = false;
+      document.querySelectorAll('#crear-items-container input[name="cantidad[]"]').forEach(function (inp) {
+        var v = parseInt(inp.value, 10);
+        if (isNaN(v) || v < 1) { inp.classList.add('is-invalid'); cantInvalida = true; }
+        else inp.classList.remove('is-invalid');
+      });
+      if (cantInvalida)
+        return { ok: false, msg: 'Todas las cantidades deben ser mayores a 0.', tipo: 'error' };
+      return { ok: true };
+    }
+    return { ok: true };
+  }
+
+  function goToStep(step) {
+    if (step > currentStep) {
+      var res = validarPasoActual();
+      if (!res.ok) {
+        mostrarAlertaInline(res.msg, res.tipo || 'error');
+        return;
+      }
+    }
+    limpiarAlerta();
+    document.querySelectorAll('.wizard-step').forEach(function (s) { s.classList.add('d-none'); });
+    document.getElementById('step-' + step).classList.remove('d-none');
+    currentStep = step;
+    var titles = [
+      { title: 'Paso 1: Responsable del préstamo', subtitle: 'Selecciona el usuario responsable' },
+      { title: 'Paso 2: Herramientas', subtitle: 'Selecciona las herramientas a prestar' },
+      { title: 'Paso 3: Detalles del préstamo', subtitle: 'Agrega información adicional' },
+      { title: 'Paso 4: Resumen', subtitle: 'Revisa todos los datos antes de confirmar' },
+    ];
+    if (titles[step - 1]) {
+      document.getElementById('wizard-title').textContent = titles[step - 1].title;
+      document.getElementById('wizard-subtitle').textContent = titles[step - 1].subtitle;
+    }
+    renderWizardProgress();
+    document.getElementById('btn-prev').classList.toggle('d-none', step <= 1);
+    document.getElementById('btn-next').classList.toggle('d-none', step >= maxSteps);
+    document.getElementById('btn-submit').classList.toggle('d-none', step !== maxSteps);
+    if (step === maxSteps) updateSummary();
+    var body = document.querySelector('#modalCrearPrestamo .modal-body');
+    if (body) body.scrollTop = 0;
+  }
+
+  function updateSummary() {
+    var usuarioSelect = document.getElementById('id_usuario');
+    var nombreInput = document.querySelector('[name="nombre_usuario"]');
+    var vencimientoInput = document.querySelector('[name="fecha_vencimiento"]');
+    var doc = usuarioSelect ? usuarioSelect.value : '';
+    var usuario = usuariosData.find(function (u) { return u.doc === doc; });
+    var nombreTexto = nombreInput && nombreInput.value ? nombreInput.value : (usuario ? usuario.nombre : 'No seleccionado');
+    document.getElementById('summary-usuario').textContent = nombreTexto;
+    var venc = vencimientoInput && vencimientoInput.value;
+    document.getElementById('summary-vencimiento').textContent = venc ? 'Vencimiento: ' + venc : '';
+    var container = document.getElementById('summary-items');
+    container.innerHTML = '';
+    document.querySelectorAll('#crear-items-container .crear-item-row').forEach(function (row) {
+      var sel = row.querySelector('.crear-prod-sel');
+      var qty = row.querySelector('input[name="cantidad[]"]');
+      if (!sel || !sel.value) return;
+      var prod = productosData.find(function (p) { return p.pk == sel.value; });
+      if (!prod) return;
+      var item = document.createElement('div');
+      item.className = 'p-2 rounded border bg-primary bg-opacity-10 border-primary border-opacity-25 d-flex align-items-center justify-content-between';
+      item.innerHTML =
+        '<div>' +
+        '<div class="fw-semibold small">' + escapeHtml(prod.nombre) + '</div>' +
+        '<div class="text-muted font-monospace" style="font-size:.72rem;">' + escapeHtml(prod.sku) + '</div>' +
+        '</div>' +
+        '<div class="fw-bold font-monospace text-primary">×' + (qty ? qty.value : 1) + '</div>';
+      container.appendChild(item);
+    });
+    if (container.children.length === 0) {
+      container.innerHTML = '<div class="text-muted small">No hay herramientas seleccionadas</div>';
+    }
+  }
+
+  function crearFilaProducto() {
+    var opciones = '<option value="">— Selecciona herramienta —</option>' +
+      productosData.map(function (p) {
+        return '<option value="' + p.pk + '" data-stock="' + p.stock + '">[' +
+          escapeHtml(p.sku) + '] ' + escapeHtml(p.nombre) + ' — Stock: ' + p.stock + '</option>';
+      }).join('');
+    var div = document.createElement('div');
+    div.className = 'crear-item-row row g-2 align-items-start mb-2';
+    div.innerHTML =
+      '<div class="col">' +
+      '<select name="producto[]" class="form-select crear-prod-sel" required>' + opciones + '</select>' +
+      '<div class="stock-info-dyn d-none mt-1 px-2 py-1 rounded small"></div>' +
+      '</div>' +
+      '<div class="col-auto" style="width:90px;"><input type="number" name="cantidad[]" class="form-control text-center" min="1" value="1" required></div>' +
+      '<div class="col-auto"><button type="button" class="btn btn-outline-secondary crear-del-btn" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;">' +
+      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button></div>';
+    div.querySelector('.crear-prod-sel').addEventListener('change', function () {
+      var info = div.querySelector('.stock-info-dyn');
+      var opt = this.options[this.selectedIndex];
+      info.className = 'stock-info-dyn d-none mt-1 px-2 py-1 rounded small';
+      if (!opt.value) return;
+      var s = parseInt(opt.dataset.stock, 10);
+      info.classList.remove('d-none');
+      if (s > 0) {
+        info.className += ' text-success bg-success bg-opacity-10 border border-success border-opacity-25';
+        info.textContent = '✓ Disponible — Stock: ' + s;
+      } else {
+        info.className += ' text-danger bg-danger bg-opacity-10 border border-danger border-opacity-25';
+        info.textContent = '⚠ Sin stock disponible';
+      }
+    });
+    return div;
+  }
+
+  document.getElementById('btn-next').addEventListener('click', function () {
+    if (currentStep < maxSteps) goToStep(currentStep + 1);
+  });
+  document.getElementById('btn-prev').addEventListener('click', function () {
+    if (currentStep > 1) goToStep(currentStep - 1);
+  });
+  document.getElementById('crear-add-item').addEventListener('click', function () {
+    document.getElementById('crear-items-container').appendChild(crearFilaProducto());
+    actualizarDelBtns();
+  });
+  document.getElementById('crear-items-container').addEventListener('click', function (e) {
+    var btn = e.target.closest('.crear-del-btn');
+    if (!btn) return;
+    var rows = document.querySelectorAll('#crear-items-container .crear-item-row');
+    if (rows.length > 1) { btn.closest('.crear-item-row').remove(); actualizarDelBtns(); }
+  });
+  function actualizarDelBtns() {
+    var rows = document.querySelectorAll('#crear-items-container .crear-item-row');
+    rows.forEach(function (r) {
+      var b = r.querySelector('.crear-del-btn');
+      if (b) b.classList.toggle('disabled', rows.length === 1);
+    });
+  }
+
+  document.getElementById('id_usuario').addEventListener('change', function () {
+    var doc = this.value;
+    var u = usuariosData.find(function (u) { return u.doc === doc; });
+    var inp = document.querySelector('[name="nombre_usuario"]');
+    if (u && inp) inp.value = u.nombre;
+  });
+
+  document.getElementById('modalCrearPrestamo').addEventListener('show.bs.modal', function () {
+    currentStep = 1;
+    goToStep(1);
+    document.getElementById('wizardForm').reset();
+    document.getElementById('id_usuario').classList.remove('is-invalid');
+    var container = document.getElementById('crear-items-container');
+    while (container.children.length > 1) container.removeChild(container.lastChild);
+    actualizarDelBtns();
+  });
+
+  /* ── KPI animación ── */
+  (function () {
+    function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+    function animarContador(el, target, dur) {
+      var inicio = performance.now();
+      function paso(ahora) {
+        var p = Math.min((ahora - inicio) / dur, 1);
+        el.textContent = Math.round(easeOutExpo(p) * target);
+        if (p < 1) requestAnimationFrame(paso);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(paso);
+    }
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var card = entry.target;
+        var delay = parseInt(card.getAttribute('data-kpi-delay') || '0', 10);
+        setTimeout(function () {
+          card.classList.add('kpi-visible');
+          card.querySelectorAll('.kpi-number').forEach(function (num) {
+            animarContador(num, parseInt(num.getAttribute('data-target')) || 0, 1100);
+          });
+        }, delay + 80);
+        observer.unobserve(card);
+      });
+    }, { threshold: .15 });
+    document.querySelectorAll('.kpi-card').forEach(function (c) { observer.observe(c); });
+  })();
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
 </script>
 {% endblock js %}
