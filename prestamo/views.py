@@ -46,7 +46,6 @@ def prestamo_usuario_view(request):
     total_prestamos       = all_prestamos.count()
     total_activos         = all_prestamos.filter(estado='activo').count()
     vencidos_count        = all_prestamos.filter(estado='vencido').count()
-    pendientes_aprobacion = all_prestamos.filter(estado='pendiente').count()
 
     proximos_vencer = all_prestamos.filter(
         estado__in=['activo', 'parcial'],
@@ -62,7 +61,6 @@ def prestamo_usuario_view(request):
         'total_prestamos':       total_prestamos,
         'total_activos':         total_activos,
         'vencidos_count':        vencidos_count,
-        'pendientes_aprobacion': pendientes_aprobacion,
         'proximos_vencer':       proximos_vencer,
         'productos_disponibles': productos_disponibles,
     })
@@ -402,7 +400,6 @@ def prestamos_view(request):
     prestamos_activos    = Prestamo.objects.filter(estado='activo').count()
     prestamos_devueltos  = Prestamo.objects.filter(estado='devuelto').count()
     prestamos_vencidos   = Prestamo.objects.filter(estado='vencido').count()
-    prestamos_pendientes = Prestamo.objects.filter(estado='pendiente').count()
 
     hoy = timezone.localdate()
     proximos_vencer = Prestamo.objects.filter(
@@ -422,7 +419,6 @@ def prestamos_view(request):
         'prestamos_activos':    prestamos_activos,
         'prestamos_devueltos':  prestamos_devueltos,
         'prestamos_vencidos':   prestamos_vencidos,
-        'prestamos_pendientes': prestamos_pendientes,
         'proximos_vencer':      proximos_vencer,
         'filtro_q':             q,
         'filtro_estado':        estado_f,

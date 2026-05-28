@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ titulo }}{% endblock %} 
+{% block content %} 
+
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body" style="padding: 2rem">
+          <div class="text-center mb-4">
+            {% if 'eliminar' in request.path %}
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="color: var(--danger)"
+              >
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            {% else %}
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="color: var(--warning)"
+              >
+                <circle cx="12" cy="12" r="1"></circle>
+                <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24"></path>
+              </svg>
+            {% endif %}
+          </div>
+
+          <h4 class="card-title text-center mb-3">
+            {% if 'eliminar' in request.path %}
+              ¿Eliminar tipo de mantenimiento?
+            {% else %}
+              ¿Inactivar tipo de mantenimiento?
+            {% endif %}
+          </h4>
+
+          <p class="text-muted text-center mb-4">
+            <strong>{{ tipo.nombre }}</strong>
+            {% if tipo.descripcion %}
+              <br><span style="font-size: 0.85rem">{{ tipo.descripcion }}</span>
+            {% endif %}
+          </p>
+
+          {% if puede_eliminar or puede_inactivar %}
+            {% if 'eliminar' in request.path %}
+              <div class="alert alert-danger mb-4" style="font-size: 0.9rem">
+                <strong>Esta acción no se puede deshacer.</strong> El tipo de mantenimiento será eliminado permanentemente si nunca fue usado.
+              </div>
+            {% else %}
+              <div class="alert alert-warning mb-4" style="font-size: 0.9rem">
+                El tipo de mantenimiento será marcado como inactivo y no aparecerá en los formularios nuevos.
+              </div>
+            {% endif %}
+
+            <form method="post" class="d-flex gap-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-lg {% if 'eliminar' in request.path %}btn-danger{% else %}btn-warning{% endif %} flex-grow-1">
+                {% if 'eliminar' in request.path %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; margin-right: 0.4rem;">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  Sí, eliminar
+                {% else %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; margin-right: 0.4rem;">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24"></path>
+                  </svg>
+                  Sí, inactivar
+                {% endif %}
+              </button>
+              <a href="{% url 'mantenimiento:tipo_mantenimiento_lista' %}" class="btn btn-lg btn-outline-secondary flex-grow-1">
+                Cancelar
+              </a>
+            </form>
+          {% else %}
+            <div class="alert alert-info mb-4">
+              {% if 'eliminar' in request.path %}
+                <strong>No se puede eliminar:</strong> Este tipo de mantenimiento ya fue utilizado en órdenes y contiene datos históricos.
+              {% else %}
+                <strong>No se puede inactivar:</strong> Este tipo de mantenimiento tiene órdenes abiertas o en proceso.
+              {% endif %}
+            </div>
+
+            <a href="{% url 'mantenimiento:tipo_mantenimiento_lista' %}" class="btn btn-lg btn-outline-primary w-100">
+              Volver a la lista
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
