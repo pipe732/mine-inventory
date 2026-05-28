@@ -1,6 +1,4 @@
 from django.db import models
-from almacenamiento.models import Estante   # ← importar Estante
-
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True, verbose_name="Nombre")
@@ -15,7 +13,6 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nombre
 
-
 class Producto(models.Model):
     codigo_sku = models.CharField(
         max_length=50, unique=True, verbose_name="Código / SKU"
@@ -23,7 +20,7 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=200, verbose_name="Nombre")
     descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
     stock = models.PositiveIntegerField(default=0, verbose_name="Stock / Cantidad")
-
+    
     categoria = models.ForeignKey(
         Categoria,
         on_delete=models.SET_NULL,
@@ -32,34 +29,23 @@ class Producto(models.Model):
         related_name="productos",
         verbose_name="Categoría"
     )
-
-    # ── NUEVO: relación real con Estante ──
-    estante = models.ForeignKey(
-        Estante,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="productos",
-        verbose_name="Estante"
-    )
-
+    
     numero_serie = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
+        max_length=100, 
+        blank=True, 
+        null=True, 
         verbose_name="Número de serie"
     )
 
     disponible = models.BooleanField(
-        default=True,
+        default=True, 
         verbose_name="Disponible para préstamo"
     )
 
-    # ubicacion se mantiene por compatibilidad pero ya no se usa para almacén/estante
     ubicacion = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
+        max_length=150, 
+        blank=True, 
+        null=True, 
         verbose_name="Almacén / Estante"
     )
 
@@ -70,6 +56,12 @@ class Producto(models.Model):
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
         ordering = ["nombre"]
+        # NUEVO: Índices optimizados para búsquedas rápidas en la base de datos
+        indexes = [
+            models.Index(fields=['codigo_sku']),
+            models.Index(fields=['nombre']),
+            models.Index(fields=['stock']),
+        ]
 
     def __str__(self):
         return f"[{self.codigo_sku}] {self.nombre}"
