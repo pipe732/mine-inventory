@@ -258,7 +258,7 @@ class Mantenimiento(models.Model):
         verbose_name="Última edición por",
     )
 
-    # ── Auditoría ─────────────────────────────────────────────────
+    #Auditoría
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

@@ -80,9 +80,9 @@ DATABASES = {
         'PASSWORD': 'npg_P4mVbJ6ckRad',
         'HOST': 'ep-snowy-hall-ap8oi5l1-pooler.c-7.us-east-1.aws.neon.tech',
         'PORT': '5432',
-        'CONN_MAX_AGE': 0,       
+        'CONN_MAX_AGE': 300, #cambiamos el valor de 0  a 300 para reutilizar conexiones cada 5 minutos y mejorar el rendimiento   
         'OPTIONS': {
-            'sslmode': 'require',
+        'sslmode': 'require',
         },
     }
 }
