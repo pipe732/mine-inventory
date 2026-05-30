@@ -46,7 +46,6 @@
     <div class="card h-100">
       <div class="card-body" style="padding:2rem 1.5rem;text-align:center;">
 
-        <!-- Avatar generativo -->
         <div id="avatar-display"
              style="width:88px;height:88px;border-radius:50%;
                     background:var(--rust);color:#fff;
@@ -64,7 +63,7 @@
         </div>
         <div style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);
                     margin-bottom:.85rem;">
-          {{ usuario.id_rol.nombre }}
+          {{ usuario.rol }}
         </div>
 
         <hr style="border-color:var(--border-color);margin:.75rem 0;">
@@ -73,6 +72,12 @@
           {% include "partials/_perfil_dato.html" with icono="envelope" label="Correo" valor=usuario.correo %}
           {% include "partials/_perfil_dato.html" with icono="telephone" label="Teléfono" valor=usuario.telefono|default:"—" %}
           {% include "partials/_perfil_dato.html" with icono="card-text" label="Documento" valor=usuario.get_tipo_documento_display|add:" · "|add:usuario.numero_documento %}
+          {% if usuario.numero_ficha %}
+            {% include "partials/_perfil_dato.html" with icono="hash" label="Ficha" valor=usuario.numero_ficha %}
+          {% endif %}
+          {% if usuario.nombre_programa %}
+            {% include "partials/_perfil_dato.html" with icono="mortarboard" label="Programa" valor=usuario.nombre_programa %}
+          {% endif %}
         </div>
 
       </div>
@@ -94,29 +99,21 @@
       </div>
       <div class="card-body">
         <div class="row g-3 text-center">
-          {% with prestamos_count=usuario.numero_documento %}
           <div class="col-4">
-            <div style="font-family:var(--font-mono);font-size:1.6rem;font-weight:800;color:var(--navy);">
-              —
-            </div>
+            <div style="font-family:var(--font-mono);font-size:1.6rem;font-weight:800;color:var(--navy);">—</div>
             <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
                         color:var(--text-muted);font-weight:600;">Préstamos</div>
           </div>
           <div class="col-4">
-            <div style="font-family:var(--font-mono);font-size:1.6rem;font-weight:800;color:var(--sage);">
-              —
-            </div>
+            <div style="font-family:var(--font-mono);font-size:1.6rem;font-weight:800;color:var(--sage);">—</div>
             <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
                         color:var(--text-muted);font-weight:600;">Devoluciones</div>
           </div>
           <div class="col-4">
-            <div style="font-family:var(--font-mono);font-size:1.6rem;font-weight:800;color:var(--rust);">
-              —
-            </div>
+            <div style="font-family:var(--font-mono);font-size:1.6rem;font-weight:800;color:var(--rust);">—</div>
             <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
                         color:var(--text-muted);font-weight:600;">Vencidos</div>
           </div>
-          {% endwith %}
         </div>
       </div>
     </div>
@@ -131,9 +128,7 @@
           </svg>
           Notificaciones
         </span>
-        <button class="btn-ghost" id="btn-abrir-config" style="font-size:.75rem;">
-          Configurar
-        </button>
+        <button class="btn-ghost" id="btn-abrir-config" style="font-size:.75rem;">Configurar</button>
       </div>
       <div class="card-body" style="padding:1rem 1.2rem;">
         <div style="display:flex;flex-direction:column;gap:.65rem;">
@@ -155,7 +150,6 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
 
-      <!-- Header oscuro con avatar pequeño -->
       <div class="modal-header" style="padding:.9rem 1.35rem;">
         <div style="display:flex;align-items:center;gap:.85rem;">
           <div style="width:36px;height:36px;border-radius:50%;
@@ -170,10 +164,10 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <!-- Pestañas internas -->
+      <!-- Pestañas -->
       <div style="display:flex;border-bottom:1px solid var(--border-color);
                   padding:0 1.35rem;background:rgba(9,77,146,.02);">
-        {% for tab_id, tab_label, tab_icon in tab_list %}
+                  {% for tab_id, tab_label, tab_icon in tab_list %}
         <button type="button"
                 class="modal-tab {% if forloop.first %}modal-tab--active{% endif %}"
                 data-tab="{{ tab_id }}"
@@ -256,6 +250,22 @@
                 {% endif %}
               </div>
 
+              <!-- Número de ficha -->
+              <div class="col-md-5">
+                <label class="form-label">Número de ficha</label>
+                <input type="text" name="numero_ficha" class="form-control"
+                       value="{{ usuario.numero_ficha|default:'' }}"
+                       placeholder="Ej: 2758369" maxlength="20">
+              </div>
+
+              <!-- Nombre del programa -->
+              <div class="col-md-7">
+                <label class="form-label">Nombre del programa</label>
+                <input type="text" name="nombre_programa" class="form-control"
+                       value="{{ usuario.nombre_programa|default:'' }}"
+                       placeholder="Ej: Análisis y Desarrollo de Software" maxlength="200">
+              </div>
+
             </div>
           </div>
           <div class="modal-footer">
@@ -286,7 +296,6 @@
               Cambiar contraseña
             </div>
 
-            <!-- Info de seguridad -->
             <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:1.2rem;
                         padding:.75rem 1rem;border-radius:var(--radius-md);
                         background:rgba(9,77,146,.05);border:1px solid rgba(9,77,146,.14);
@@ -301,39 +310,18 @@
             <div class="row g-3">
               <div class="col-12">
                 <label class="form-label">Contraseña actual *</label>
-                <div style="position:relative;">
-                  <input type="password" name="password_actual" id="pw-actual"
-                         class="form-control {% if errores.password_actual %}is-invalid{% endif %}"
-                         placeholder="Tu contraseña actual" required>
-                  <button type="button" class="pw-toggle" data-target="pw-actual"
-                          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-                                 background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                  </button>
-                </div>
+                <input type="password" name="password_actual" id="pw-actual"
+                       class="form-control {% if errores.password_actual %}is-invalid{% endif %}"
+                       placeholder="Tu contraseña actual" required>
                 {% if errores.password_actual %}
                 <div class="form-error">{{ errores.password_actual }}</div>
                 {% endif %}
               </div>
               <div class="col-md-6">
                 <label class="form-label">Nueva contraseña *</label>
-                <div style="position:relative;">
-                  <input type="password" name="password_nueva" id="pw-nueva"
-                         class="form-control {% if errores.password_nueva %}is-invalid{% endif %}"
-                         placeholder="Mínimo 8 caracteres" required minlength="8">
-                  <button type="button" class="pw-toggle" data-target="pw-nueva"
-                          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-                                 background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                  </button>
-                </div>
-                <!-- Barra de fortaleza -->
+                <input type="password" name="password_nueva" id="pw-nueva"
+                       class="form-control {% if errores.password_nueva %}is-invalid{% endif %}"
+                       placeholder="Mínimo 8 caracteres" required minlength="8">
                 <div id="strength-bar" style="height:3px;border-radius:2px;margin-top:.4rem;
                                                background:var(--border-color);overflow:hidden;">
                   <div id="strength-fill" style="height:100%;width:0;transition:width .3s,background .3s;"></div>
@@ -345,19 +333,9 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label">Confirmar nueva *</label>
-                <div style="position:relative;">
-                  <input type="password" name="password_confirma" id="pw-confirma"
-                         class="form-control {% if errores.password_confirma %}is-invalid{% endif %}"
-                         placeholder="Repite la contraseña" required>
-                  <button type="button" class="pw-toggle" data-target="pw-confirma"
-                          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-                                 background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                  </button>
-                </div>
+                <input type="password" name="password_confirma" id="pw-confirma"
+                       class="form-control {% if errores.password_confirma %}is-invalid{% endif %}"
+                       placeholder="Repite la contraseña" required>
                 <div id="match-label" style="font-size:.7rem;margin-top:.2rem;"></div>
                 {% if errores.password_confirma %}
                 <div class="form-error">{{ errores.password_confirma }}</div>
@@ -393,7 +371,6 @@
             </div>
 
             <div style="display:flex;flex-direction:column;gap:.5rem;">
-
               {% for notif_name, notif_label, notif_desc, notif_val in notificaciones_lista %}
               <div style="display:flex;align-items:center;justify-content:space-between;
                           padding:.9rem 1rem;border-radius:var(--radius-md);
@@ -405,7 +382,6 @@
                   <div style="font-family:var(--font-ui);font-size:.76rem;color:var(--text-muted);
                                margin-top:.1rem;">{{ notif_desc }}</div>
                 </div>
-                <!-- Toggle switch -->
                 <label class="toggle-switch" style="flex-shrink:0;">
                   <input type="checkbox" name="{{ notif_name }}"
                          {% if notif_val %}checked{% endif %}>
@@ -413,7 +389,6 @@
                 </label>
               </div>
               {% endfor %}
-
             </div>
           </div>
           <div class="modal-footer">
@@ -437,7 +412,6 @@
 
 {% block js %}
 <style>
-/* ── Tabs del modal ── */
 .modal-tab { color: var(--text-muted); }
 .modal-tab:hover { color: var(--text-main); }
 .modal-tab--active {
@@ -445,8 +419,6 @@
   border-bottom-color: var(--navy) !important;
   font-weight: 700 !important;
 }
-
-/* ── Toggle switch ── */
 .toggle-switch { position:relative; display:inline-block; width:42px; height:24px; cursor:pointer; }
 .toggle-switch input { opacity:0; width:0; height:0; }
 .toggle-slider {
@@ -466,7 +438,6 @@
 <script>
 (function () {
 
-  // ── Abrir modal ──────────────────────────────────────────────────────
   const modal = new bootstrap.Modal(document.getElementById('modalPerfil'));
 
   document.getElementById('btn-abrir-perfil').addEventListener('click', function () {
@@ -482,7 +453,6 @@
     });
   }
 
-  // Reabrir en la pestaña correcta si hubo errores de validación backend
   {% if errores and accion_activa %}
     const accionMap = {
       'editar_perfil':    'tab-datos',
@@ -496,11 +466,9 @@
     });
   {% endif %}
 
-  // ── Lógica de pestañas ───────────────────────────────────────────────
   function activarTab(id) {
     document.querySelectorAll('.modal-tab').forEach(function (btn) {
-      const esActiva = btn.dataset.tab === id;
-      btn.classList.toggle('modal-tab--active', esActiva);
+      btn.classList.toggle('modal-tab--active', btn.dataset.tab === id);
     });
     document.querySelectorAll('.modal-tab-panel').forEach(function (panel) {
       panel.style.display = panel.id === id ? 'block' : 'none';
@@ -508,20 +476,10 @@
   }
 
   document.querySelectorAll('.modal-tab').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      activarTab(btn.dataset.tab);
-    });
+    btn.addEventListener('click', function () { activarTab(btn.dataset.tab); });
   });
 
-  // ── Ver/ocultar contraseñas ──────────────────────────────────────────
-  document.querySelectorAll('.pw-toggle').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const input = document.getElementById(btn.dataset.target);
-      input.type  = input.type === 'password' ? 'text' : 'password';
-    });
-  });
-
-  // ── Barra de fortaleza de contraseña ────────────────────────────────
+  // Barra de fortaleza de contraseña
   const pwNueva    = document.getElementById('pw-nueva');
   const pwConfirma = document.getElementById('pw-confirma');
   const fillEl     = document.getElementById('strength-fill');
@@ -548,14 +506,9 @@
 
   if (pwNueva) {
     pwNueva.addEventListener('input', function () {
-      const pw    = this.value;
-      const score = calcFuerza(pw);
-      if (!pw) {
-        fillEl.style.width = '0';
-        labelEl.textContent = '';
-        return;
-      }
-      const n = niveles[Math.min(score - 1, 4)] || niveles[0];
+      const pw = this.value;
+      if (!pw) { fillEl.style.width = '0'; labelEl.textContent = ''; return; }
+      const n = niveles[Math.min(calcFuerza(pw) - 1, 4)] || niveles[0];
       fillEl.style.width      = n.pct;
       fillEl.style.background = n.color;
       labelEl.textContent     = n.label;
@@ -567,17 +520,16 @@
   function checkMatch() {
     if (!pwNueva || !pwConfirma || !pwConfirma.value) return;
     if (pwNueva.value === pwConfirma.value) {
-      matchEl.textContent  = '✓ Las contraseñas coinciden';
-      matchEl.style.color  = '#22c55e';
+      matchEl.textContent = '✓ Las contraseñas coinciden';
+      matchEl.style.color = '#22c55e';
     } else {
-      matchEl.textContent  = '✗ No coinciden';
-      matchEl.style.color  = '#ef4444';
+      matchEl.textContent = '✗ No coinciden';
+      matchEl.style.color = '#ef4444';
     }
   }
 
   if (pwConfirma) pwConfirma.addEventListener('input', checkMatch);
 
-  // ── Solo dígitos en teléfono ─────────────────────────────────────────
   const telInput = document.querySelector('[name="telefono"]');
   if (telInput) {
     telInput.addEventListener('input', function () {
