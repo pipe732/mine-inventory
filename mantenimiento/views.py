@@ -382,6 +382,13 @@ class MantenimientoUpdateView(SesionRequeridaMixin, ContextoMixin, UpdateView):
     subtitulo = "Actualiza la orden sin perder trazabilidad"
     boton_texto = "Guardar cambios"
     url_cancelar = "mantenimiento:mantenimiento_lista"
+    
+    #Metodo para tráer el mismo JOIN el producto, el estado, el responsable y quien lo creó
+    #Metodo para realizar una sola consulta a la bd por cada join mejorando el rendimiento
+    def get_queryset(self):                            
+        return Mantenimiento.objects.select_related(
+            "producto", "tipo_estado", "responsable", "creado_por"
+        )
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
