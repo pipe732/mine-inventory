@@ -27,7 +27,7 @@ from django.http import HttpResponse
 from django.conf import settings
 
 def registro_qr_pdf(request):
-    # URL de registro — usa tu dominio real en producción
+    # URL de registro 
     url_registro = request.build_absolute_uri('/usuario/registro/')
 
     # Generar el QR en memoria
