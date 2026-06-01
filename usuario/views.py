@@ -1,6 +1,7 @@
 import re
 import csv
 import time
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
@@ -18,6 +19,8 @@ from usuario.decorators import admin_required, login_required
 
 from .models import Usuario, validar_numero_documento
 from common.mixins import sesion_requerida
+
+logger = logging.getLogger(__name__)
 
 DOC_RULES = {
     'CC': re.compile(r'^\d{6,10}$'),
@@ -39,7 +42,6 @@ DOC_HINTS = {
 }
 TIPOS_VALIDOS = set(DOC_RULES.keys())
 
-# Roles disponibles según ROL_CHOICES del modelo
 ROLES = [{'id': r[0], 'nombre': r[1]} for r in Usuario.ROL_CHOICES]
 
 
@@ -133,41 +135,51 @@ def logout_view(request):
 #  REGISTRO
 # ─────────────────────────────────────────────────────────────
 def registro_view(request):
+    ctx_base = {
+        'roles':           ROLES,
+        'tipo_documento':  'CC',
+        'username':        '',
+        'email':           '',
+        'documento':       '',
+        'numero_ficha':    '',
+        'nombre_programa': '',
+    }
+
     # Todos los roles disponibles para el registro
     """
     linea comentada temporal
     roles_disponibles = Rol.objects.all()
     """
     if request.method == 'POST':
-        username       = request.POST.get('username', '').strip()
-        email          = request.POST.get('email', '').strip().lower()
-        tipo_documento = request.POST.get('tipo_documento', '').strip().upper()
-        documento      = request.POST.get('documento', '').strip()
-        password1      = request.POST.get('password1', '')
-        password2      = request.POST.get('password2', '')
-        # El rol siempre es 'Usuario' al registrarse; no lo elige el usuario
-        rol_id = 'Usuario'
+        username        = request.POST.get('username', '').strip()
+        email           = request.POST.get('email', '').strip().lower()
+        tipo_documento  = request.POST.get('tipo_documento', '').strip().upper()
+        documento       = request.POST.get('documento', '').strip()
+        password1       = request.POST.get('password1', '')
+        password2       = request.POST.get('password2', '')
+        numero_ficha    = request.POST.get('numero_ficha', '').strip()
+        nombre_programa = request.POST.get('nombre_programa', '').strip()
+        rol_id          = 'Usuario'
 
         ctx = {
             **ctx_base,
-            'username':       username,
-            'email':          email,
-            'tipo_documento': tipo_documento,
-            'documento':      documento,
+            'username':        username,
+            'email':           email,
+            'tipo_documento':  tipo_documento,
+            'documento':       documento,
+            'numero_ficha':    numero_ficha,
+            'nombre_programa': nombre_programa,
         }
 
-        # Validar campos obligatorios (rol ya está fijo, no se valida del POST)
         if not all([username, email, tipo_documento, documento, password1, password2]):
-            messages.error(request, 'Completa todos los campos.')
+            messages.error(request, 'Completa todos los campos obligatorios.')
             return render(request, 'registro.html', ctx)
 
-        # Validar documento
         error_doc = _validar_documento(tipo_documento, documento)
         if error_doc:
             messages.error(request, error_doc)
             return render(request, 'registro.html', ctx)
 
-        # Validar contraseña
         if len(password1) < 8:
             messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
             return render(request, 'registro.html', ctx)
@@ -176,7 +188,6 @@ def registro_view(request):
             messages.error(request, 'Las contraseñas no coinciden.')
             return render(request, 'registro.html', ctx)
 
-        # Verificar duplicados
         if Usuario.objects.filter(numero_documento=documento).exists():
             messages.error(request, 'Ya existe un usuario con ese número de documento.')
             return render(request, 'registro.html', ctx)
@@ -185,7 +196,6 @@ def registro_view(request):
             messages.error(request, 'El correo ya está registrado.')
             return render(request, 'registro.html', ctx)
 
-        # Crear usuario
         usuario = Usuario(
             numero_documento=documento,
             nombre_completo=username,
@@ -194,6 +204,8 @@ def registro_view(request):
             tipo_documento=tipo_documento,
             password=make_password(password1),
             rol=rol_id,
+            numero_ficha=numero_ficha,
+            nombre_programa=nombre_programa,
         )
 
         try:
@@ -230,14 +242,15 @@ def olvido_contrasena_view(request):
         try:
             usuario = Usuario.objects.get(correo=email)
         except Usuario.DoesNotExist:
+            # Mensaje genérico por seguridad
             messages.success(request, 'Si el correo está registrado, recibirás un enlace.')
             return render(request, 'olvido_contrasena.html')
 
+        # Generar token y guardarlo en la base de datos (no en sesión)
         token = get_random_string(40)
-        request.session[f'reset_token_{usuario.numero_documento}'] = {
-            'token':  token,
-            'expira': time.time() + 900,
-        }
+        usuario.reset_token        = token
+        usuario.reset_token_expira = time.time() + 900  # 15 minutos
+        usuario.save(update_fields=['reset_token', 'reset_token_expira'])
 
         uid  = urlsafe_base64_encode(force_bytes(usuario.numero_documento))
         link = request.build_absolute_uri(
@@ -249,7 +262,8 @@ def olvido_contrasena_view(request):
                 subject='Recuperación de contraseña – SENA Centro Minero',
                 message=(
                     f'Hola {usuario.nombre_completo},\n\n'
-                    f'Haz clic en el siguiente enlace para cambiar tu contraseña:\n\n{link}\n\n'
+                    f'Haz clic en el siguiente enlace para cambiar tu contraseña:\n\n'
+                    f'{link}\n\n'
                     'Este enlace expira en 15 minutos.\n\n'
                     'Si no solicitaste esto, ignora este mensaje.\n\n'
                     'SENA – Centro Minero · Regional Boyacá'
@@ -259,8 +273,11 @@ def olvido_contrasena_view(request):
                 fail_silently=False,
             )
             messages.success(request, 'Te enviamos un enlace a tu correo. Tienes 15 minutos para usarlo.')
-        except Exception:
-            messages.error(request, 'No se pudo enviar el correo. Contacta al administrador.')
+        except Exception as e:
+            # Registrar el error real en consola/logs para poder diagnosticarlo
+            logger.error('Error al enviar correo de recuperación: %s', e)
+            print(f'[ERROR CORREO] {e}')  # visible en la consola del servidor
+            messages.error(request, f'No se pudo enviar el correo. Error: {e}')
 
     return render(request, 'olvido_contrasena.html')
 
@@ -276,8 +293,10 @@ def nueva_contrasena_view(request, uid, token):
         messages.error(request, 'El enlace no es válido.')
         return redirect('olvido_contrasena')
 
-    data = request.session.get(f'reset_token_{documento}')
-    if not data or data['token'] != token or time.time() > data['expira']:
+    # Validar token guardado en base de datos
+    if (not usuario.reset_token
+            or usuario.reset_token != token
+            or time.time() > usuario.reset_token_expira):
         messages.error(request, 'El enlace ya fue usado o expiró. Solicita uno nuevo.')
         return redirect('olvido_contrasena')
 
@@ -293,10 +312,11 @@ def nueva_contrasena_view(request, uid, token):
             messages.error(request, 'Las contraseñas no coinciden.')
             return render(request, 'nueva_contrasena.html')
 
-        usuario.password = make_password(password1)
-        usuario.save(update_fields=['password'])
+        usuario.password        = make_password(password1)
+        usuario.reset_token        = ''
+        usuario.reset_token_expira = 0
+        usuario.save(update_fields=['password', 'reset_token', 'reset_token_expira'])
 
-        del request.session[f'reset_token_{documento}']
         messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
         return redirect('login')
 
@@ -363,6 +383,8 @@ def detalle_usuario_json(request, numero_documento):
         'nombre_completo':        usuario.nombre_completo,
         'correo':                 usuario.correo,
         'telefono':               usuario.telefono,
+        'numero_ficha':           usuario.numero_ficha,
+        'nombre_programa':        usuario.nombre_programa,
         'tipo_documento_display': usuario.get_tipo_documento_display(),
         'rol':                    usuario.rol,
         'destinado':      usuario.destinado.nombre_completo if usuario.destinado else None,
@@ -397,11 +419,11 @@ def exportar_usuarios_csv(request):
 
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="usuarios.csv"'
-    response.write('\ufeff')  # BOM para Excel
+    response.write('\ufeff')
 
     writer = csv.writer(response)
     writer.writerow(['Número de Documento', 'Tipo de Documento', 'Nombre Completo',
-                     'Correo', 'Teléfono', 'Rol'])
+                     'Correo', 'Teléfono', 'Ficha', 'Programa', 'Rol'])
     for u in qs:
         writer.writerow([
             u.numero_documento,
@@ -409,6 +431,8 @@ def exportar_usuarios_csv(request):
             u.nombre_completo,
             u.correo,
             u.telefono,
+            u.numero_ficha,
+            u.nombre_programa,
             u.rol,
         ])
     return response
@@ -427,11 +451,12 @@ def perfil_view(request):
     if request.method == 'POST':
         accion_activa = request.POST.get('accion', '')
 
-        # ── Editar datos personales ──────────────────────────────────
         if accion_activa == 'editar_perfil':
-            nombre   = request.POST.get('nombre_completo', '').strip()
-            correo   = request.POST.get('correo', '').strip().lower()
-            telefono = request.POST.get('telefono', '').strip()
+            nombre          = request.POST.get('nombre_completo', '').strip()
+            correo          = request.POST.get('correo', '').strip().lower()
+            telefono        = request.POST.get('telefono', '').strip()
+            numero_ficha    = request.POST.get('numero_ficha', '').strip()
+            nombre_programa = request.POST.get('nombre_programa', '').strip()
 
             if not nombre:
                 errores['nombre_completo'] = 'El nombre no puede estar vacío.'
@@ -444,15 +469,19 @@ def perfil_view(request):
                     errores['correo'] = 'Este correo ya está en uso por otro usuario.'
 
             if not errores:
-                usuario.nombre_completo = nombre
-                usuario.correo          = correo
-                usuario.telefono        = telefono
-                usuario.save(update_fields=['nombre_completo', 'correo', 'telefono'])
+                usuario.nombre_completo  = nombre
+                usuario.correo           = correo
+                usuario.telefono         = telefono
+                usuario.numero_ficha     = numero_ficha
+                usuario.nombre_programa  = nombre_programa
+                usuario.save(update_fields=[
+                    'nombre_completo', 'correo', 'telefono',
+                    'numero_ficha', 'nombre_programa',
+                ])
                 request.session['usuario_nombre'] = nombre
                 messages.success(request, 'Perfil actualizado correctamente.')
                 return redirect('perfil')
 
-        # ── Cambiar contraseña ───────────────────────────────────────
         elif accion_activa == 'cambiar_password':
             actual   = request.POST.get('password_actual', '')
             nueva    = request.POST.get('password_nueva', '')
@@ -471,7 +500,6 @@ def perfil_view(request):
                 messages.success(request, 'Contraseña actualizada correctamente.')
                 return redirect('perfil')
 
-        # ── Guardar configuración de notificaciones ──────────────────
         elif accion_activa == 'guardar_config':
             request.session['cfg_notif_prestamos']    = 'notif_prestamos'    in request.POST
             request.session['cfg_notif_vencimientos'] = 'notif_vencimientos' in request.POST
