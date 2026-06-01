@@ -567,13 +567,34 @@ def prestamo_api(request, pk):
                 'serial_entregado': item.serial_entregado,
                 'producto': {
                     'id':        item.producto.pk,
-                    'nombre':    item.producto.nombre,                    'sku':       item.producto.codigo_sku,                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
+                    'nombre':    item.producto.nombre,
+                    'sku':       item.producto.codigo_sku,
+                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
                 }
             }
             for item in p.items.all()
         ]
     }
     return JsonResponse(data)
+
+
+def actualizar_observacion_prestamo(request, pk):
+    doc = request.session.get('usuario_documento')
+    if not doc:
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+
+    rol = request.session.get('usuario_rol', '').strip().lower()
+    if rol not in ('admin', 'administrador'):
+        return JsonResponse({'error': 'No tienes permisos para actualizar observaciones.'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    observaciones = request.POST.get('observaciones', '').strip()
+    prestamo.observaciones = observaciones
+    prestamo.save(update_fields=['observaciones', 'fecha_actualizacion'])
+    return JsonResponse({'ok': True, 'observaciones': prestamo.observaciones})
 
 
 # ── API JSON de usuario ─────────────────────────────────────────────────

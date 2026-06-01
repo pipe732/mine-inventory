@@ -422,6 +422,40 @@
                       text-transform:uppercase;color:var(--navy);
                       border-bottom:1px solid rgba(9,77,146,.15);
                       padding-bottom:.35rem;margin-bottom:.9rem;">
+            Préstamos
+          </div>
+          <div class="row g-2 mb-4">
+            <div class="col-6 col-md-3">
+              <div style="padding:.75rem;border:1px solid rgba(9,77,146,.12);border-radius:14px;">
+                <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.25rem;">Total</div>
+                <div id="mPrestamosTotal" style="font-size:1.05rem;font-weight:700;color:var(--text-main);">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div style="padding:.75rem;border:1px solid rgba(22,101,52,.15);border-radius:14px;">
+                <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.25rem;">Activos</div>
+                <div id="mPrestamosActivos" style="font-size:1.05rem;font-weight:700;color:#166534;">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div style="padding:.75rem;border:1px solid rgba(196,144,10,.2);border-radius:14px;">
+                <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.25rem;">Parciales</div>
+                <div id="mPrestamosPendientes" style="font-size:1.05rem;font-weight:700;color:#92400e;">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div style="padding:.75rem;border:1px solid rgba(185,28,28,.15);border-radius:14px;">
+                <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.25rem;">Vencidos</div>
+                <div id="mPrestamosVencidos" style="font-size:1.05rem;font-weight:700;color:#b91c1c;">0</div>
+              </div>
+            </div>
+          </div>
+          <div id="mPrestamosList" class="mb-4"></div>
+
+          <div style="font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;
+                      text-transform:uppercase;color:var(--navy);
+                      border-bottom:1px solid rgba(9,77,146,.15);
+                      padding-bottom:.35rem;margin-bottom:.9rem;">
             Relaciones
           </div>
           <div class="row g-3" id="mRelaciones"></div>
@@ -626,7 +660,10 @@ function verUsuario(doc) {
   _modalVerUsuario.show();
 
   fetch('/usuario/usuarios/' + doc + '/json/')
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(d) {
       _datosUsuarioActual = d;
       var iniciales = d.nombre_completo.slice(0, 2).toUpperCase();
@@ -645,6 +682,12 @@ function verUsuario(doc) {
       document.getElementById('mCorreo').textContent   = d.correo;
       document.getElementById('mTelefono').textContent = d.telefono || '—';
       document.getElementById('mIdDoc').textContent    = 'doc · ' + d.numero_documento;
+
+      document.getElementById('mPrestamosTotal').textContent     = d.prestamos_totales;
+      document.getElementById('mPrestamosActivos').textContent   = d.prestamos_activos;
+      document.getElementById('mPrestamosPendientes').textContent = d.prestamos_parciales;
+      document.getElementById('mPrestamosVencidos').textContent   = d.prestamos_vencidos;
+      document.getElementById('mPrestamosList').innerHTML        = renderPrestamosUsuario(d.prestamos);
 
       var rel = '';
       if (d.destinado) {
@@ -676,6 +719,114 @@ function verUsuario(doc) {
       document.getElementById('modalSkeleton').innerHTML =
         '<p style="color:var(--rust);font-size:.85rem;">Error al cargar los datos del usuario.</p>';
     });
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderPrestamosUsuario(prestamos) {
+  if (!prestamos || prestamos.length === 0) {
+    return '<div style="font-size:.88rem;color:var(--text-muted);">No tiene préstamos registrados.</div>';
+  }
+
+  return prestamos.map(function(p) {
+    var estadoColor = '#0f766e';
+    var estadoBg = 'rgba(22,101,52,.08)';
+    if (p.estado === 'parcial') {
+      estadoColor = '#92400e';
+      estadoBg = 'rgba(196,144,10,.1)';
+    } else if (p.estado === 'vencido') {
+      estadoColor = '#b91c1c';
+      estadoBg = 'rgba(185,28,28,.08)';
+    } else if (p.estado === 'pendiente') {
+      estadoColor = '#164e63';
+      estadoBg = 'rgba(14,165,233,.08)';
+    }
+
+    var itemsHtml = p.items.map(function(item) {
+      return '<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.5rem .65rem;border-bottom:1px solid rgba(9,77,146,.08);">'
+        + '<div style="font-size:.82rem;color:var(--text-main);">' + escapeHtml(item.nombre) + '</div>'
+        + '<div style="font-family:var(--font-mono);color:' + (item.devuelto ? '#15803d' : '#1d4ed8') + ';font-weight:700;">×' + item.cantidad + '</div>'
+        + '</div>';
+    }).join('');
+
+    return '<div style="border:1px solid rgba(9,77,146,.12);border-radius:16px;margin-bottom:.9rem;overflow:hidden;">'
+      + '<div style="padding:.95rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:' + estadoBg + ';">'
+      + '<div>'
+      + '<div style="font-size:.85rem;font-weight:700;color:var(--text-main);">Préstamo #' + p.pk + '</div>'
+      + '<div style="font-size:.75rem;color:var(--text-muted);">' + escapeHtml(p.fecha_prestamo) + '</div>'
+      + '</div>'
+      + '<span style="color:' + estadoColor + ';font-size:.72rem;font-weight:700;padding:.3rem .65rem;border-radius:999px;background:' + estadoBg + ';">' + escapeHtml(p.estado_display) + '</span>'
+      + '</div>'
+      + '<div style="padding:1rem;">'
+      + '<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;">Vencimiento</div>'
+      + '<div style="font-size:.9rem;color:var(--text-main);margin-bottom:.7rem;">' + escapeHtml(p.fecha_vencimiento) + '</div>'
+      + '<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;">Observaciones</div>'
+      + '<textarea id="obs_prestamo_' + p.pk + '" rows="3" style="width:100%;padding:.65rem;border:1px solid rgba(9,77,146,.12);border-radius:12px;font-size:.88rem;margin-bottom:.65rem;">' + escapeHtml(p.observaciones) + '</textarea>'
+      + '<button type="button" id="obs_btn_' + p.pk + '" onclick="guardarObservacionPrestamo(' + p.pk + ')" style="border:none;background:var(--navy);color:white;padding:.55rem .75rem;border-radius:12px;font-size:.85rem;cursor:pointer;">Guardar observación</button>'
+      + '<div style="margin-top:.85rem;font-size:.75rem;color:var(--text-muted);">Ítems del préstamo</div>'
+      + itemsHtml
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function guardarObservacionPrestamo(pk) {
+  var textarea = document.getElementById('obs_prestamo_' + pk);
+  var button = document.getElementById('obs_btn_' + pk);
+  if (!textarea || !button) return;
+
+  var observaciones = textarea.value.trim();
+  button.disabled = true;
+  button.textContent = 'Guardando...';
+
+  fetch('/prestamo/' + pk + '/observacion/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: 'observaciones=' + encodeURIComponent(observaciones),
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(data) {
+    if (data.ok) {
+      button.textContent = 'Guardado';
+      setTimeout(function() { button.textContent = 'Guardar observación'; }, 1500);
+    } else {
+      throw new Error(data.error || 'No se pudo guardar la observación.');
+    }
+  })
+  .catch(function() {
+    button.textContent = 'Error';
+    setTimeout(function() { button.textContent = 'Guardar observación'; }, 1500);
+  })
+  .finally(function() {
+    button.disabled = false;
+  });
+}
+
+function getCookie(name) {
+  var cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
 }
 
 /* ── Modal editar usuario ─────────────────────────────────── */
