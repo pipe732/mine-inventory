@@ -28,6 +28,7 @@
 {% endfor %}
 {% endif %}
 
+<!-- ══ SECCIÓN KPIs ══ -->
 <div class="row g-3 mb-4">
   <div class="col-12 col-sm-6 col-lg-3">
     <div class="card p-3 border-0 shadow-sm bg-white h-100">
@@ -86,6 +87,37 @@
   </div>
 </div>
 
+<!-- ══ SECCIÓN DE FILTROS Y BÚSQUEDA ══ -->
+<div class="card p-3 border-0 shadow-sm mb-4 bg-white">
+  <form method="GET" action="{% url 'inventario:inventario' %}" class="row g-2 align-items-center">
+    <div class="col-12 col-md-5">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="busqueda" class="form-control bg-light border-start-0" placeholder="Buscar por SKU o nombre de herramienta..." value="{{ request.GET.busqueda|default:'' }}">
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <select name="categoria" class="form-select form-select-sm bg-light">
+        <option value="">-- Todas las Categorías --</option>
+        {% for cat in categorias %}
+        <option value="{{ cat.pk }}" {% if request.GET.categoria == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-1">
+      <button type="submit" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1">
+        <i class="bi bi-funnel-fill"></i> Filtrar
+      </button>
+      {% if request.GET.busqueda or request.GET.categoria %}
+      <a href="{% url 'inventario:inventario' %}" class="btn btn-outline-secondary btn-sm" title="Limpiar Filtros">
+        <i class="bi bi-x-lg"></i>
+      </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- ══ TABLA INVENTARIO ══ -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
@@ -143,36 +175,10 @@
             </a>
           </th>
           <th>Descripción</th>
-          <th>
-            <a href="{% url 'inventario:inventario' %}?orden=categoria__nombre&dir={% if orden_activo == 'categoria__nombre' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
-              class="sort-link {% if orden_activo == 'categoria__nombre' %}sort-active{% endif %}">
-              Categoría
-              {% if orden_activo == 'categoria__nombre' %}
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                {% if dir_activo == 'asc' %}
-                <polyline points="18 15 12 9 6 15" />
-                {% else %}
-                <polyline points="6 9 12 15 18 9" />{% endif %}
-              </svg>
-              {% endif %}
-            </a>
-          </th>
+          <th>Categoría</th>
           <th>Ubicación</th>
-          <th>
-            <a href="{% url 'inventario:inventario' %}?orden=stock&dir={% if orden_activo == 'stock' and dir_activo == 'asc' %}desc{% else %}asc{% endif %}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"
-              class="sort-link {% if orden_activo == 'stock' %}sort-active{% endif %}">
-              Stock
-              {% if orden_activo == 'stock' %}
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                {% if dir_activo == 'asc' %}
-                <polyline points="18 15 12 9 6 15" />
-                {% else %}
-                <polyline points="6 9 12 15 18 9" />{% endif %}
-              </svg>
-              {% endif %}
-            </a>
-          </th>
-          <th>Acciones</th>
+          <th>Stock</th>
+          <th class="text-center">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -201,11 +207,7 @@
               data-almacen-pk="{{ producto.estante.almacen.pk }}"
               data-estante-codigo="{{ producto.estante.codigo|escapejs }}" data-estante-pk="{{ producto.estante.pk }}"
               data-producto-nombre="{{ producto.nombre|escapejs }}" title="Ver ubicación">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              Ver
+              <i class="bi bi-geo-alt"></i> Ver
             </button>
             {% else %}
             <span style="color:var(--text-muted); font-size:.82rem;">—</span>
@@ -215,14 +217,27 @@
             {% if producto.stock == 0 %}
             <span class="badge-state badge-rechazada">Sin stock</span>
             {% elif producto.stock <= 5 %} 
-            <span class="badge-state badge-pendiente">{{ producto.stock }}</span>
+            <span class="badge-state badge-pendiente">{{ producto.stock }} unidades</span>
             {% else %}
-            <span class="badge-state badge-aprobada">{{ producto.stock }}</span>
+            <span class="badge-state badge-aprobada">{{ producto.stock }} unidades</span>
             {% endif %}
           </td>
           <td>
-            <div class="d-flex gap-1 align-items-center">
-              <button type="button" class="btn-ghost" title="Editar" onclick="abrirEditar(
+            <div class="d-flex gap-1 justify-content-center align-items-center">
+              <!-- CONEXIÓN: SOLICITAR PRESTAMO -->
+              {% if producto.stock > 0 %}
+              <button type="button" class="btn btn-sm btn-outline-success px-2 py-1" style="font-size: 0.8rem;" title="Prestar"
+                onclick="abrirPrestamo('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}')">
+                <i class="bi bi-person-plus"></i> Prestar
+              </button>
+              {% else %}
+              <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" style="font-size: 0.8rem;" disabled title="Sin existencias">
+                <i class="bi bi-person-plus"></i> Prestar
+              </button>
+              {% endif %}
+
+              <!-- ACCIÓN: EDITAR -->
+              <button type="button" class="btn btn-sm btn-light border" style="font-size: 0.8rem;" title="Editar" onclick="abrirEditar(
                     '{{ producto.pk }}',
                     '{{ producto.codigo_sku|escapejs }}',
                     '{{ producto.nombre|escapejs }}',
@@ -232,25 +247,21 @@
                     '{% if producto.estante %}{{ producto.estante.almacen.pk }}{% endif %}',
                     '{% if producto.estante %}{{ producto.estante.pk }}{% endif %}'
                   )">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Editar
+                <i class="bi bi-pencil"></i>
               </button>
               
-              <button type="button" class="btn-ghost" title="Registrar mantenimiento" style="color:var(--navy);"
+              <!-- CONEXIÓN: ENVIAR A MANTENIMIENTO -->
+              <button type="button" class="btn btn-sm btn-light border text-warning" style="font-size: 0.8rem;" title="Mantenimiento"
                 onclick="abrirMantenimiento('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}')">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                </svg>
-                Mantenimiento
+                <i class="bi bi-wrench"></i>
               </button>
-
-              <a href="{% url 'inventario:inventario' %}" class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center" title="Limpiar Filtros" style="height: 26px; width: 26px; padding: 0;">
-                <i class="bi bi-arrow-clockwise"></i>
-              </a>
             </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-4 text-muted">
+            <i class="bi bi-box-seam display-6 d-block mb-2"></i> No se encontraron herramientas registradas.
           </td>
         </tr>
         {% endfor %}
@@ -258,13 +269,14 @@
     </table>
   </div>
 
+  <!-- PAGINACIÓN -->
   {% if productos.has_other_pages %}
   <div class="card-footer bg-white border-0 py-3 d-flex justify-content-center">
     <nav aria-label="Navegación de inventario">
       <ul class="pagination pagination-sm mb-0 gap-1">
         {% if productos.has_previous %}
         <li class="page-item">
-          <a class="page-link border-0 rounded-circle" href="?page={{ productos.previous_page_number }}{% if form_filtro.busqueda.value %}&busqueda={{ form_filtro.busqueda.value }}{% endif %}{% if form_filtro.categoria.value %}&categoria={{ form_filtro.categoria.value }}{% endif %}">
+          <a class="page-link border-0 rounded-circle" href="?page={{ productos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
             <i class="bi bi-chevron-left"></i>
           </a>
         </li>
@@ -272,7 +284,7 @@
 
         {% for num in productos.paginator.page_range %}
         <li class="page-item {% if productos.number == num %}active{% endif %}">
-          <a class="page-link border-0 rounded-circle px-3" href="?page={{ num }}{% if form_filtro.busqueda.value %}&busqueda={{ form_filtro.busqueda.value }}{% endif %}{% if form_filtro.categoria.value %}&categoria={{ form_filtro.categoria.value }}{% endif %}">
+          <a class="page-link border-0 rounded-circle px-3" href="?page={{ num }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
             {{ num }}
           </a>
         </li>
@@ -280,7 +292,7 @@
 
         {% if productos.has_next %}
         <li class="page-item">
-          <a class="page-link border-0 rounded-circle" href="?page={{ productos.next_page_number }}{% if form_filtro.busqueda.value %}&busqueda={{ form_filtro.busqueda.value }}{% endif %}{% if form_filtro.categoria.value %}&categoria={{ form_filtro.categoria.value }}{% endif %}">
+          <a class="page-link border-0 rounded-circle" href="?page={{ productos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
             <i class="bi bi-chevron-right"></i>
           </a>
         </li>
@@ -291,16 +303,58 @@
   {% endif %}
 </div>
 
+<!-- ══ MODAL — Registrar Préstamo Rápido ══ -->
+<div class="modal fade" id="modalPrestamoRapido" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-person-plus me-2"></i>Registrar Préstamo de Salida</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <!-- Ajusta la URL de action de acuerdo al nombre de tu app de préstamos -->
+      <!-- Línea 315 corregida -->
+<form method="POST" action="{% url 'usuario_solicitar_prestamo' %}">
+        {% csrf_token %}
+        <input type="hidden" name="producto_id" id="prestamo_producto_id">
+        <div class="modal-body p-4">
+          <div class="alert alert-success py-2 mb-3 fs-7">
+            <strong>Herramienta:</strong> <span id="prestamo_display_herramienta">—</span>
+          </div>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Operario / Solicitante *</label>
+              <input type="text" name="operario" class="form-control" placeholder="Nombre completo del operario" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Cantidad a Prestar *</label>
+              <input type="number" name="cantidad" class="form-control" min="1" value="1" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Fecha de Devolución Estimada</label>
+              <input type="date" name="fecha_devolucion_esperada" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Observación inicial</label>
+              <textarea name="notas" class="form-control" rows="2" placeholder="Frente de trabajo, área de minas, etc..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-0 px-4 py-3">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success px-4">Confirmar Préstamo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL — Ver Ubicación ══ -->
 <div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title d-flex align-items-center gap-2">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          Ubicación de la herramienta
+          <i class="bi bi-geo-alt"></i> Ubicación de la herramienta
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
@@ -317,13 +371,9 @@
           <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Código almacén</span>
           <span style="font-size:13px; text-align:right; flex:1; font-family:var(--font-mono);" id="ubi_almacen_pk">—</span>
         </div>
-        <div class="detalle-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--row-border, #e0d8cf);">
+        <div style="display:flex; justify-content:space-between; padding:10px 0;">
           <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Estante</span>
           <span style="font-size:13px; text-align:right; flex:1; font-family:var(--font-mono);" id="ubi_estante_codigo">—</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:10px 0;">
-          <span style="font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); min-width:110px;">Referencia</span>
-          <span style="font-size:13px; text-align:right; flex:1; font-family:var(--font-mono);" id="ubi_referencia">—</span>
         </div>
       </div>
       <div class="modal-footer">
@@ -333,6 +383,7 @@
   </div>
 </div>
 
+<!-- ══ MODAL — Nueva Herramienta ══ -->
 <div class="modal fade" id="modalNuevaHerramienta" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow">
@@ -368,20 +419,15 @@
             </div>
             <div class="col-md-6">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Categoría</label>
-              <div class="input-group">
-                <select name="categoria" class="form-select">
-                  <option value="">-- Sin Categoría --</option>
-                  {% for cat in categorias %}
-                  <option value="{{ cat.pk }}" {% if post_categoria|slugify == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
-                  {% endfor %}
-                </select>
-                <button type="button" class="btn btn-outline-secondary" title="Nueva Categoría" onclick="abrirNuevaCategoriaRapida()">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-              </div>
+              <select name="categoria" class="form-select">
+                <option value="">-- Sin Categoría --</option>
+                {% for cat in categorias %}
+                <option value="{{ cat.pk }}" {% if post_categoria|slugify == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
+                {% endfor %}
+              </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label text-muted fw-bold small uppercase mb-1">Stock / Cantidad</label>
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Stock / Cantidad INITIAL</label>
               <input type="number" name="stock" class="form-control" min="0" value="{{ post_stock|default:1 }}" required>
             </div>
             <div class="col-12">
@@ -399,6 +445,7 @@
   </div>
 </div>
 
+<!-- ══ MODAL — Editar Herramienta ══ -->
 <div class="modal fade" id="modalEditarHerramienta" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -450,6 +497,7 @@
   </div>
 </div>
 
+<!-- ══ MODAL — Mantenimiento ══ -->
 <div class="modal fade" id="modalMantenimiento" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -496,15 +544,35 @@
   </div>
 </div>
 
-<div class="modal fade" id="modalNuevaCategoriaRapida" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title fw-bold fs-6">Nueva Categoría</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      </div>
-  </div>
-</div>
+<!-- ══ SCRIPTS JS DE CONTROL ══ -->
+<script>
+  // Abrir Préstamo Rápido
+  function abrirPrestamo(id, sku, nombre) {
+    document.getElementById('prestamo_producto_id').value = id;
+    document.getElementById('prestamo_display_herramienta').innerText = '[' + sku + '] ' + nombre;
+    var modal = new bootstrap.Modal(document.getElementById('modalPrestamoRapido'));
+    modal.show();
+  }
+
+  // Abrir Edición
+  function abrirEditar(id, sku, nombre, descripcion, stock, categoriaId) {
+    document.getElementById('edit_producto_id').value = id;
+    document.getElementById('edit_sku').value = sku;
+    document.getElementById('edit_nombre').value = nombre;
+    document.getElementById('edit_descripcion').value = descripcion;
+    document.getElementById('edit_stock').value = stock;
+    document.getElementById('edit_categoria').value = categoriaId || "";
+    var modal = new bootstrap.Modal(document.getElementById('modalEditarHerramienta'));
+    modal.show();
+  }
+
+  // Abrir Mantenimiento
+  function abrirMantenimiento(id, sku, nombre) {
+    document.getElementById('mantProductoId').value = id;
+    document.getElementById('mantTextDisplay').innerText = '[' + sku + '] ' + nombre;
+    var modal = new bootstrap.Modal(document.getElementById('modalMantenimiento'));
+    modal.show();
+  }
+</script>
 
 {% endblock %}
