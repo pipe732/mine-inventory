@@ -304,3 +304,18 @@ if (newPassForm) {
     }
   });
 }
+// Solo dígitos en número de ficha
+const fichaInput = document.getElementById('numero_ficha');
+if (fichaInput) {
+  fichaInput.addEventListener('keypress', (e) => {
+    if (!/\d/.test(e.key)) e.preventDefault();
+  });
+  fichaInput.addEventListener('paste', (e) => {
+    e.preventDefault();
+    fichaInput.value = (e.clipboardData || window.clipboardData)
+      .getData('text').replace(/\D/g, '').slice(0, 7);
+  });
+  fichaInput.addEventListener('input', () => {
+    fichaInput.value = fichaInput.value.replace(/\D/g, '');
+  });
+}

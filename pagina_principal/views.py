@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.db.models import Sum, Max
 from inventario.models import Producto, Categoria
+from django.utils import timezone
 from prestamo.models import Prestamo
 from devoluciones.models import Devolucion
 from django.http import JsonResponse
