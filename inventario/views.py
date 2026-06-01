@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count
 from django.db import IntegrityError
 from almacenamiento.models import Almacen, Estante
@@ -22,7 +23,7 @@ def inventario(request):
     post_sku = ""
     post_nombre = ""
     post_descripcion = ""
-    post_stock = "1"  # Forzado por defecto a 1 para herramienta única
+    post_stock = "1"
     post_categoria = ""
     post_cat_nombre = ""
     post_cat_descripcion = ""
@@ -36,11 +37,13 @@ def inventario(request):
             post_nombre = request.POST.get("nombre", "").strip()
             post_descripcion = request.POST.get("descripcion", "").strip()
             post_categoria = request.POST.get("categoria", "")
-            
-            # Forzamos estrictamente que el stock sea 1 ya que es una herramienta única serializada
-            post_stock = 1 
+            post_stock = request.POST.get("stock", "1").strip() or "1"
 
             try:
+                stock_value = int(post_stock)
+                if stock_value < 0:
+                    raise ValueError
+
                 cat_instancia = None
                 if post_categoria:
                     cat_instancia = Categoria.objects.get(pk=post_categoria)
@@ -49,15 +52,18 @@ def inventario(request):
                     codigo_sku=post_sku,
                     nombre=post_nombre,
                     descripcion=post_descripcion,
-                    stock=post_stock,  # Guarda 1 exactamente
+                    stock=stock_value,
                     categoria=cat_instancia,
-                    disponible=True   # Queda disponible inmediatamente para préstamo
+                    disponible=True
                 )
-                messages.success(request, f"Herramienta '{post_nombre}' registrada con éxito con stock unitario.")
+                messages.success(request, f"Herramienta '{post_nombre}' registrada con éxito.")
                 return redirect("inventario:inventario")
 
             except IntegrityError:
                 error_producto = "El Código SKU ya se encuentra registrado. Ingrese uno diferente."
+                form_modal_errors = True
+            except ValueError:
+                error_producto = "El stock debe ser un número entero mayor o igual a 0."
                 form_modal_errors = True
             except Exception as e:
                 error_producto = f"Error al guardar: {str(e)}"
@@ -72,9 +78,15 @@ def inventario(request):
             prod.nombre = request.POST.get("nombre", "").strip()
             prod.descripcion = request.POST.get("descripcion", "").strip()
             
-            # Al editar, también aseguramos que mantenga su naturaleza de herramienta única (stock=1)
-            prod.stock = 1
-            
+            try:
+                stock_value = int(request.POST.get("stock", prod.stock))
+                if stock_value < 0:
+                    raise ValueError
+                prod.stock = stock_value
+            except ValueError:
+                messages.error(request, "El stock debe ser un número entero mayor o igual a 0.")
+                return redirect("inventario:inventario")
+
             cat_id = request.POST.get("categoria")
             if cat_id:
                 prod.categoria = Categoria.objects.get(pk=cat_id)
@@ -116,13 +128,17 @@ def inventario(request):
     query = request.GET.get("busqueda", "")
     categoria_id = request.GET.get("categoria", "")
 
-    productos = Producto.objects.all()
+    productos_qs = Producto.objects.all()
     categorias = Categoria.objects.all()
 
     if query:
-        productos = productos.filter(Q(nombre__icontains=query) | Q(codigo_sku__icontains=query))
+        productos_qs = productos_qs.filter(Q(nombre__icontains=query) | Q(codigo_sku__icontains=query))
     if categoria_id:
-        productos = productos.filter(categoria_id=categoria_id)
+        productos_qs = productos_qs.filter(categoria_id=categoria_id)
+
+    paginator = Paginator(productos_qs, 10)
+    page_number = request.GET.get("page")
+    productos = paginator.get_page(page_number)
 
     # Manejo de errores de formularios externos (Mantenimiento)
     mant_form_data = request.session.pop('mant_form_data', None)
@@ -138,14 +154,15 @@ def inventario(request):
         mant_modal_errors = False
 
     # KPIs adaptados a la lógica unitaria
-    total_productos = productos.count()
-    total_stock = productos.aggregate(s=Sum("stock"))["s"] or 0
-    sin_stock = productos.filter(stock=0).count()
-    stock_bajo = productos.filter(stock__lte=0).count() # En lógica unitaria, bajo o agotado es lo mismo
+    total_productos = productos_qs.count()
+    total_stock = productos_qs.aggregate(s=Sum("stock"))["s"] or 0
+    sin_stock = productos_qs.filter(stock=0).count()
+    stock_bajo = productos_qs.filter(stock__lte=5, stock__gt=0).count()
 
     context = {
         "productos": productos,
         "categorias": categorias,
+        "total": total_productos,
         "form_filtro": form_filtro,
         "form_modal_errors": form_modal_errors,
         "modal_categoria_errors": modal_categoria_errors,
