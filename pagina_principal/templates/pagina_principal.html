@@ -61,6 +61,15 @@
     flex-shrink: 0;
     opacity: .7;
   }
+  .stock-rust {
+    color: var(--rust) !important;
+  }
+  .stock-warning {
+    color: #c4900a !important;
+  }
+  .stock-sage {
+    color: var(--sage) !important;
+  }
 </style>
 <!-- ═══════════════════════════════════
      KPI CARDS
@@ -231,8 +240,8 @@
           <span style="font-size:.83rem; width:105px; overflow:hidden; text-overflow:ellipsis;
                        white-space:nowrap; color:var(--text-main);">{{ cat.nombre }}</span>
           <div class="flex-grow-1" style="height:5px; background:var(--border-color); border-radius:3px; overflow:hidden;">
-            <div style="width:{% widthratio cat.total_stock max_stock 100 %}%;
-                        height:100%; background:var(--navy); border-radius:3px;"></div>
+            <div class="category-stock-bar" data-width="{% widthratio cat.total_stock max_stock 100 %}"
+                 style="height:100%; background:var(--navy); border-radius:3px;"></div>
           </div>
           <span style="font-size:.75rem; color:var(--text-muted); font-family:var(--font-mono);
                        width:28px; text-align:right;">{{ cat.total_stock }}</span>
@@ -287,10 +296,8 @@
               {% endif %}
             </td>
             <td>
-              <span style="font-family:var(--font-mono); font-weight:700;
-                {% if prod.stock == 0 %}color:var(--rust);
-                {% elif prod.stock < 3 %}color:#c4900a;
-                {% else %}color:var(--sage);{% endif %}">
+              <span class="{% if prod.stock == 0 %}stock-rust{% elif prod.stock < 3 %}stock-warning{% else %}stock-sage{% endif %}"
+                    style="font-family:var(--font-mono); font-weight:700;">
                 {{ prod.stock }}
               </span>
             </td>
@@ -298,14 +305,12 @@
               {{ prod.actualizado_en|date:"d M Y" }}
             </td>
             <td>
-              <button class="btn-ghost"
-                      onclick="verProducto(
-                        '{{ prod.codigo_sku|escapejs }}',
-                        '{{ prod.nombre|escapejs }}',
-                        '{{ prod.descripcion|default:''|escapejs }}',
-                        {{ prod.stock }},
-                        '{% if prod.categoria %}{{ prod.categoria.nombre|escapejs }}{% endif %}'
-                      )">
+              <button class="btn-ghost btn-ver-producto-home"
+                      data-sku="{{ prod.codigo_sku|escapejs }}"
+                      data-nombre="{{ prod.nombre|escapejs }}"
+                      data-descripcion="{% if prod.descripcion %}{{ prod.descripcion|escapejs }}{% endif %}"
+                      data-stock="{{ prod.stock }}"
+                      data-categoria="{% if prod.categoria %}{{ prod.categoria.nombre|escapejs }}{% endif %}">
                 Ver
               </button>
             </td>
@@ -375,6 +380,28 @@
 {% block js %}
 <script src="{% static 'js/pagina_principal.js' %}"></script>
 <script>
+  // ── Inicializar barras de stock de categorías ──
+  function initCategoryBars() {
+    document.querySelectorAll('.category-stock-bar').forEach(function (bar) {
+      var w = bar.getAttribute('data-width') || '0';
+      bar.style.width = w + '%';
+    });
+  }
+
+  // ── Evento botón ver producto ──
+  function initVerProductos() {
+    document.querySelectorAll('.btn-ver-producto-home').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var sku = btn.getAttribute('data-sku') || '';
+        var nombre = btn.getAttribute('data-nombre') || '';
+        var desc = btn.getAttribute('data-descripcion') || '';
+        var stock = parseInt(btn.getAttribute('data-stock')) || 0;
+        var cat = btn.getAttribute('data-categoria') || '';
+        verProducto(sku, nombre, desc, stock, cat);
+      });
+    });
+  }
+
   // ── Animación KPI ──
   function initKpis() {
     function animarContador(el, target, duracion) {
@@ -398,10 +425,17 @@
       }, delay + 150);
     });
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initKpis);
-  } else {
+
+  function initAll() {
+    initCategoryBars();
+    initVerProductos();
     initKpis();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
   }
 </script>
 {% endblock js %}
