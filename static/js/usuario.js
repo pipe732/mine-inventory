@@ -12,7 +12,7 @@
   }
   function done() { ctx.restore(); }
   function seg(x0,y0,x1,y1){ ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); }
-  function poly(pts){ ctx.beginPath(); ctx.moveTo(pts[0],pts[1]); for(var i=2;i<pts.length;i+=2) ctx.lineTo(pts[i],pts[i+1]); ctx.closePath(); ctx.stroke(); }
+  function poly(pts){ if (pts.length < 2) return; ctx.beginPath(); ctx.moveTo(pts.at(0),pts.at(1)); for(var i=2;i<pts.length;i+=2) ctx.lineTo(pts.at(i),pts.at(i+1)); ctx.closePath(); ctx.stroke(); }
   function circ(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,PI*2); ctx.stroke(); }
   function rrect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r); ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath(); ctx.stroke(); }
 
@@ -28,40 +28,96 @@
     function(cx,cy,s){ prep(cx,cy,s); circ(-0.42,0,0.46); circ(0.42,0,0.46); circ(-0.42,0,0.3); circ(0.42,0,0.3); seg(-0.42,-0.3,0.42,-0.3); seg(-0.42,0.3,0.42,0.3); circ(0,0,0.08); seg(-0.42,0,-0.08,0); seg(0.08,0,0.42,0); ctx.beginPath(); ctx.moveTo(-0.54,0.46); ctx.lineTo(-0.62,0.66); ctx.lineTo(0.62,0.66); ctx.lineTo(0.54,0.46); ctx.stroke(); seg(-0.62,0.66,0.62,0.66); done(); },
   ];
 
-  function draw() {
-    var W=canvas.width, H=canvas.height;
-    ctx.clearRect(0,0,W,H);
-    var CELL=112, SZ=0.28;
-    var cols=Math.ceil(W/CELL)+2, rows=Math.ceil(H/CELL)+2;
-    var n=0;
-    for(var r=0;r<rows;r++){
-      for(var c=0;c<cols;c++){
-        var cx=c*CELL+(r%2===0?0:CELL*0.5);
-        var cy=r*CELL;
-        var jx=((r*19+c*13)%11)-5;
-        var jy=((r*13+c*19)%11)-5;
-        icons[n%icons.length](cx+jx,cy+jy,CELL*SZ);
+  var entities = [];
+
+  function initEntities(W, H) {
+    entities = [];
+    var CELL = 112;
+    var cols = Math.ceil(W / CELL) + 2;
+    var rows = Math.ceil(H / CELL) + 2;
+    var n = 0;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var cx = c * CELL + (r % 2 === 0 ? 0 : CELL * 0.5);
+        var cy = r * CELL;
+        var jx = ((r * 19 + c * 13) % 11) - 5;
+        var jy = ((r * 13 + c * 19) % 11) - 5;
+        entities.push({
+          iconIndex: n % icons.length,
+          originX: cx + jx,
+          originY: cy + jy,
+          position: { x: cx + jx, y: cy + jy },
+          velocity: { x: 0, y: 0 },
+          acceleration: { x: 0, y: 0 },
+          mass: 1.0 + (Math.abs(jx) % 3) * 0.15
+        });
         n++;
       }
     }
   }
 
-  function resize(){
+  var isAnimating = false;
+  var lastTime = performance.now();
+
+  function animate(now) {
+    if (!isAnimating) return;
+    requestAnimationFrame(animate);
+    var dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+
+    var W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    var CELL = 112, SZ = 0.28;
+    var isAntigravity = document.body.classList.contains('antigravity-active');
+
+    for (var i = 0; i < entities.length; i++) {
+      var ent = entities.at(i);
+      if (isAntigravity) {
+        if (window.calculateGravityEffect) {
+          window.calculateGravityEffect(ent, 'antygraviti', dt);
+        } else {
+          ent.velocity.y -= 9.81 * 0.5 * dt;
+          ent.position.y += ent.velocity.y;
+        }
+
+        // Si sale por arriba, reaparece abajo con velocidad inicial 0
+        if (ent.position.y < -50) {
+          ent.position.y = H + 50;
+          ent.velocity.y = 0;
+        }
+      } else {
+        // Volver suavemente a su posición original
+        ent.position.y += (ent.originY - ent.position.y) * 0.08;
+        ent.velocity.y = 0;
+      }
+      var iconFn = icons.at(ent.iconIndex);
+      if (iconFn) {
+        iconFn(ent.position.x, ent.position.y, CELL * SZ);
+      }
+    }
+  }
+
+  function resize() {
     canvas.width  = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
     canvas.height = canvas.offsetHeight || canvas.parentElement.offsetHeight;
-    draw();
+    initEntities(canvas.width, canvas.height);
+    if (!isAnimating) {
+      isAnimating = true;
+      lastTime = performance.now();
+      requestAnimationFrame(animate);
+    }
   }
   window.addEventListener('resize', resize);
   resize();
 })();
 
 
-const DOC_RULES = {
-  CC: { min: 6,  max: 10, onlyDigits: true,  pattern: /^\d{6,10}$/,          hint: 'Solo dígitos · 6 a 10 caracteres' },
-  CE: { min: 6,  max: 12, onlyDigits: false, pattern: /^[A-Za-z0-9]{6,12}$/, hint: 'Letras y dígitos · 6 a 12 caracteres' },
-  PP: { min: 5,  max: 9,  onlyDigits: false, pattern: /^[A-Za-z0-9]{5,9}$/,  hint: 'Letras y dígitos · 5 a 9 caracteres' },
-  TI: { min: 10, max: 11, onlyDigits: true,  pattern: /^\d{10,11}$/,          hint: 'Solo dígitos · 10 u 11 caracteres' },
-};
+const DOC_RULES = new Map([
+  ['CC', { min: 6,  max: 10, onlyDigits: true,  pattern: /^\d{6,10}$/,          hint: 'Solo dígitos · 6 a 10 caracteres' }],
+  ['CE', { min: 6,  max: 12, onlyDigits: false, pattern: /^[A-Za-z0-9]{6,12}$/, hint: 'Letras y dígitos · 6 a 12 caracteres' }],
+  ['PP', { min: 5,  max: 9,  onlyDigits: false, pattern: /^[A-Za-z0-9]{5,9}$/,  hint: 'Letras y dígitos · 5 a 9 caracteres' }],
+  ['TI', { min: 10, max: 11, onlyDigits: true,  pattern: /^\d{10,11}$/,          hint: 'Solo dígitos · 10 u 11 caracteres' }]
+]);
 
 (function initDocField() {
   const tipoInput   = document.getElementById('tipo_documento');
@@ -93,7 +149,7 @@ const DOC_RULES = {
   });
 
   function applyRules() {
-    const r = DOC_RULES[tipoInput.value];
+    const r = DOC_RULES.get(tipoInput.value);
     if (!r) return;
     docInput.minLength   = r.min;
     docInput.maxLength   = r.max;
@@ -103,7 +159,7 @@ const DOC_RULES = {
   }
 
   function validateDoc() {
-    const r = DOC_RULES[tipoInput.value];
+    const r = DOC_RULES.get(tipoInput.value);
     if (!r || docInput.value === '') { docInput.classList.remove('is-valid','is-invalid'); return; }
     const ok = r.pattern.test(docInput.value);
     docInput.classList.toggle('is-valid',   ok);
@@ -111,12 +167,12 @@ const DOC_RULES = {
   }
 
   docInput.addEventListener('keypress', (e) => {
-    const r = DOC_RULES[tipoInput.value];
+    const r = DOC_RULES.get(tipoInput.value);
     if (r?.onlyDigits && !/\d/.test(e.key)) e.preventDefault();
   });
 
   docInput.addEventListener('paste', (e) => {
-    const r = DOC_RULES[tipoInput.value];
+    const r = DOC_RULES.get(tipoInput.value);
     if (!r?.onlyDigits) return;
     e.preventDefault();
     docInput.value = (e.clipboardData || window.clipboardData)
@@ -133,7 +189,11 @@ const DOC_RULES = {
 
 function showError(area, msg) {
   if (!area) return;
-  area.innerHTML = `<div class="alert-mine error">⚠ ${msg}</div>`;
+  area.innerHTML = '';
+  const errDiv = document.createElement('div');
+  errDiv.className = 'alert-mine error';
+  errDiv.textContent = `⚠ ${msg}`;
+  area.appendChild(errDiv);
 }
 
 
