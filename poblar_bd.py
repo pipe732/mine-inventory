@@ -94,9 +94,8 @@ print("[*] 10 Préstamos de ejemplo verificados/creados.")
 
 # 6. CREAR 10 DEVOLUCIONES
 for i in range(1, 11):
-    Devolucion.objects.get_or_create(
-        prestamo=prestamos[i - 1],
-        defaults={'estado': 'pendiente'}
+  Devolucion.objects.get_or_create(
+    prestamo=prestamos[i - 1]
     )
 print("[*] 10 Devoluciones de ejemplo verificadas/creadas.")
 print("--- PROCESO FINALIZADO ---")
