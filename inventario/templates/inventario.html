@@ -1372,7 +1372,7 @@
   {% endif %}
  
   // ── Animación KPI ──
-  document.addEventListener('DOMContentLoaded', function () {
+  function initKpis() {
     function animarContador(el, target, duracion) {
       var inicio = performance.now();
       function paso(ahora) {
@@ -1393,7 +1393,12 @@
         });
       }, delay + 150);
     });
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKpis);
+  } else {
+    initKpis();
+  }
  
   // ── Eliminar producto ──
   function abrirEliminar(pk, nombre) {
