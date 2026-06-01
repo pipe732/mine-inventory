@@ -386,7 +386,7 @@
               <select name="categoria" class="form-select">
                 <option value="">— Sin categoría —</option>
                 {% for cat in categorias %}
-                <option value="{{ cat.pk }}" {% if cat.pk|stringformat:"s"==post_categoria %}selected{% endif %}>
+                <option value="{{ cat.pk }}" {% if cat.pk|stringformat:"s" ==post_categoria %}selected{% endif %}>
                   {{ cat.nombre }}
                 </option>
                 {% endfor %}
