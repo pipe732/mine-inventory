@@ -86,8 +86,8 @@
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- ══ TABLA INVENTARIO ══ -->
 <div class="card table-card">
   <div class="card-header d-flex align-items-center justify-content-between">
@@ -245,17 +245,16 @@
               </svg>
               Mantenimiento
             </button>
-
+            
             <a href="{% url 'inventario:inventario' %}" class="btn btn-outline-secondary" title="Limpiar Filtros">
-              <i class="bi bi-arrow-clockwise"></i>
+                <i class="bi bi-arrow-clockwise"></i>
             </a>
-
-            <button type="button" class="btn btn-success ms-auto ms-md-0" data-bs-toggle="modal"
-              data-bs-target="#modalNuevaHerramienta">
-              <i class="bi bi-plus-lg me-1"></i>Nueva Herramienta
+            
+            <button type="button" class="btn btn-success ms-auto ms-md-0" data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta">
+                <i class="bi bi-plus-lg me-1"></i>Nueva Herramienta
             </button>
-  </div>
-  </form>
+        </div>
+    </form>
 </div>
 <!-- ══ MODAL — Ver Ubicación ══ -->
 <div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
@@ -668,74 +667,70 @@
           {% endblock %}
 
 
-          {% block js %}
-          <script id="estantes-por-almacen-data" type="application/json">
-            {
-              {% for almacen in almacenes_lista %}
-              "{{ almacen.pk }}": [
-                {% for estante in almacen.estante_set.all %}
-                { "pk": "{{ estante.pk }}", "codigo": "{{ estante.codigo|escapejs }}" }{% if not forloop.last %},{% endif %}
-                {% endfor %}
-              ]{% if not forloop.last %},{% endif %}
-              {% endfor %}
-            }
-          </script>
-          <script>
-            // ── Datos estantes por almacén (para selector encadenado) ──
-            const estantesPorAlmacenElement = document.getElementById('estantes-por-almacen-data');
-            const estantesPorAlmacen = estantesPorAlmacenElement ? JSON.parse(estantesPorAlmacenElement.textContent || '{}') : {};
-            // ── Modal Ver Ubicación ──
-            document.addEventListener('DOMContentLoaded', function () {
-              document.querySelectorAll('.btn-ver-ubicacion').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                  document.getElementById('ubi_producto_nombre').textContent = btn.dataset.productoNombre;
-                  document.getElementById('ubi_almacen_nombre').textContent = btn.dataset.almacenNombre;
-                  document.getElementById('ubi_almacen_pk').textContent = 'AL' + btn.dataset.almacenPk;
-                  document.getElementById('ubi_estante_codigo').textContent = btn.dataset.estanteCodigo;
-                  document.getElementById('ubi_referencia').textContent = 'AL' + btn.dataset.almacenPk + '-ES' + btn.dataset.estantePk;
-                  new bootstrap.Modal(document.getElementById('modalUbicacion')).show();
-                });
-              });
-            });
-
-            // FIX: puebla el selector de estantes según almacén seleccionado
-            function llenarEstantes(almacenPk, selectorEstante, estanteSeleccionado) {
-              selectorEstante.innerHTML = '<option value="">— Sin estante —</option>';
-              if (!almacenPk || !estantesPorAlmacen[almacenPk]) return;
-              estantesPorAlmacen[almacenPk].forEach(function (e) {
-                const opt = document.createElement('option');
-                opt.value = e.pk;
-                opt.textContent = e.codigo;
-                if (estanteSeleccionado && String(e.pk) === String(estanteSeleccionado)) {
-                  opt.selected = true;
-                }
-                selectorEstante.appendChild(opt);
-              });
-            }
-
-            // Selector encadenado — modal CREAR
-            document.getElementById('crear_almacen_selector').addEventListener('change', function () {
-              llenarEstantes(this.value, document.getElementById('crear_estante_selector'));
-            });
-
-            // Selector encadenado — modal EDITAR
-            document.getElementById('edit_almacen_selector').addEventListener('change', function () {
-              // Al cambiar almacén manualmente, limpia el estante seleccionado
-              llenarEstantes(this.value, document.getElementById('edit_estante_selector'));
-            });
-
-            // ── Abrir modal editar con datos precargados ──
-            function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId, almacenPk, estantePk) {
-              document.getElementById('edit_producto_id').value = pk;
-              document.getElementById('edit_sku').value = sku;
-              document.getElementById('edit_nombre').value = nombre;
-              document.getElementById('edit_descripcion').value = descripcion;
-              document.getElementById('edit_stock').value = stock;
-              document.getElementById('edit_categoria').value = categoriaId;
-
-              // Inicializa y despliega la ventana de edición mediante la API nativa de Bootstrap 5
-              new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
-            }
+{% block js %}
+<script>
+  // ── Datos estantes por almacén (para selector encadenado) ──
+  const estantesPorAlmacen = {
+    {% for almacen in almacenes_lista %}
+    "{{ almacen.pk }}": [
+      {% for estante in almacen.estante_set.all %}
+      { "pk": "{{ estante.pk }}", "codigo": "{{ estante.codigo|escapejs }}" },
+      {% endfor %}
+    ],
+    {% endfor %}
+  };
+  // ── Modal Ver Ubicación ──
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-ver-ubicacion').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('ubi_producto_nombre').textContent = btn.dataset.productoNombre;
+        document.getElementById('ubi_almacen_nombre').textContent  = btn.dataset.almacenNombre;
+        document.getElementById('ubi_almacen_pk').textContent      = 'AL' + btn.dataset.almacenPk;
+        document.getElementById('ubi_estante_codigo').textContent  = btn.dataset.estanteCodigo;
+        document.getElementById('ubi_referencia').textContent      = 'AL' + btn.dataset.almacenPk + '-ES' + btn.dataset.estantePk;
+        new bootstrap.Modal(document.getElementById('modalUbicacion')).show();
+      });
+    });
+  });
+ 
+  // FIX: puebla el selector de estantes según almacén seleccionado
+  function llenarEstantes(almacenPk, selectorEstante, estanteSeleccionado) {
+    selectorEstante.innerHTML = '<option value="">— Sin estante —</option>';
+    if (!almacenPk || !estantesPorAlmacen[almacenPk]) return;
+    estantesPorAlmacen[almacenPk].forEach(function(e) {
+      const opt = document.createElement('option');
+      opt.value = e.pk;
+      opt.textContent = e.codigo;
+      if (estanteSeleccionado && String(e.pk) === String(estanteSeleccionado)) {
+        opt.selected = true;
+      }
+      selectorEstante.appendChild(opt);
+    });
+  }
+ 
+  // Selector encadenado — modal CREAR
+  document.getElementById('crear_almacen_selector').addEventListener('change', function() {
+    llenarEstantes(this.value, document.getElementById('crear_estante_selector'));
+  });
+ 
+  // Selector encadenado — modal EDITAR
+  document.getElementById('edit_almacen_selector').addEventListener('change', function() {
+    // Al cambiar almacén manualmente, limpia el estante seleccionado
+    llenarEstantes(this.value, document.getElementById('edit_estante_selector'));
+  });
+ 
+  // ── Abrir modal editar con datos precargados ──
+  function abrirEditar(pk, sku, nombre, descripcion, stock, categoriaId, almacenPk, estantePk) {
+    document.getElementById('edit_producto_id').value = pk;
+    document.getElementById('edit_sku').value         = sku;
+    document.getElementById('edit_nombre').value      = nombre;
+    document.getElementById('edit_descripcion').value = descripcion;
+    document.getElementById('edit_stock').value        = stock;
+    document.getElementById('edit_categoria').value    = categoriaId;
+    
+    // Inicializa y despliega la ventana de edición mediante la API nativa de Bootstrap 5
+    new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
+  }
 
             /**
              * FUNCION 2: Transfiere la data de la fila al Modal de Eliminación
