@@ -11,14 +11,16 @@ from .models import Prestamo, ItemPrestamo
 from inventario.models import Producto
 from common.mixins import sesion_requerida
 
-
-# ── Helper: marcar vencidos (sin decorador, sin request) ──────────────────
+# Línea 14 - MODIFICACIÓN:
 def _marcar_vencidos():
     hoy = timezone.localdate()
-    Prestamo.objects.filter(
+    # Solo ejecutamos el update si existen registros desactualizados
+    vencidos = Prestamo.objects.filter(
         estado__in=['activo', 'parcial'],
         fecha_vencimiento__lt=hoy,
-    ).update(estado='vencido')
+    )
+    if vencidos.exists():
+        vencidos.update(estado='vencido')
 
 
 # ── Vista portal de usuario ────────────────────────────────────────────────
@@ -46,7 +48,6 @@ def prestamo_usuario_view(request):
     total_prestamos       = all_prestamos.count()
     total_activos         = all_prestamos.filter(estado='activo').count()
     vencidos_count        = all_prestamos.filter(estado='vencido').count()
-    pendientes_aprobacion = all_prestamos.filter(estado='pendiente').count()
 
     proximos_vencer = all_prestamos.filter(
         estado__in=['activo', 'parcial'],
@@ -62,7 +63,6 @@ def prestamo_usuario_view(request):
         'total_prestamos':       total_prestamos,
         'total_activos':         total_activos,
         'vencidos_count':        vencidos_count,
-        'pendientes_aprobacion': pendientes_aprobacion,
         'proximos_vencer':       proximos_vencer,
         'productos_disponibles': productos_disponibles,
     })
@@ -283,27 +283,32 @@ def prestamos_view(request):
             return redirect(f'/devoluciones/?prestamo={prestamo_id}')
 
         # ── Crear nuevo préstamo (admin directo) ───────────────────────────
+# ── Crear nuevo préstamo (admin directo) ───────────────────────────
         else:
             form = PrestamoForm(request.POST)
             if form.is_valid():
                 producto_ids = request.POST.getlist('producto[]')
                 cantidades   = request.POST.getlist('cantidad[]')
 
+                # Emparejamos IDs y cantidades limpiando los vacíos
                 items_raw = [
-                    (pid, qty)
-                    for pid, qty in zip(producto_ids, cantidades)
-                    if pid
+                    (pid, qty) for pid, qty in zip(producto_ids, cantidades) if pid
                 ]
 
                 if not items_raw:
                     form.add_error(None, 'Debes seleccionar al menos una herramienta.')
                 else:
+                    # OPTIMIZACIÓN: Traemos todos los productos involucrados en UNA sola consulta
+                    p_ids = [pid for pid, _ in items_raw]
+                    productos_db = {str(p.pk): p for p in Producto.objects.filter(pk__in=p_ids)}
+                    
                     errores = []
                     items_validated = []
+
+                    # Validamos los datos en memoria (ya no toca la base de datos en cada iteración)
                     for pid, qty_str in items_raw:
-                        try:
-                            producto = Producto.objects.get(pk=pid)
-                        except Producto.DoesNotExist:
+                        producto = productos_db.get(str(pid))
+                        if not producto:
                             errores.append(f'Producto con id {pid} no existe.')
                             continue
                         try:
@@ -313,6 +318,7 @@ def prestamos_view(request):
                         except (ValueError, TypeError):
                             errores.append(f'Cantidad inválida para "{producto.nombre}".')
                             continue
+
                         if producto.stock <= 0:
                             errores.append(f'"{producto.nombre}" no tiene stock disponible.')
                         elif cantidad > producto.stock:
@@ -327,32 +333,45 @@ def prestamos_view(request):
                         for e in errores:
                             form.add_error(None, e)
                     else:
-                        prestamo = form.save(commit=False)
-                        prestamo.nombre_usuario = request.POST.get('nombre_usuario', '')
-                        prestamo.estado = 'activo'
+                        # Usamos una transacción atómica para que todo se guarde junto y sea seguro
+                        from django.db import transaction
+                        
+                        with transaction.atomic():
+                            prestamo = form.save(commit=False)
+                            prestamo.nombre_usuario = request.POST.get('nombre_usuario', '')
+                            prestamo.estado = 'activo'
 
-                        fv = request.POST.get('fecha_vencimiento', '').strip()
-                        try:
-                            prestamo.fecha_vencimiento = datetime.date.fromisoformat(fv) if fv else None
-                        except ValueError:
-                            prestamo.fecha_vencimiento = None
+                            # Procesamiento seguro de fechas y horas
+                            fv = request.POST.get('fecha_vencimiento', '').strip()
+                            try:
+                                prestamo.fecha_vencimiento = datetime.date.fromisoformat(fv) if fv else None
+                            except ValueError:
+                                prestamo.fecha_vencimiento = None
 
-                        hme = request.POST.get('hora_max_entrega', '').strip()
-                        try:
-                            prestamo.hora_max_entrega = datetime.time.fromisoformat(hme) if hme else None
-                        except ValueError:
-                            prestamo.hora_max_entrega = None
+                            hme = request.POST.get('hora_max_entrega', '').strip()
+                            try:
+                                prestamo.hora_max_entrega = datetime.time.fromisoformat(hme) if hme else None
+                            except ValueError:
+                                prestamo.hora_max_entrega = None
 
-                        prestamo.save()
+                            prestamo.save()
 
-                        for producto, cantidad in items_validated:
-                            ItemPrestamo.objects.create(
-                                prestamo=prestamo,
-                                producto=producto,
-                                cantidad=cantidad,
-                            )
-                            producto.stock -= cantidad
-                            producto.save(update_fields=['stock'])
+                            # Guardado en lote (Bulk Create) para los ítems del préstamo
+                            items_a_crear = []
+                            for producto, cantidad in items_validated:
+                                items_a_crear.append(
+                                    ItemPrestamo(
+                                        prestamo=prestamo,
+                                        producto=producto,
+                                        cantidad=cantidad
+                                    )
+                                )
+                                # Descontamos stock en memoria
+                                producto.stock -= cantidad
+                                producto.save(update_fields=['stock'])
+                            
+                            # Crea todos los registros de ítems con un solo golpe a la base de datos
+                            ItemPrestamo.objects.bulk_create(items_a_crear)
 
                         messages.success(request, 'Préstamo registrado exitosamente.')
                         return redirect('prestamo')
@@ -402,7 +421,6 @@ def prestamos_view(request):
     prestamos_activos    = Prestamo.objects.filter(estado='activo').count()
     prestamos_devueltos  = Prestamo.objects.filter(estado='devuelto').count()
     prestamos_vencidos   = Prestamo.objects.filter(estado='vencido').count()
-    prestamos_pendientes = Prestamo.objects.filter(estado='pendiente').count()
 
     hoy = timezone.localdate()
     proximos_vencer = Prestamo.objects.filter(
@@ -422,7 +440,6 @@ def prestamos_view(request):
         'prestamos_activos':    prestamos_activos,
         'prestamos_devueltos':  prestamos_devueltos,
         'prestamos_vencidos':   prestamos_vencidos,
-        'prestamos_pendientes': prestamos_pendientes,
         'proximos_vencer':      proximos_vencer,
         'filtro_q':             q,
         'filtro_estado':        estado_f,
@@ -550,13 +567,34 @@ def prestamo_api(request, pk):
                 'serial_entregado': item.serial_entregado,
                 'producto': {
                     'id':        item.producto.pk,
-                    'nombre':    item.producto.nombre,                    'sku':       item.producto.codigo_sku,                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
+                    'nombre':    item.producto.nombre,
+                    'sku':       item.producto.codigo_sku,
+                    'categoria': item.producto.categoria.nombre if item.producto.categoria else 'Sin categoría',
                 }
             }
             for item in p.items.all()
         ]
     }
     return JsonResponse(data)
+
+
+def actualizar_observacion_prestamo(request, pk):
+    doc = request.session.get('usuario_documento')
+    if not doc:
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+
+    rol = request.session.get('usuario_rol', '').strip().lower()
+    if rol not in ('admin', 'administrador'):
+        return JsonResponse({'error': 'No tienes permisos para actualizar observaciones.'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    observaciones = request.POST.get('observaciones', '').strip()
+    prestamo.observaciones = observaciones
+    prestamo.save(update_fields=['observaciones', 'fecha_actualizacion'])
+    return JsonResponse({'ok': True, 'observaciones': prestamo.observaciones})
 
 
 # ── API JSON de usuario ─────────────────────────────────────────────────

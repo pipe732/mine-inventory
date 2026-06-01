@@ -7,6 +7,7 @@
   var contrast  = localStorage.getItem('acc_contrast') === 'true';
   var darkMode  = localStorage.getItem('acc_dark')     === 'true';
   var lightMode = localStorage.getItem('acc_light')    === 'true';
+  var antigravity = localStorage.getItem('acc_antigravity') === 'true';
 
   document.documentElement.style.fontSize = fontSize + '%';
 
@@ -133,6 +134,7 @@
   ══════════════════════════════════════════ */
   if (contrast)  document.body.classList.add('high-contrast');
   if (lightMode) document.body.classList.add('light-mode');
+  if (antigravity) document.body.classList.add('antigravity-active');
   if (darkMode) {
     document.body.classList.add('dark-mode');
     applyAsideDark();
@@ -145,9 +147,11 @@
     var c = document.getElementById('acc-btn-contrast');
     var d = document.getElementById('acc-btn-dark');
     var l = document.getElementById('acc-btn-light');
+    var a = document.getElementById('acc-btn-antigravity');
     if (c) c.classList.toggle('acc-active', contrast);
     if (d) d.classList.toggle('acc-active', darkMode);
     if (l) l.classList.toggle('acc-active', lightMode);
+    if (a) a.classList.toggle('acc-active', antigravity);
   }
 
   /* ══════════════════════════════════════════
@@ -218,6 +222,16 @@
       repaintPanel();
     });
 
+    var antiBtn = document.getElementById('acc-btn-antigravity');
+    if (antiBtn) {
+      antiBtn.addEventListener('click', function () {
+        antigravity = !antigravity;
+        document.body.classList.toggle('antigravity-active', antigravity);
+        localStorage.setItem('acc_antigravity', antigravity);
+        syncButtons();
+      });
+    }
+
     document.getElementById('acc-btn-plus').addEventListener('click', function () {
       if (fontSize >= 140) return;
       fontSize += 10;
@@ -233,14 +247,15 @@
     });
 
     document.getElementById('acc-btn-reset').addEventListener('click', function () {
-      fontSize = 100; contrast = false; darkMode = false; lightMode = false;
-      document.body.classList.remove('high-contrast', 'dark-mode', 'light-mode');
+      fontSize = 100; contrast = false; darkMode = false; lightMode = false; antigravity = false;
+      document.body.classList.remove('high-contrast', 'dark-mode', 'light-mode', 'antigravity-active');
       document.documentElement.style.fontSize = '100%';
       resetAsideDark();
       localStorage.removeItem('acc_fs');
       localStorage.removeItem('acc_contrast');
       localStorage.removeItem('acc_dark');
       localStorage.removeItem('acc_light');
+      localStorage.removeItem('acc_antigravity');
       syncButtons();
     });
 
@@ -248,3 +263,32 @@
   }
 
 })();
+
+/* ══════════════════════════════════════════
+   FUNCION DE GRAVEDAD / ANTIGRAVEDAD GLOBAL
+   Exponemos window.calculateGravityEffect
+   ══════════════════════════════════════════ */
+window.calculateGravityEffect = function (targetEntity, mode, deltaTime) {
+  var dt = deltaTime || 0.016;
+  if (!targetEntity.position) targetEntity.position = { x: 0, y: 0 };
+  if (!targetEntity.velocity) targetEntity.velocity = { x: 0, y: 0 };
+  if (!targetEntity.acceleration) targetEntity.acceleration = { x: 0, y: 0 };
+
+  var gravity = 9.81;
+  var mass = targetEntity.mass || 1.0;
+
+  if (mode === 'antygraviti') {
+    // Vector de fuerza negativa (hacia arriba)
+    // En Canvas 2D, Y apunta hacia abajo, por lo que la fuerza ascendente es negativa.
+    var upwardForce = -gravity * mass * 1.5; 
+    targetEntity.acceleration.y = (upwardForce / mass) + gravity;
+    targetEntity.velocity.y += targetEntity.acceleration.y * dt;
+    targetEntity.velocity.y *= 0.95; // Fricción amortiguadora para flotar de forma estable
+  } else {
+    // Gravedad normal
+    targetEntity.acceleration.y = gravity;
+    targetEntity.velocity.y += targetEntity.acceleration.y * dt;
+  }
+
+  targetEntity.position.y += targetEntity.velocity.y;
+};

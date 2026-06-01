@@ -6,7 +6,9 @@ urlpatterns = [
     path('', views.prestamos_view, name='prestamo'),
     path('<int:pk>/api/', views.prestamo_api, name='prestamo_api'),
     path('<int:pk>/aprobar/', views.aprobar_prestamo_view, name='aprobar_prestamo'),
+    path('<int:pk>/observacion/', views.actualizar_observacion_prestamo, name='actualizar_observacion_prestamo'),
     path('usuario/', views.prestamo_usuario_view, name='prestamo_usuario'),
     path('usuario/solicitar/', views.usuario_solicitar_prestamo, name='usuario_solicitar_prestamo'),
     path('usuario/api/', views.usuario_api, name='usuario_api'),
 ]
+
