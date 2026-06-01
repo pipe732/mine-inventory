@@ -224,11 +224,11 @@
                       '{{ producto.pk }}',
                       '{{ producto.codigo_sku|escapejs }}',
                       '{{ producto.nombre|escapejs }}',
-                      '{{ producto.descripcion|default:''|escapejs }}',
+                      '{% if producto.descripcion %}{{ producto.descripcion|escapejs }}{% endif %}',
                       '{{ producto.stock }}',
-                      '{{ producto.categoria.pk|default:'' }}',
-                      '{{ producto.estante.almacen.pk|default:'' }}',
-                      '{{ producto.estante.pk|default:'' }}'
+                      '{% if producto.categoria %}{{ producto.categoria.pk }}{% endif %}',
+                      '{% if producto.estante %}{{ producto.estante.almacen.pk }}{% endif %}',
+                      '{% if producto.estante %}{{ producto.estante.pk }}{% endif %}'
                     )">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -660,21 +660,30 @@
             </div>
           </div>
 
+          <!-- Triggers de control para reabrir modales tras errores de validación -->
+          {% if form_modal_errors %}<div id="trigger-nueva-herramienta" style="display:none;"></div>{% endif %}
+          {% if modal_categoria_errors %}<div id="trigger-categoria-rapida" style="display:none;"></div>{% endif %}
+          {% if mant_modal_errors %}<div id="trigger-mantenimiento" style="display:none;"></div>{% endif %}
+
           {% endblock %}
 
 
           {% block js %}
+          <script id="estantes-por-almacen-data" type="application/json">
+            {
+              {% for almacen in almacenes_lista %}
+              "{{ almacen.pk }}": [
+                {% for estante in almacen.estante_set.all %}
+                { "pk": "{{ estante.pk }}", "codigo": "{{ estante.codigo|escapejs }}" }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+              ]{% if not forloop.last %},{% endif %}
+              {% endfor %}
+            }
+          </script>
           <script>
             // ── Datos estantes por almacén (para selector encadenado) ──
-            const estantesPorAlmacen = {
-    {% for almacen in almacenes_lista %}
-            "{{ almacen.pk }}": [
-              {% for estante in almacen.estante_set.all %}
-            { "pk": "{{ estante.pk }}", "codigo": "{{ estante.codigo|escapejs }}" },
-            {% endfor %}
-    ],
-            {% endfor %}
-  };
+            const estantesPorAlmacenElement = document.getElementById('estantes-por-almacen-data');
+            const estantesPorAlmacen = estantesPorAlmacenElement ? JSON.parse(estantesPorAlmacenElement.textContent || '{}') : {};
             // ── Modal Ver Ubicación ──
             document.addEventListener('DOMContentLoaded', function () {
               document.querySelectorAll('.btn-ver-ubicacion').forEach(function (btn) {
@@ -754,8 +763,7 @@
             function abrirNuevaCategoriaRapida() {
               bootstrap.Modal.getInstance(document.getElementById('modalNuevaHerramienta')).hide();
               new bootstrap.Modal(document.getElementById('modalNuevaCategoriaRapida')).show();
-            });
-            {% endif %}
+            }
 
             // ── Animación KPI ──
             function initKpis() {
@@ -807,25 +815,17 @@
              * al navegador a reabrir la ventana modal correspondiente de forma automática con la información repoblada.
              */
 
-            // Reabrir modal de creación de herramienta si falló la validación
-            {% if form_modal_errors %}
+            // Reabrir modales si se detectaron errores de validación en el servidor
             document.addEventListener("DOMContentLoaded", function () {
-              new bootstrap.Modal(document.getElementById('modalNuevaHerramienta')).show();
+              if (document.getElementById("trigger-nueva-herramienta")) {
+                new bootstrap.Modal(document.getElementById('modalNuevaHerramienta')).show();
+              }
+              if (document.getElementById("trigger-categoria-rapida")) {
+                new bootstrap.Modal(document.getElementById('modalNuevaCategoriaRapida')).show();
+              }
+              if (document.getElementById("trigger-mantenimiento")) {
+                new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
+              }
             });
-            {% endif %}
-
-            // Reabrir modal de creación rápida de categoría si hubo errores
-            {% if modal_categoria_errors %}
-            document.addEventListener("DOMContentLoaded", function () {
-              new bootstrap.Modal(document.getElementById('modalNuevaCategoriaRapida')).show();
-            });
-            {% endif %}
-
-            // Reabrir modal de mantenimiento si la información enviada fue incompleta
-            {% if mant_modal_errors %}
-            document.addEventListener("DOMContentLoaded", function () {
-              new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
-            });
-            {% endif %}
           </script>
           {% endblock %}

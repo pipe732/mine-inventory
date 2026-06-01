@@ -18,7 +18,10 @@ def registro_qr_pdf(request):
     # Generar el QR en memoria
     qr = qrcode.make(url_registro)
     qr_buffer = io.BytesIO()
-    qr.save(qr_buffer, format='PNG')
+    try:
+        qr.save(qr_buffer, format='PNG')  # type: ignore
+    except TypeError:
+        qr.save(qr_buffer)
     qr_buffer.seek(0)
 
     # Crear el PDF
