@@ -386,8 +386,7 @@
               <select name="categoria" class="form-select">
                 <option value="">— Sin categoría —</option>
                 {% for cat in categorias %}
-                <option value="{{ cat.pk }}" {% if cat.pk|stringformat:"s" ==post_categoria %}selected{% endif %}>
-                  {{ cat.nombre }}
+                <option value="{{ cat.pk }}" {% if cat.pk|stringformat:"s" == post_categoria %}selected{% endif %}>
                 </option>
                 {% endfor %}
                 </tbody>
@@ -456,12 +455,14 @@
                         <label class="form-label text-muted fw-bold small uppercase mb-1">Categoría</label>
                         <div class="input-group">
                           <select name="categoria" class="form-select">
-                            <option value="">-- Seleccionar Categoría --</option>
+                            <option value="">-- Sin Categoría --</option>
                             {% for cat in categorias %}
-                            <option value="{{ cat.pk }}" {% if post_categoria==cat.pk|stringformat:"s" %}selected{%
-                              endif %}>{{ cat.nombre }}</option>
+                          <option value="{{ cat.pk }}" {% if post_categoria|slugify == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
+             {% endfor %} ```
                             {% endfor %}
-                          </select>
+                           </select>
+
+                          
                           <button type="button" class="btn btn-outline-secondary" title="Nueva Categoría"
                             onclick="abrirNuevaCategoriaRapida()">
                             <i class="bi bi-plus-lg"></i>
