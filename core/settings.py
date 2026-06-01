@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'pagina_principal',
     'mantenimiento',
     'reportes',
+    'debug_toolbar', #Herramienta para debugging.
 ]
 
 MIDDLEWARE = [
@@ -47,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', #Herramienta para debugging.
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -160,4 +162,4 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 # Permite que JS lea la cookie CSRF (ya estaba, confirmar que existe)
 CSRF_COOKIE_HTTPONLY = False
  
- 
+INTERNAL_IPS = ['127.0.0.1']
