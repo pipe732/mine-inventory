@@ -3,6 +3,70 @@
 
 {% block content %}
 
+<!-- ══ ESTILOS COMPLEMENTARIOS PARA EVITAR WARNINGS EN LINTER ══ -->
+<style>
+  .border-pending {
+    border-color: rgba(196, 144, 10, .4) !important;
+  }
+  .kpi-padding-pending {
+    padding-right: 5rem !important;
+  }
+  .kpi-color-pending {
+    color: #c4900a !important;
+  }
+  .border-rust {
+    border-color: rgba(152, 71, 62, .35) !important;
+  }
+  .border-warn-light {
+    border-color: rgba(196, 144, 10, .3) !important;
+  }
+  .kpi-padding-5 {
+    padding-right: 5rem !important;
+  }
+  .kpi-color-rust {
+    color: var(--rust) !important;
+  }
+  .kpi-color-warn {
+    color: #c4900a !important;
+  }
+  .row-pending-bg {
+    background: rgba(196, 144, 10, .04) !important;
+  }
+  .urgencia-vencido {
+    color: var(--rust) !important;
+    font-weight: 700;
+  }
+  .urgencia-proximo {
+    color: #c4900a !important;
+    font-weight: 600;
+  }
+  .urgencia-normal {
+    color: var(--text-muted) !important;
+  }
+  .item-row-bg-devuelto {
+    background: rgba(58, 122, 66, .07) !important;
+    border: 1px solid rgba(58, 122, 66, .15) !important;
+  }
+  .item-row-bg-pendiente {
+    background: rgba(9, 77, 146, .05) !important;
+    border: 1px solid rgba(9, 77, 146, .1) !important;
+  }
+  .item-color-sage {
+    color: var(--sage) !important;
+  }
+  .item-color-navy {
+    color: var(--navy) !important;
+  }
+  .badge-devuelto {
+    background: rgba(58, 122, 66, .12) !important;
+    color: var(--sage) !important;
+  }
+  .badge-pendiente {
+    background: rgba(9, 77, 146, .1) !important;
+    color: var(--navy) !important;
+  }
+</style>
+
 {# ══ CABECERA ══ #}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -48,19 +112,18 @@
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if prestamos_pendientes > 0 %}border-color:rgba(196,144,10,.4);{% endif %}"
+    <div class="card h-100 kpi-card {% if prestamos_pendientes > 0 %}border-pending{% endif %}"
+         style="padding:.9rem 1rem;"
          data-kpi-delay="160">
       <div class="kpi-accent-bar" style="background:#c4900a;"></div>
       {% if prestamos_pendientes > 0 %}
       <span class="kpi-trend warn">⏳ pendientes</span>
       {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if prestamos_pendientes > 0 %}5rem{% else %}0{% endif %};">Pendientes</div>
-      <div class="kpi-number" data-target="{{ prestamos_pendientes }}"
+      <div class="{% if prestamos_pendientes > 0 %}kpi-padding-pending{% endif %}"
+           style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Pendientes</div>
+      <div class="kpi-number {% if prestamos_pendientes > 0 %}kpi-color-pending{% endif %}" data-target="{{ prestamos_pendientes }}"
            style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if prestamos_pendientes > 0 %}#c4900a{% else %}var(--text-main){% endif %};
                   line-height:1;">0</div>
       <div class="kpi-label">por aprobar</div>
     </div>
@@ -77,37 +140,35 @@
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if prestamos_vencidos > 0 %}border-color:rgba(152,71,62,.35);{% endif %}"
+    <div class="card h-100 kpi-card {% if prestamos_vencidos > 0 %}border-rust{% endif %}"
+         style="padding:.9rem 1rem;"
          data-kpi-delay="320">
       <div class="kpi-accent-bar" style="background:var(--rust);"></div>
       {% if prestamos_vencidos > 0 %}
       <span class="kpi-trend down">↑ vencidos</span>
       {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if prestamos_vencidos > 0 %}5rem{% else %}0{% endif %};">Vencidos</div>
-      <div class="kpi-number" data-target="{{ prestamos_vencidos }}"
+      <div class="{% if prestamos_vencidos > 0 %}kpi-padding-5{% endif %}"
+           style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Vencidos</div>
+      <div class="kpi-number {% if prestamos_vencidos > 0 %}kpi-color-rust{% endif %}" data-target="{{ prestamos_vencidos }}"
            style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if prestamos_vencidos > 0 %}var(--rust){% else %}var(--text-main){% endif %};
                   line-height:1;">0</div>
       <div class="kpi-label">requieren atención</div>
     </div>
   </div>
   <div class="col-6 col-md-2">
-    <div class="card h-100 kpi-card"
-         style="padding:.9rem 1rem; {% if proximos_vencer > 0 %}border-color:rgba(196,144,10,.3);{% endif %}"
+    <div class="card h-100 kpi-card {% if proximos_vencer > 0 %}border-warn-light{% endif %}"
+         style="padding:.9rem 1rem;"
          data-kpi-delay="400">
       <div class="kpi-accent-bar" style="background:rgba(196,144,10,.7);"></div>
       {% if proximos_vencer > 0 %}
       <span class="kpi-trend warn">⚡ urgente</span>
       {% endif %}
-      <div style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
-                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;
-                  padding-right:{% if proximos_vencer > 0 %}5rem{% else %}0{% endif %};">Próx. vencer</div>
-      <div class="kpi-number" data-target="{{ proximos_vencer }}"
+      <div class="{% if proximos_vencer > 0 %}kpi-padding-5{% endif %}"
+           style="font-family:var(--font-mono); font-size:.58rem; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:.3rem;">Próx. vencer</div>
+      <div class="kpi-number {% if proximos_vencer > 0 %}kpi-color-warn{% endif %}" data-target="{{ proximos_vencer }}"
            style="font-family:var(--font-mono); font-size:1.55rem; font-weight:700;
-                  color:{% if proximos_vencer > 0 %}#c4900a{% else %}var(--text-main){% endif %};
                   line-height:1;">0</div>
       <div class="kpi-label">en 3 días</div>
     </div>
@@ -204,7 +265,7 @@
       </thead>
       <tbody>
         {% for p in prestamos %}
-        <tr style="{% if p.estado == 'pendiente' %}background:rgba(196,144,10,.04);{% endif %}">
+        <tr class="{% if p.estado == 'pendiente' %}row-pending-bg{% endif %}">
           <td style="padding:.5rem .5rem .5rem 1rem;">
             <button type="button"
                     data-bs-toggle="collapse"
@@ -260,10 +321,8 @@
           </td>
           <td>
             {% if p.fecha_vencimiento %}
-              <span style="font-family:var(--font-mono); font-size:.78rem;
-                {% if p.urgencia == 'vencido' %}color:var(--rust); font-weight:700;
-                {% elif p.urgencia == 'proximo' %}color:#c4900a; font-weight:600;
-                {% else %}color:var(--text-muted);{% endif %}">
+              <span class="{% if p.urgencia == 'vencido' %}urgencia-vencido{% elif p.urgencia == 'proximo' %}urgencia-proximo{% else %}urgencia-normal{% endif %}"
+                    style="font-family:var(--font-mono); font-size:.78rem;">
                 {{ p.fecha_vencimiento|date:"d/m/Y" }}
                 {% if p.dias_restantes is not None and p.dias_restantes >= 0 %}
                   <span style="font-size:.68rem;">({{ p.dias_restantes }}d)</span>
@@ -276,17 +335,27 @@
           <td style="text-align:center;">
             <div style="display:flex; align-items:center; justify-content:center; gap:.3rem; flex-wrap:wrap;">
               {% if p.estado == 'pendiente' %}
-              <button type="button" class="btn-ghost"
+              <button type="button" class="btn-ghost btn-aprobar-solicitud"
                       style="background:rgba(196,144,10,.1); color:#7a5500;
                              border-color:rgba(196,144,10,.3); font-size:.78rem;"
-                      onclick="abrirAprobar(
-                        {{ p.pk }},
-                        '{{ p.nombre_usuario|default:p.usuario|escapejs }}',
-                        '{{ p.usuario|escapejs }}',
-                        '{{ p.motivo_solicitud|default:''|escapejs }}',
-                        '{{ p.fecha_prestamo|date:'d/m/Y H:i' }}',
-                        [{% for item in p.items.all %}{id:{{ item.pk }},nombre:'{{ item.producto.nombre|escapejs }}',sku:'{{ item.producto.codigo_sku|escapejs }}',cantidad:{{ item.cantidad }},stock:{{ item.producto.stock }}}{% if not forloop.last %},{% endif %}{% endfor %}]
-                      )">
+                      data-pk="{{ p.pk }}"
+                      data-nombre="{{ p.nombre_usuario|default:p.usuario|escapejs }}"
+                      data-usuario="{{ p.usuario|escapejs }}"
+                      data-motivo="{% if p.motivo_solicitud %}{{ p.motivo_solicitud|escapejs }}{% endif %}"
+                      data-fecha="{{ p.fecha_prestamo|date:'d/m/Y H:i' }}">
+                <span class="items-json d-none">
+                  [
+                    {% for item in p.items.all %}
+                      {
+                        "id": {{ item.pk }},
+                        "nombre": "{{ item.producto.nombre|escapejs }}",
+                        "sku": "{{ item.producto.codigo_sku|escapejs }}",
+                        "cantidad": {{ item.cantidad }},
+                        "stock": {{ item.producto.stock }}
+                      }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  ]
+                </span>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -294,8 +363,9 @@
               </button>
               {% endif %}
               {% if p.estado in 'activo,parcial' %}
-              <button type="button" class="btn-ghost" style="font-size:.78rem;"
-                      onclick="abrirDevolver({{ p.pk }}, '{{ p.nombre_usuario|default:p.usuario|escapejs }}')">
+              <button type="button" class="btn-ghost btn-devolver-prestamo" style="font-size:.78rem;"
+                      data-pk="{{ p.pk }}"
+                      data-usuario="{{ p.nombre_usuario|default:p.usuario|escapejs }}">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="1 4 1 10 7 10"/>
                   <path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
@@ -327,10 +397,9 @@
                     Herramientas
                   </div>
                   {% for item in p.items.all %}
-                  <div style="display:flex; align-items:center; gap:.65rem; margin-bottom:.4rem;
-                               padding:.45rem .75rem; border-radius:var(--radius-sm);
-                               background:{% if item.devuelto %}rgba(58,122,66,.07){% else %}rgba(9,77,146,.05){% endif %};
-                               border:1px solid {% if item.devuelto %}rgba(58,122,66,.15){% else %}rgba(9,77,146,.1){% endif %};">
+                  <div class="{% if item.devuelto %}item-row-bg-devuelto{% else %}item-row-bg-pendiente{% endif %}"
+                       style="display:flex; align-items:center; gap:.65rem; margin-bottom:.4rem;
+                               padding:.45rem .75rem; border-radius:var(--radius-sm);">
                     <div style="flex:1;">
                       <div style="font-weight:600; font-size:.85rem;">{{ item.producto.nombre }}</div>
                       <div style="font-family:var(--font-mono); font-size:.7rem; color:var(--text-muted);">
@@ -338,13 +407,12 @@
                         {% if item.serial_entregado %}· Serial: <strong>{{ item.serial_entregado }}</strong>{% endif %}
                       </div>
                     </div>
-                    <div style="font-family:var(--font-mono); font-size:.85rem; font-weight:700;
-                                 color:{% if item.devuelto %}var(--sage){% else %}var(--navy){% endif %};">
+                    <div class="{% if item.devuelto %}item-color-sage{% else %}item-color-navy{% endif %}"
+                         style="font-family:var(--font-mono); font-size:.85rem; font-weight:700;">
                       ×{{ item.cantidad }}
                     </div>
-                    <span style="font-size:.7rem; padding:.1rem .4rem; border-radius:10px; font-weight:700;
-                                  background:{% if item.devuelto %}rgba(58,122,66,.12){% else %}rgba(9,77,146,.1){% endif %};
-                                  color:{% if item.devuelto %}var(--sage){% else %}var(--navy){% endif %};">
+                    <span class="{% if item.devuelto %}badge-devuelto{% else %}badge-pendiente{% endif %}"
+                          style="font-size:.7rem; padding:.1rem .4rem; border-radius:10px; font-weight:700;">
                       {% if item.devuelto %}✓ Devuelto{% else %}En préstamo{% endif %}
                     </span>
                   </div>
@@ -826,4 +894,38 @@
 
 {% block js %}
 <script src="{% static 'js/prestamos.js' %}"></script>
+<script>
+  // Registrar el click handler para abrirAprobar y abrirDevolver dinámicamente usando data-* attributes
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-aprobar-solicitud').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var pk = btn.getAttribute('data-pk');
+        var nombre = btn.getAttribute('data-nombre');
+        var doc = btn.getAttribute('data-usuario');
+        var motivo = btn.getAttribute('data-motivo');
+        var fecha = btn.getAttribute('data-fecha');
+        
+        var jsonSpan = btn.querySelector('.items-json');
+        var items = [];
+        if (jsonSpan) {
+          try {
+            items = JSON.parse(jsonSpan.textContent);
+          } catch (e) {
+            console.error("Error al parsear items de la solicitud:", e);
+          }
+        }
+        
+        abrirAprobar(pk, nombre, doc, motivo, fecha, items);
+      });
+    });
+
+    document.querySelectorAll('.btn-devolver-prestamo').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var pk = btn.getAttribute('data-pk');
+        var usuario = btn.getAttribute('data-usuario');
+        abrirDevolver(pk, usuario);
+      });
+    });
+  });
+</script>
 {% endblock js %}
