@@ -125,20 +125,8 @@ def inventario(request):
                 form_modal_errors = True # Mantiene el flujo para regresar al modal principal
 
     # Consultar herramientas y categorías para la vista
-    query = request.GET.get("busqueda", "")
-    categoria_id = request.GET.get("categoria", "")
-
-    productos_qs = Producto.objects.all()
+    productos = Producto.objects.all()
     categorias = Categoria.objects.all()
-
-    if query:
-        productos_qs = productos_qs.filter(Q(nombre__icontains=query) | Q(codigo_sku__icontains=query))
-    if categoria_id:
-        productos_qs = productos_qs.filter(categoria_id=categoria_id)
-
-    paginator = Paginator(productos_qs, 10)
-    page_number = request.GET.get("page")
-    productos = paginator.get_page(page_number)
 
     # Manejo de errores de formularios externos (Mantenimiento)
     mant_form_data = request.session.pop('mant_form_data', None)
@@ -154,10 +142,10 @@ def inventario(request):
         mant_modal_errors = False
 
     # KPIs adaptados a la lógica unitaria
-    total_productos = productos_qs.count()
-    total_stock = productos_qs.aggregate(s=Sum("stock"))["s"] or 0
-    sin_stock = productos_qs.filter(stock=0).count()
-    stock_bajo = productos_qs.filter(stock__lte=5, stock__gt=0).count()
+    total_productos = productos.count()
+    total_stock = productos.aggregate(s=Sum("stock"))["s"] or 0
+    sin_stock = productos.filter(stock=0).count()
+    stock_bajo = productos.filter(stock__lte=5, stock__gt=0).count()
 
     context = {
         "productos": productos,
