@@ -109,23 +109,20 @@
     <div class="d-flex gap-2 flex-wrap align-items-center">
       <button class="btn btn-sm btn-primary pu-filter-btn" data-filter="todos" onclick="puFiltrar('todos', this)">
         Todos
-        <span class="badge bg-primary-subtle text-primary ms-1 font-monospace" style="font-size:.65rem;">{{
-          total_prestamos }}</span>
+        <span class="badge bg-primary-subtle text-primary ms-1 font-monospace" style="font-size:.65rem;">{{ total_prestamos }}</span>
       </button>
       <button class="btn btn-sm btn-outline-secondary pu-filter-btn" data-filter="activo"
         onclick="puFiltrar('activo', this)">
         Activos
         {% if total_activos %}
-        <span class="badge bg-primary-subtle text-primary ms-1 font-monospace" style="font-size:.65rem;">{{
-          total_activos }}</span>
+        <span class="badge bg-primary-subtle text-primary ms-1 font-monospace" style="font-size:.65rem;">{{ total_activos }}</span>
         {% endif %}
       </button>
       {% if pendientes_aprobacion %}
       <button class="btn btn-sm btn-outline-secondary pu-filter-btn" data-filter="pendiente"
         onclick="puFiltrar('pendiente', this)">
         Pendientes
-        <span class="badge bg-warning-subtle text-warning-emphasis ms-1 font-monospace" style="font-size:.65rem;">{{
-          pendientes_aprobacion }}</span>
+        <span class="badge bg-warning-subtle text-warning-emphasis ms-1 font-monospace" style="font-size:.65rem;">{{ pendientes_aprobacion }}</span>
       </button>
       {% endif %}
       <button class="btn btn-sm btn-outline-secondary pu-filter-btn" data-filter="devuelto"
@@ -134,8 +131,7 @@
       <button class="btn btn-sm btn-outline-secondary pu-filter-btn" data-filter="vencido"
         onclick="puFiltrar('vencido', this)">
         Vencidos
-        <span class="badge bg-danger-subtle text-danger ms-1 font-monospace" style="font-size:.65rem;">{{ vencidos_count
-          }}</span>
+        <span class="badge bg-danger-subtle text-danger ms-1 font-monospace" style="font-size:.65rem;">{{ vencidos_count }}</span>
       </button>
       {% endif %}
     </div>
@@ -298,8 +294,7 @@
                         <div class="fw-semibold small">{{ item.producto.nombre }}</div>
                         <div class="font-monospace text-muted" style="font-size:.7rem;">
                           {{ item.producto.codigo_sku }}
-                          {% if item.serial_entregado %}· Serial: <strong>{{ item.serial_entregado }}</strong>{% endif
-                          %}
+                          {% if item.serial_entregado %}· Serial: <strong>{{ item.serial_entregado }}</strong>{% endif %}
                         </div>
                       </div>
                       <div class="font-monospace fw-bold
