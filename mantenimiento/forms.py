@@ -413,94 +413,96 @@ class MantenimientoForm(forms.ModelForm):
 
         return fecha_inicio
 
-    def clean_descripcion_problema(self):
-        """Valida descripción del problema."""
-        desc = self.cleaned_data.get("descripcion_problema")
-        if not desc or not desc.strip():
-            raise ValidationError(
-                "La descripción del problema es obligatoria. "
-                "Describe en detalle qué falla presenta el equipo."
-            )
 
-        if len(desc.strip()) < 10:
-            raise ValidationError(
-                "La descripción es muy corta. "
-                "Mínimo 10 caracteres. Describe el problema en detalle."
-            )
+def clean_descripcion_problema(self):
+    """Valida descripción del problema."""
+    desc = self.cleaned_data.get("descripcion_problema")
+    if not desc or not desc.strip():
+        raise ValidationError(
+            "La descripción del problema es obligatoria. "
+            "Describe en detalle qué falla presenta el equipo."
+        )
 
-        return desc
+    if len(desc.strip()) < 10:
+        raise ValidationError(
+            "La descripción es muy corta. "
+            "Mínimo 10 caracteres. Describe el problema en detalle."
+        )
 
-    def clean_responsable(self):
-        """Valida responsable/técnico."""
-        responsable = self.cleaned_data.get("responsable")
-        if not responsable:
-            raise ValidationError(
-                "Debes asignar un técnico responsable del mantenimiento."
-            )
-        return responsable
+    return desc
 
-    def clean_estado_registro(self):
-        """Valida estado del registro."""
-        estado = self.cleaned_data.get("estado_registro")
-        if not estado:
-            raise ValidationError("El estado del registro es obligatorio.")
-        return estado
 
-    def clean_prioridad(self):
-        """Valida prioridad."""
-        prioridad = self.cleaned_data.get("prioridad")
-        if not prioridad:
-            raise ValidationError(
-                "La prioridad es obligatoria. "
-                "Selecciona: Baja, Media, Alta o Crítica."
-            )
-        return prioridad
+def clean_responsable(self):
+    """Valida responsable/técnico."""
+    responsable = self.cleaned_data.get("responsable")
+    if not responsable:
+        raise ValidationError("Debes asignar un técnico responsable del mantenimiento.")
+    return responsable
 
-    def clean(self):
-        """Validaciones cruzadas."""
-        cleaned = super().clean()
 
-        fecha_reporte = cleaned.get("fecha_reporte")
-        fecha_inicio = cleaned.get("fecha_inicio")
-        fecha_fin_estimada = cleaned.get("fecha_fin_estimada")
-        fecha_fin_real = cleaned.get("fecha_fin_real")
-        tiempo = cleaned.get("tiempo_empleado_horas")
-        costo_estimado = cleaned.get("costo_estimado")
-        costo_real = cleaned.get("costo_real")
+def clean_estado_registro(self):
+    """Valida estado del registro."""
+    estado = self.cleaned_data.get("estado_registro")
+    if not estado:
+        raise ValidationError("El estado del registro es obligatorio.")
+    return estado
 
-        # Validar fechas en orden lógico
-        if fecha_reporte and fecha_inicio and fecha_inicio < fecha_reporte:
-            self.add_error(
-                "fecha_inicio",
-                f"La fecha de inicio ({fecha_inicio}) no puede ser anterior "
-                f"a la fecha de reporte ({fecha_reporte}).",
-            )
 
-        if fecha_inicio and fecha_fin_estimada and fecha_fin_estimada < fecha_inicio:
-            self.add_error(
-                "fecha_fin_estimada",
-                f"La fecha estimada ({fecha_fin_estimada}) no puede ser anterior "
-                f"a la fecha de inicio ({fecha_inicio}).",
-            )
+def clean_prioridad(self):
+    """Valida prioridad."""
+    prioridad = self.cleaned_data.get("prioridad")
+    if not prioridad:
+        raise ValidationError(
+            "La prioridad es obligatoria. " "Selecciona: Baja, Media, Alta o Crítica."
+        )
+    return prioridad
 
-        if fecha_inicio and fecha_fin_real and fecha_fin_real < fecha_inicio:
-            self.add_error(
-                "fecha_fin_real",
-                f"La fecha real ({fecha_fin_real}) no puede ser anterior "
-                f"a la fecha de inicio ({fecha_inicio}).",
-            )
 
-        # Validar números
-        if tiempo is not None and tiempo < 0:
-            self.add_error("tiempo_empleado_horas", "El tiempo no puede ser negativo.")
+def clean(self):
+    """Validaciones cruzadas."""
+    cleaned = super().clean()
 
-        if costo_estimado is not None and costo_estimado < 0:
-            self.add_error("costo_estimado", "El costo estimado no puede ser negativo.")
+    fecha_reporte = cleaned.get("fecha_reporte")
+    fecha_inicio = cleaned.get("fecha_inicio")
+    fecha_fin_estimada = cleaned.get("fecha_fin_estimada")
+    fecha_fin_real = cleaned.get("fecha_fin_real")
+    tiempo = cleaned.get("tiempo_empleado_horas")
+    costo_estimado = cleaned.get("costo_estimado")
+    costo_real = cleaned.get("costo_real")
 
-        if costo_real is not None and costo_real < 0:
-            self.add_error("costo_real", "El costo real no puede ser negativo.")
+    # Validar fechas en orden lógico
+    if fecha_reporte and fecha_inicio and fecha_inicio < fecha_reporte:
+        self.add_error(
+            "fecha_inicio",
+            f"La fecha de inicio ({fecha_inicio}) no puede ser anterior "
+            f"a la fecha de reporte ({fecha_reporte}).",
+        )
 
-        return cleaned
+    if fecha_inicio and fecha_fin_estimada and fecha_fin_estimada < fecha_inicio:
+        self.add_error(
+            "fecha_fin_estimada",
+            f"La fecha estimada ({fecha_fin_estimada}) no puede ser anterior "
+            f"a la fecha de inicio ({fecha_inicio}).",
+        )
+
+    if fecha_inicio and fecha_fin_real and fecha_fin_real < fecha_inicio:
+        self.add_error(
+            "fecha_fin_real",
+            f"La fecha real ({fecha_fin_real}) no puede ser anterior "
+            f"a la fecha de inicio ({fecha_inicio}).",
+        )
+
+    # Validar números
+    if tiempo is not None and tiempo < 0:
+        self.add_error("tiempo_empleado_horas", "El tiempo no puede ser negativo.")
+
+    if costo_estimado is not None and costo_estimado < 0:
+        self.add_error("costo_estimado", "El costo estimado no puede ser negativo.")
+
+    if costo_real is not None and costo_real < 0:
+        self.add_error("costo_real", "El costo real no puede ser negativo.")
+
+    return cleaned
 
 
 class MantenimientoUpdateForm(MantenimientoForm):
