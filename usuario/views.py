@@ -569,3 +569,5 @@ def perfil_view(request):
         'cfg_notif_vencimientos': cfg_notif_vencimientos,
         'cfg_notif_devoluciones': cfg_notif_devoluciones,
     })
+def registro_qr_pdf(request):
+    pass 

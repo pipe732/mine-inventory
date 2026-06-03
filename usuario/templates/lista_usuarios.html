@@ -24,7 +24,6 @@
   {% endfor %}
 {% endif %}
 
-{# ══ CABECERA ══ #}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
     <h5 style="font-family:var(--font-ui);font-weight:700;font-size:1rem;
@@ -36,7 +35,6 @@
     </p>
   </div>
   <div style="display:flex;gap:.6rem;align-items:center;">
-    {# Badge total #}
     <span style="font-family:var(--font-mono);font-size:.72rem;
                  background:rgba(9,77,146,.08);color:var(--navy);
                  padding:.22rem .75rem;border-radius:20px;
@@ -46,7 +44,6 @@
   </div>
 </div>
 
-{# ══ FILTROS ══ #}
 <div class="card mb-3">
   <div class="card-body" style="padding:.85rem 1.2rem;">
     <form method="get" id="filtroForm" class="d-flex flex-wrap gap-3 align-items-end">
@@ -99,7 +96,6 @@
         {% endif %}
       </div>
 
-      {# Toggle vista #}
       <div style="margin-left:auto;display:flex;gap:.3rem;">
         <button type="button" id="btnLista" class="btn-primary-mine" onclick="setVista('lista')"
                 style="padding:.4rem .7rem;" title="Vista lista">
@@ -125,7 +121,6 @@
 
 {% if usuarios %}
 
-{# ══ VISTA LISTA ══ #}
 <div id="vistaLista">
   <div class="card table-card">
     <div class="card-header d-flex align-items-center justify-content-between">
@@ -233,7 +228,6 @@
   </div>
 </div>
 
-{# ══ VISTA FICHAS ══ #}
 <div id="vistaFichas" class="d-none">
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3">
     {% for u in usuarios %}
@@ -241,10 +235,7 @@
       <div class="card h-100" style="transition:box-shadow .2s;"
            onmouseover="this.style.boxShadow='0 6px 24px rgba(27,32,33,.12)'"
            onmouseout="this.style.boxShadow=''">
-
-        {# Barra superior por rol #}
         <div style="height:3px;background:{% if u.rol == 'Administrador' %}var(--rust){% else %}var(--navy){% endif %};"></div>
-
         <div class="card-body" style="padding:1.1rem;">
           <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;">
             <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;
@@ -268,9 +259,7 @@
               </span>
             </div>
           </div>
-
           <hr style="border-color:var(--border-color);margin:.5rem 0 .75rem;">
-
           <div style="display:flex;flex-direction:column;gap:.38rem;font-size:.8rem;">
             <div style="display:flex;align-items:center;gap:.45rem;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
@@ -288,6 +277,15 @@
                 {{ u.get_tipo_documento_display }} · {{ u.numero_documento }}
               </span>
             </div>
+            {% if u.numero_ficha %}
+            <div style="display:flex;align-items:center;gap:.45rem;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span style="color:var(--text-muted);">Ficha {{ u.numero_ficha }}{% if u.nombre_programa %} · {{ u.nombre_programa }}{% endif %}</span>
+            </div>
+            {% endif %}
             {% if u.telefono %}
             <div style="display:flex;align-items:center;gap:.45rem;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
@@ -298,13 +296,10 @@
             {% endif %}
           </div>
         </div>
-
         <div class="card-footer" style="background:#f9f7f3;border-top:1px solid var(--border-color);
                                          padding:.6rem .9rem;display:flex;gap:.4rem;justify-content:flex-end;">
           <button type="button" class="btn-ghost" style="font-size:.76rem;"
-                  onclick="verUsuario('{{ u.numero_documento }}')">
-            Ver
-          </button>
+                  onclick="verUsuario('{{ u.numero_documento }}')">Ver</button>
           <button type="button" class="btn-primary-mine" style="font-size:.76rem;padding:.3rem .7rem;"
                   onclick="abrirEditar(
                     '{{ u.numero_documento }}',
@@ -346,9 +341,7 @@
 {% endif %}
 
 
-{% comment %} {# ══════════════════════════════════════════════════
-   MODAL — VER DETALLE DE USUARIO
-══════════════════════════════════════════════════ #} {% endcomment %}
+{# ══ MODAL VER USUARIO ══ #}
 <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -416,6 +409,16 @@
                           color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Teléfono</div>
               <span id="mTelefono" style="color:var(--text-muted);font-size:.85rem;"></span>
             </div>
+            <div class="col-6">
+              <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;
+                          color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Número de ficha</div>
+              <span id="mNumFicha" style="font-family:var(--font-mono);font-size:.85rem;color:var(--text-main);"></span>
+            </div>
+            <div class="col-6">
+              <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;
+                          color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Programa</div>
+              <span id="mPrograma" style="font-size:.85rem;color:var(--text-main);"></span>
+            </div>
           </div>
 
           <div style="font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;
@@ -478,9 +481,7 @@
 </div>
 
 
-{% comment %} {# ══════════════════════════════════════════════════
-   MODAL — EDITAR USUARIO
-══════════════════════════════════════════════════ #} {% endcomment %}
+{# ══ MODAL EDITAR USUARIO ══ #}
 <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -518,7 +519,6 @@
 
           <div class="row g-3">
 
-            {# Documento — solo lectura #}
             <div class="col-md-4">
               <label class="form-label">Tipo de documento</label>
               <input type="text" id="edit_tipo_doc_display" class="form-control"
@@ -533,28 +533,36 @@
               </div>
             </div>
 
-            {# Nombre #}
             <div class="col-12">
               <label class="form-label">Nombre completo *</label>
               <input type="text" name="nombre_completo" id="edit_nombre"
                      class="form-control" placeholder="Nombre completo" required>
             </div>
 
-            {# Correo #}
             <div class="col-md-7">
               <label class="form-label">Correo electrónico *</label>
               <input type="email" name="correo" id="edit_correo"
                      class="form-control" placeholder="correo@ejemplo.com" required>
             </div>
 
-            {# Teléfono #}
             <div class="col-md-5">
               <label class="form-label">Teléfono</label>
               <input type="text" name="telefono" id="edit_telefono"
                      class="form-control" placeholder="Ej: 3001234567" maxlength="20">
             </div>
 
-            {# Separador acceso #}
+            <div class="col-md-6">
+              <label class="form-label">Número de ficha</label>
+              <input type="text" name="numero_ficha" id="edit_ficha"
+                     class="form-control" placeholder="Ej. 2758369" maxlength="10">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nombre del programa</label>
+              <input type="text" name="nombre_programa" id="edit_programa"
+                     class="form-control" placeholder="Ej. ADSO">
+            </div>
+
             <div class="col-12" style="padding-top:.25rem;">
               <div style="font-family:var(--font-mono);font-size:.65rem;letter-spacing:.13em;
                           text-transform:uppercase;color:var(--navy);
@@ -564,7 +572,6 @@
               </div>
             </div>
 
-            {# Rol #}
             <div class="col-md-6">
               <label class="form-label">Rol *</label>
               <select name="rol" id="edit_rol" class="form-select" required>
@@ -574,7 +581,6 @@
               </select>
             </div>
 
-            {# Contraseña nueva (opcional) #}
             <div class="col-md-6">
               <label class="form-label">
                 Nueva contraseña
@@ -618,7 +624,6 @@
 
 
 <script>
-/* ── Toggle vista ─────────────────────────────────────────── */
 function setVista(v) {
   var esLista = v === 'lista';
   document.getElementById('vistaLista').classList.toggle('d-none', !esLista);
@@ -637,14 +642,12 @@ function setVista(v) {
 var _pref = localStorage.getItem('gu_vista');
 if (_pref) setVista(_pref);
 
-/* ── Búsqueda con debounce ────────────────────────────────── */
 var _timer;
 document.getElementById('qInput').addEventListener('input', function () {
   clearTimeout(_timer);
   _timer = setTimeout(function () { document.getElementById('filtroForm').submit(); }, 500);
 });
 
-/* ── Modal ver detalle via AJAX ───────────────────────────── */
 var _modalVerUsuario = null;
 var _datosUsuarioActual = null;
 
@@ -668,8 +671,8 @@ function verUsuario(doc) {
       _datosUsuarioActual = d;
       var iniciales = d.nombre_completo.slice(0, 2).toUpperCase();
 
-      document.getElementById('modalAvatar').textContent        = iniciales;
-      document.getElementById('modalUsuarioLabel').textContent  = d.nombre_completo;
+      document.getElementById('modalAvatar').textContent       = iniciales;
+      document.getElementById('modalUsuarioLabel').textContent = d.nombre_completo;
 
       var rolEl = document.getElementById('modalRol');
       rolEl.textContent  = d.rol;
@@ -681,26 +684,28 @@ function verUsuario(doc) {
       document.getElementById('mNumDoc').textContent   = d.numero_documento;
       document.getElementById('mCorreo').textContent   = d.correo;
       document.getElementById('mTelefono').textContent = d.telefono || '—';
+      document.getElementById('mNumFicha').textContent = d.numero_ficha || '—';
+      document.getElementById('mPrograma').textContent = d.nombre_programa || '—';
       document.getElementById('mIdDoc').textContent    = 'doc · ' + d.numero_documento;
 
-      document.getElementById('mPrestamosTotal').textContent     = d.prestamos_totales;
-      document.getElementById('mPrestamosActivos').textContent   = d.prestamos_activos;
+      document.getElementById('mPrestamosTotal').textContent      = d.prestamos_totales;
+      document.getElementById('mPrestamosActivos').textContent    = d.prestamos_activos;
       document.getElementById('mPrestamosPendientes').textContent = d.prestamos_parciales;
       document.getElementById('mPrestamosVencidos').textContent   = d.prestamos_vencidos;
-      document.getElementById('mPrestamosList').innerHTML        = renderPrestamosUsuario(d.prestamos);
+      document.getElementById('mPrestamosList').innerHTML         = renderPrestamosUsuario(d.prestamos);
 
       var rel = '';
       if (d.destinado) {
-        rel += '<div class="col-6">' +
-          '<div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Destinado a</div>' +
-          '<button class="btn-ghost p-0" style="font-size:.82rem;font-weight:600;color:var(--navy);background:none;border:none;cursor:pointer;" onclick="verUsuario(\'' + d.destinado_doc + '\')">' + d.destinado + '</button>' +
-          '</div>';
+        rel += '<div class="col-6">'
+          + '<div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Destinado a</div>'
+          + '<button class="btn-ghost p-0" style="font-size:.82rem;font-weight:600;color:var(--navy);background:none;border:none;cursor:pointer;" onclick="verUsuario(\'' + d.destinado_doc + '\')">' + d.destinado + '</button>'
+          + '</div>';
       }
       if (d.solicitado) {
-        rel += '<div class="col-6">' +
-          '<div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Solicitado por</div>' +
-          '<button class="btn-ghost p-0" style="font-size:.82rem;font-weight:600;color:var(--navy);background:none;border:none;cursor:pointer;" onclick="verUsuario(\'' + d.solicitado_doc + '\')">' + d.solicitado + '</button>' +
-          '</div>';
+        rel += '<div class="col-6">'
+          + '<div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:.2rem;">Solicitado por</div>'
+          + '<button class="btn-ghost p-0" style="font-size:.82rem;font-weight:600;color:var(--navy);background:none;border:none;cursor:pointer;" onclick="verUsuario(\'' + d.solicitado_doc + '\')">' + d.solicitado + '</button>'
+          + '</div>';
       }
       document.getElementById('mRelaciones').innerHTML =
         rel || '<div class="col-12"><small style="color:var(--text-muted);">Sin relaciones asignadas.</small></div>';
@@ -708,7 +713,7 @@ function verUsuario(doc) {
       document.getElementById('btnEditarDesdeModal').onclick = function() {
         _modalVerUsuario.hide();
         setTimeout(function() {
-          abrirEditar(d.numero_documento, d.nombre_completo, d.correo, d.telefono || '', d.rol, d.tipo_documento_display.slice(0,2));
+          abrirEditar(d.numero_documento, d.nombre_completo, d.correo, d.telefono || '', d.rol, d.tipo_documento_display.slice(0,2), d.numero_ficha || '', d.nombre_programa || '');
         }, 350);
       };
 
@@ -723,30 +728,19 @@ function verUsuario(doc) {
 
 function escapeHtml(value) {
   return String(value || '').replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function renderPrestamosUsuario(prestamos) {
   if (!prestamos || prestamos.length === 0) {
     return '<div style="font-size:.88rem;color:var(--text-muted);">No tiene préstamos registrados.</div>';
   }
-
   return prestamos.map(function(p) {
-    var estadoColor = '#0f766e';
-    var estadoBg = 'rgba(22,101,52,.08)';
-    if (p.estado === 'parcial') {
-      estadoColor = '#92400e';
-      estadoBg = 'rgba(196,144,10,.1)';
-    } else if (p.estado === 'vencido') {
-      estadoColor = '#b91c1c';
-      estadoBg = 'rgba(185,28,28,.08)';
-    } else if (p.estado === 'pendiente') {
-      estadoColor = '#164e63';
-      estadoBg = 'rgba(14,165,233,.08)';
-    }
+    var estadoColor = '#0f766e', estadoBg = 'rgba(22,101,52,.08)';
+    if (p.estado === 'parcial')   { estadoColor = '#92400e'; estadoBg = 'rgba(196,144,10,.1)'; }
+    else if (p.estado === 'vencido')  { estadoColor = '#b91c1c'; estadoBg = 'rgba(185,28,28,.08)'; }
+    else if (p.estado === 'pendiente'){ estadoColor = '#164e63'; estadoBg = 'rgba(14,165,233,.08)'; }
 
     var itemsHtml = p.items.map(function(item) {
       return '<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.5rem .65rem;border-bottom:1px solid rgba(9,77,146,.08);">'
@@ -757,10 +751,8 @@ function renderPrestamosUsuario(prestamos) {
 
     return '<div style="border:1px solid rgba(9,77,146,.12);border-radius:16px;margin-bottom:.9rem;overflow:hidden;">'
       + '<div style="padding:.95rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:' + estadoBg + ';">'
-      + '<div>'
-      + '<div style="font-size:.85rem;font-weight:700;color:var(--text-main);">Préstamo #' + p.pk + '</div>'
-      + '<div style="font-size:.75rem;color:var(--text-muted);">' + escapeHtml(p.fecha_prestamo) + '</div>'
-      + '</div>'
+      + '<div><div style="font-size:.85rem;font-weight:700;color:var(--text-main);">Préstamo #' + p.pk + '</div>'
+      + '<div style="font-size:.75rem;color:var(--text-muted);">' + escapeHtml(p.fecha_prestamo) + '</div></div>'
       + '<span style="color:' + estadoColor + ';font-size:.72rem;font-weight:700;padding:.3rem .65rem;border-radius:999px;background:' + estadoBg + ';">' + escapeHtml(p.estado_display) + '</span>'
       + '</div>'
       + '<div style="padding:1rem;">'
@@ -770,94 +762,74 @@ function renderPrestamosUsuario(prestamos) {
       + '<textarea id="obs_prestamo_' + p.pk + '" rows="3" style="width:100%;padding:.65rem;border:1px solid rgba(9,77,146,.12);border-radius:12px;font-size:.88rem;margin-bottom:.65rem;">' + escapeHtml(p.observaciones) + '</textarea>'
       + '<button type="button" id="obs_btn_' + p.pk + '" onclick="guardarObservacionPrestamo(' + p.pk + ')" style="border:none;background:var(--navy);color:white;padding:.55rem .75rem;border-radius:12px;font-size:.85rem;cursor:pointer;">Guardar observación</button>'
       + '<div style="margin-top:.85rem;font-size:.75rem;color:var(--text-muted);">Ítems del préstamo</div>'
-      + itemsHtml
-      + '</div>'
-      + '</div>';
+      + itemsHtml + '</div></div>';
   }).join('');
 }
 
 function guardarObservacionPrestamo(pk) {
   var textarea = document.getElementById('obs_prestamo_' + pk);
-  var button = document.getElementById('obs_btn_' + pk);
+  var button   = document.getElementById('obs_btn_' + pk);
   if (!textarea || !button) return;
-
-  var observaciones = textarea.value.trim();
   button.disabled = true;
   button.textContent = 'Guardando...';
-
   fetch('/prestamo/' + pk + '/observacion/', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-CSRFToken': getCookie('csrftoken'),
-    },
-    body: 'observaciones=' + encodeURIComponent(observaciones),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+    body: 'observaciones=' + encodeURIComponent(textarea.value.trim()),
   })
-  .then(function(r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  })
+  .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
   .then(function(data) {
-    if (data.ok) {
-      button.textContent = 'Guardado';
-      setTimeout(function() { button.textContent = 'Guardar observación'; }, 1500);
-    } else {
-      throw new Error(data.error || 'No se pudo guardar la observación.');
-    }
+    button.textContent = data.ok ? 'Guardado' : 'Error';
+    setTimeout(function() { button.textContent = 'Guardar observación'; }, 1500);
   })
   .catch(function() {
     button.textContent = 'Error';
     setTimeout(function() { button.textContent = 'Guardar observación'; }, 1500);
   })
-  .finally(function() {
-    button.disabled = false;
-  });
+  .finally(function() { button.disabled = false; });
 }
 
 function getCookie(name) {
   var cookieValue = null;
   if (document.cookie && document.cookie !== '') {
-    var cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      var cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
+    document.cookie.split(';').forEach(function(c) {
+      c = c.trim();
+      if (c.startsWith(name + '=')) cookieValue = decodeURIComponent(c.substring(name.length + 1));
+    });
   }
   return cookieValue;
 }
 
-/* ── Modal editar usuario ─────────────────────────────────── */
-function abrirEditar(doc, nombre, correo, telefono, rol, tipoDot) {
-  var initiales = nombre.slice(0, 2).toUpperCase();
-  document.getElementById('editAvatar').textContent    = initiales;
-  document.getElementById('editDocLabel').textContent  = doc;
-  document.getElementById('edit_doc_hidden').value     = doc;
-  document.getElementById('edit_tipo_doc_display').value = tipoDot || '';
-  document.getElementById('edit_num_doc_display').value  = doc;
-  document.getElementById('edit_nombre').value   = nombre;
-  document.getElementById('edit_correo').value   = correo;
-  document.getElementById('edit_telefono').value = telefono;
-  document.getElementById('edit_password').value = '';
+function abrirEditar(doc, nombre, correo, telefono, rol, tipoDot, ficha, programa) {
+  document.getElementById('editAvatar').textContent       = nombre.slice(0, 2).toUpperCase();
+  document.getElementById('editDocLabel').textContent     = doc;
+  document.getElementById('edit_doc_hidden').value        = doc;
+  document.getElementById('edit_tipo_doc_display').value  = tipoDot || '';
+  document.getElementById('edit_num_doc_display').value   = doc;
+  document.getElementById('edit_nombre').value    = nombre;
+  document.getElementById('edit_correo').value    = correo;
+  document.getElementById('edit_telefono').value  = telefono;
+  document.getElementById('edit_ficha').value     = ficha || '';
+  document.getElementById('edit_programa').value  = programa || '';
+  document.getElementById('edit_password').value  = '';
 
   var selRol = document.getElementById('edit_rol');
   for (var i = 0; i < selRol.options.length; i++) {
     selRol.options[i].selected = (selRol.options[i].value === rol || selRol.options[i].text === rol);
   }
-
   new bootstrap.Modal(document.getElementById('modalEditarUsuario')).show();
 }
 
-/* ── Toggle contraseña ────────────────────────────────────── */
 document.getElementById('toggleEditPw').addEventListener('click', function() {
   var inp = document.getElementById('edit_password');
   inp.type = inp.type === 'password' ? 'text' : 'password';
 });
 
-/* ── Solo dígitos en teléfono ─────────────────────────────── */
 document.getElementById('edit_telefono').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '');
+});
+
+document.getElementById('edit_ficha').addEventListener('input', function() {
   this.value = this.value.replace(/\D/g, '');
 });
 </script>
