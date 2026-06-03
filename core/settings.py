@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'pagina_principal',
     'mantenimiento',
     'reportes',
-]
+    ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
