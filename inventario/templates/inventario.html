@@ -92,7 +92,7 @@
 <!-- ══ SECCIÓN DE FILTROS Y BÚSQUEDA ══ -->
 <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
   <div class="row g-2 align-items-center">
-    <div class="col-12 col-md-5">
+    <div class="col-12 col-md-7">
       <div class="input-group input-group-sm">
         <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
         <input type="text" id="inventario-busqueda" class="form-control bg-light border-start-0" placeholder="Buscar por SKU o nombre de herramienta..." value="{{ request.GET.busqueda|default:'' }}">
@@ -106,17 +106,17 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-12 col-md-3">
-      <button type="button" id="btn-limpiar-filtros" class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-1" 
-        data-bs-toggle="tooltip" data-bs-placement="top" title="Restablecer todos los filtros y búsqueda">
-        <i class="bi bi-x-lg"></i> Limpiar Filtros
+    <div class="col-12 col-md-1">
+      <button type="button" id="btn-limpiar-filtros" class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center" 
+        data-bs-toggle="tooltip" data-bs-placement="top" title="Limpiar filtros">
+        <i class="bi bi-brush"></i>
       </button>
     </div>
   </div>
 </div>
 
 <!-- ══ TABLA INVENTARIO ══ -->
-<div class="card table-card">
+<div class="card table-card p-3">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
