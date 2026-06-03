@@ -19,6 +19,7 @@ from usuario.decorators import admin_required, login_required
 
 from .models import Usuario, validar_numero_documento
 from common.mixins import sesion_requerida
+from prestamo.models import Prestamo
 
 logger = logging.getLogger(__name__)
 
@@ -378,6 +379,37 @@ def detalle_usuario_json(request, numero_documento):
         Usuario.objects.select_related('destinado', 'solicitado'),
         numero_documento=numero_documento,
     )
+
+    prestamos_qs = (
+        Prestamo.objects
+        .prefetch_related('items__producto')
+        .filter(usuario=usuario.numero_documento)
+        .order_by('-fecha_prestamo')
+    )
+
+    prestamos = []
+    for p in prestamos_qs:
+        prestamos.append({
+            'pk': p.pk,
+            'estado': p.estado,
+            'estado_display': p.get_estado_display(),
+            'fecha_prestamo': p.fecha_prestamo.strftime('%d/%m/%Y'),
+            'fecha_vencimiento': p.fecha_vencimiento.strftime('%d/%m/%Y') if p.fecha_vencimiento else '—',
+            'dias_restantes': p.dias_restantes,
+            'observaciones': p.observaciones or '',
+            'motivo_solicitud': p.motivo_solicitud or '',
+            'pendiente_para_devolucion': p.estado in ['activo', 'parcial'],
+            'items': [
+                {
+                    'nombre': item.producto.nombre,
+                    'cantidad': item.cantidad,
+                    'devuelto': item.devuelto,
+                    'serial': item.serial_entregado,
+                }
+                for item in p.items.all()
+            ],
+        })
+
     data = {
         'numero_documento':       usuario.numero_documento,
         'nombre_completo':        usuario.nombre_completo,
@@ -391,6 +423,11 @@ def detalle_usuario_json(request, numero_documento):
         'destinado_doc':  usuario.destinado.numero_documento if usuario.destinado else None,
         'solicitado':     usuario.solicitado.nombre_completo if usuario.solicitado else None,
         'solicitado_doc': usuario.solicitado.numero_documento if usuario.solicitado else None,
+        'prestamos_totales':  prestamos_qs.count(),
+        'prestamos_activos':  prestamos_qs.filter(estado='activo').count(),
+        'prestamos_parciales': prestamos_qs.filter(estado='parcial').count(),
+        'prestamos_vencidos': prestamos_qs.filter(estado='vencido').count(),
+        'prestamos':         prestamos,
     }
     return JsonResponse(data)
 
