@@ -98,7 +98,7 @@
 
   <div class="table-responsive">
     <table
-      class="table-app"
+      class="table-app datatable-disabled"
       style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
     >
       <thead>
@@ -121,8 +121,9 @@
           <td style="text-align: center">
             {% if tipo.color %}
             <span
+              data-dynamic-bg="{{ tipo.color }}"
               style="display:inline-block; width:24px; height:24px;
-                           border-radius:4px; background:{{ tipo.color }};
+                           border-radius:4px;
                            border:1px solid rgba(0,0,0,.12);
                            vertical-align:middle;"
               title="{{ tipo.color }}"

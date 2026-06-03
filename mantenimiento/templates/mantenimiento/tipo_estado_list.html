@@ -58,7 +58,7 @@
 
   <div class="table-responsive">
     <table
-      class="table-app"
+      class="table-app datatable-disabled"
       style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
     >
       <thead>
@@ -94,8 +94,9 @@
           <td style="text-align: center">
             {% if estado.color %}
             <span
+              data-dynamic-bg="{{ estado.color }}"
               style="display:inline-block; width:20px; height:20px;
-                           border-radius:4px; background:{{ estado.color }};
+                           border-radius:4px;
                            border:1px solid rgba(0,0,0,.12);
                            vertical-align:middle;"
               title="{{ estado.color }}"

@@ -52,7 +52,7 @@
 
   <div class="table-responsive">
     <table
-      class="table-app"
+      class="table-app datatable-disabled"
       style="width: 100%; border-collapse: collapse; font-size: 0.9rem"
     >
       <thead>
@@ -111,7 +111,8 @@
               {% if ultimo and ultimo.tipo_estado %}
                 <span
                   class="badge-state"
-                  style="background:{{ ultimo.tipo_estado.color|default:'#6c757d' }}; color:#fff; border:none;"
+                  data-dynamic-bg="{{ ultimo.tipo_estado.color|default:'#6c757d' }}"
+                  style="color:#fff; border:none;"
                 >
                   {{ ultimo.tipo_estado.nombre }}
                 </span>
