@@ -56,7 +56,6 @@ IMPACTO_NO_DISPONIBLE = "no_disponible"
 
 # TIPOS DE MANTENIMIENTO
 
-
 class TipoMantenimiento(models.Model):
     """
     Catálogo dinámico de tipos de mantenimiento.
@@ -257,6 +256,7 @@ class Mantenimiento(models.Model):
         related_name="mantenimientos_actualizados",
         verbose_name="Última edición por",
     )
+
 
     #Auditoría
     creado_en = models.DateTimeField(auto_now_add=True)
