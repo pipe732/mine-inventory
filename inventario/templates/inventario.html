@@ -623,33 +623,124 @@
 
 <!-- ══ SCRIPTS JS DE CONTROL ══ -->
 <script>
-  // Abrir Préstamo Rápido
+  // ── Préstamo rápido ──
   function abrirPrestamo(id, sku, nombre) {
     document.getElementById('prestamo_producto_id').value = id;
     document.getElementById('prestamo_display_herramienta').innerText = '[' + sku + '] ' + nombre;
-    var modal = new bootstrap.Modal(document.getElementById('modalPrestamoRapido'));
-    modal.show();
+    new bootstrap.Modal(document.getElementById('modalPrestamoRapido')).show();
   }
 
-  // Abrir Edición
-  function abrirEditar(id, sku, nombre, descripcion, stock, categoriaId) {
-    document.getElementById('edit_producto_id').value = id;
-    document.getElementById('edit_sku').value = sku;
-    document.getElementById('edit_nombre').value = nombre;
-    document.getElementById('edit_descripcion').value = descripcion;
-    document.getElementById('edit_stock').value = stock;
-    document.getElementById('edit_categoria').value = categoriaId || "";
-    var modal = new bootstrap.Modal(document.getElementById('modalEditarHerramienta'));
-    modal.show();
-  }
-
-  // Abrir Mantenimiento
+  // ── Mantenimiento ──
   function abrirMantenimiento(id, sku, nombre) {
     document.getElementById('mantProductoId').value = id;
     document.getElementById('mantTextDisplay').innerText = '[' + sku + '] ' + nombre;
-    var modal = new bootstrap.Modal(document.getElementById('modalMantenimiento'));
-    modal.show();
+    new bootstrap.Modal(document.getElementById('modalMantenimiento')).show();
   }
-</script>
 
+  // ── Ubicación: cargar estantes vía AJAX ──
+  function cargarEstantes(almacenId, selectEstanteId, badgeId) {
+    const estSel = document.getElementById(selectEstanteId);
+    estSel.innerHTML = '<option value="">-- Estante --</option>';
+    estSel.disabled = true;
+    actualizarBadge(
+      selectEstanteId === 'new_estante' ? 'new_almacen' : 'edit_almacen',
+      selectEstanteId, badgeId
+    );
+    if (!almacenId) return;
+    fetch(`/inventario/api/estantes/?almacen_id=${almacenId}`)
+      .then(r => r.json())
+      .then(data => {
+        data.forEach(e => {
+          const opt = document.createElement('option');
+          opt.value = e.pk;
+          opt.textContent = e.codigo;
+          opt.dataset.codigo = e.codigo;
+          estSel.appendChild(opt);
+        });
+        estSel.disabled = false;
+        actualizarBadge(
+          selectEstanteId === 'new_estante' ? 'new_almacen' : 'edit_almacen',
+          selectEstanteId, badgeId
+        );
+      });
+  }
+
+  // ── Ubicación: actualizar badge AL1-ES3 ──
+  function actualizarBadge(almacenSelectId, estanteSelectId, badgeId) {
+    const almSel = document.getElementById(almacenSelectId);
+    const estSel = document.getElementById(estanteSelectId);
+    const badge  = document.getElementById(badgeId);
+    const estOpt = estSel.options[estSel.selectedIndex];
+
+    const almCod = almSel.value ? 'AL' + almSel.value : null;
+    const estCod = estOpt && estOpt.dataset.codigo ? estOpt.dataset.codigo : null;
+
+    if (almCod && estCod) {
+      badge.textContent = almCod + '-' + estCod;
+      badge.style.background = 'rgba(15,110,86,0.12)';
+      badge.style.color      = '#0a6640';
+      badge.style.border     = '1px solid rgba(15,110,86,0.35)';
+    } else if (almCod) {
+      badge.textContent = almCod + '-?';
+      badge.style.background = 'rgba(186,117,23,0.12)';
+      badge.style.color      = '#7a4d0a';
+      badge.style.border     = '1px solid rgba(186,117,23,0.35)';
+    } else {
+      badge.textContent = '—';
+      badge.style.background = 'rgba(0,0,0,0.05)';
+      badge.style.color      = 'var(--text-muted)';
+      badge.style.border     = '1px solid rgba(0,0,0,0.1)';
+    }
+  }
+
+  // ── Editar herramienta — abrir modal ──
+  function abrirEditar(id, sku, nombre, descripcion, stock, categoriaId, almacenId, estantePk) {
+    document.getElementById('edit_producto_id').value = id;
+    document.getElementById('edit_sku').value         = sku;
+    document.getElementById('edit_nombre').value      = nombre;
+    document.getElementById('edit_descripcion').value = descripcion;
+    document.getElementById('edit_stock').value       = stock;
+    document.getElementById('edit_categoria').value   = categoriaId || '';
+
+    // Resetear ubicación
+    const estSel = document.getElementById('edit_estante');
+    estSel.innerHTML = '<option value="">-- Estante --</option>';
+    estSel.disabled  = true;
+    document.getElementById('edit_ubicacion_badge').textContent = '—';
+
+    if (almacenId) {
+      document.getElementById('edit_almacen').value = almacenId;
+      // Cargar estantes y luego seleccionar el correcto
+      fetch(`/inventario/api/estantes/?almacen_id=${almacenId}`)
+        .then(r => r.json())
+        .then(data => {
+          data.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value          = e.pk;
+            opt.textContent    = e.codigo;
+            opt.dataset.codigo = e.codigo;
+            if (String(e.pk) === String(estantePk)) opt.selected = true;
+            estSel.appendChild(opt);
+          });
+          estSel.disabled = false;
+          actualizarBadge('edit_almacen', 'edit_estante', 'edit_ubicacion_badge');
+        });
+    } else {
+      document.getElementById('edit_almacen').value = '';
+    }
+
+    new bootstrap.Modal(document.getElementById('modalEditarHerramienta')).show();
+  }
+
+  // ── Ver ubicación ──
+  document.querySelectorAll('.btn-ver-ubicacion').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.getElementById('ubi_producto_nombre').textContent = this.dataset.productoNombre || '—';
+      document.getElementById('ubi_almacen_nombre').textContent  = this.dataset.almacenNombre  || '—';
+      document.getElementById('ubi_almacen_pk').textContent      = 'AL' + (this.dataset.almacenPk || '—');
+      document.getElementById('ubi_estante_codigo').textContent  = this.dataset.estanteCodigo  || '—';
+      new bootstrap.Modal(document.getElementById('modalUbicacion')).show();
+    });
+  });
+</script>
 {% endblock %}

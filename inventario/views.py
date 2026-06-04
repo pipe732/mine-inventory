@@ -8,7 +8,12 @@ from .models import Producto, Categoria
 from .forms import ProductoForm, CategoriaForm, FiltroInventarioForm
 from mantenimiento.forms import MantenimientoForm
 from common.mixins import sesion_requerida    
+from django.http import JsonResponse
 
+def api_estantes(request):
+    almacen_id = request.GET.get('almacen_id')
+    qs = Estante.objects.filter(almacen_id=almacen_id).values('pk', 'codigo') if almacen_id else []
+    return JsonResponse(list(qs), safe=False)
 
 @sesion_requerida
 def inventario(request):
@@ -159,6 +164,7 @@ def inventario(request):
     total_stock = productos_qs.aggregate(s=Sum("stock"))["s"] or 0
     sin_stock = productos_qs.filter(stock=0).count()
     stock_bajo = productos_qs.filter(stock__lte=5, stock__gt=0).count()
+    almacenes = Almacen.objects.all() 
 
     context = {
         "productos": productos,
@@ -185,6 +191,7 @@ def inventario(request):
         "kpi_total_stock": total_stock,
         "kpi_sin_stock": sin_stock,
         "kpi_stock_bajo": stock_bajo,
+        "almacenes": almacenes,
     }
 
     return render(request, "inventario.html", context)
