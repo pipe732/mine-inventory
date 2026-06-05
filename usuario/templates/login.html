@@ -44,8 +44,8 @@
       <div class="page-sub">Ingresa tus credenciales para acceder al inventario.</div>
 
       <div class="auth-tabs">
-        <button class="tab-btn on">Iniciar sesión</button>
-        <button class="tab-btn" onclick="window.location.href='{% url 'registro' %}'">Registro</button>
+        <span class="tab-btn on text-center">Iniciar sesión</span>
+        <a href="{% url 'registro' %}" class="tab-btn text-decoration-none text-center">Registro</a>
       </div>
 
       {% if messages %}

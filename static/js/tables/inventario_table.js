@@ -18,47 +18,7 @@ $(document).ready(function() {
     var table = $('#inventario-table').DataTable({
         responsive: true,
         dom: '<"row mb-3 align-items-center"<"col-md-6"B><"col-md-6">>t<"row mt-3 align-items-center"<"col-md-6"i><"col-md-6"p>>',
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: '<i class="bi bi-file-earmark-excel"></i>',
-                className: 'btn btn-sm btn-success px-3 me-2',
-                titleAttr: 'Exportar a Excel',
-                attr: {
-                    'data-bs-toggle': 'tooltip',
-                    'data-bs-placement': 'top',
-                    'title': 'Exportar a Excel'
-                }
-            },
-            {
-                extend: 'pdfHtml5',
-                text: '<i class="bi bi-file-earmark-pdf"></i>',
-                className: 'btn btn-sm btn-danger px-3 me-2',
-                titleAttr: 'Exportar a PDF',
-                attr: {
-                    'data-bs-toggle': 'tooltip',
-                    'data-bs-placement': 'top',
-                    'title': 'Exportar a PDF'
-                },
-                customize: function (doc) {
-                    if (doc.styles && doc.styles.tableHeader) {
-                        doc.styles.tableHeader.fillColor = '#011936';
-                        doc.styles.tableHeader.color = '#FFFFFF';
-                    }
-                }
-            },
-            {
-                extend: 'print',
-                text: '<i class="bi bi-printer"></i>',
-                className: 'btn btn-sm btn-primary px-3',
-                titleAttr: 'Imprimir listado',
-                attr: {
-                    'data-bs-toggle': 'tooltip',
-                    'data-bs-placement': 'top',
-                    'title': 'Imprimir listado'
-                }
-            }
-        ],
+        buttons: window.obtenerBotonesDataTable('inventario'),
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
         },

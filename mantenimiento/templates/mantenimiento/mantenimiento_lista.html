@@ -26,7 +26,7 @@ Todos los Mantenimientos
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" style="width: 100%; border-collapse: collapse; font-size: 0.9rem">
+    <table class="table-app datatable-custom" id="mantenimiento-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem">
       <thead>
         <tr>
           <th>Fecha</th>
@@ -61,7 +61,7 @@ Todos los Mantenimientos
           </td>
           <td>
             {% if r.tipo_estado %}
-              <span class="badge-state" style="background:{{ r.tipo_estado.color|default:'#6c757d' }}; color:#fff;">
+              <span class="badge-state" data-dynamic-bg="{{ r.tipo_estado.color|default:'#6c757d' }}" style="color:#fff;">
                 {{ r.tipo_estado.nombre }}
               </span>
             {% else %}
@@ -118,4 +118,7 @@ Todos los Mantenimientos
   </div>
 </div>
 
+{% block js %}
+<script src="{% static 'js/tables/mantenimiento_table.js' %}"></script>
+{% endblock js %}
 {% endblock %}

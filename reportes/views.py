@@ -6,15 +6,16 @@ from .models import ReporteHistorial
 from .generators import generar_reporte
 from common.mixins import sesion_requerida 
 
+# ==================== MÓDULOS DE REPORTES ====================
+# Quita o comenta las tuplas que no quieras mostrar
 MODULOS = [
-    ('inventario',     'Inventario',     'bi-boxes',          'Productos, SKU, stock y categorías'),
-    ('prestamos',      'Préstamos',      'bi-arrow-left-right','Registro de préstamos y estados'),
-    ('devoluciones',   'Devoluciones',   'bi-arrow-counterclockwise', 'Devoluciones y motivos'),
-    ('mantenimiento',  'Mantenimiento',  'bi-tools',          'Estado de herramientas'),
-    ('almacenamiento', 'Almacenamiento', 'bi-building',       'Almacenes y estantes'),
-    ('usuarios',       'Usuarios',       'bi-people',         'Usuarios y roles del sistema'),
+    # ('inventario',     'Inventario',     'bi-boxes',          'Productos, SKU, stock y categorías'),
+    # ('prestamos',      'Préstamos',      'bi-arrow-left-right','Registro de préstamos y estados'),
+    # ('devoluciones',   'Devoluciones',   'bi-arrow-counterclockwise', 'Devoluciones y motivos'),
+    # ('mantenimiento',  'Mantenimiento',  'bi-tools',          'Estado de herramientas'),
+    # ('almacenamiento', 'Almacenamiento', 'bi-building',       'Almacenes y estantes'),
+    # ('usuarios',       'Usuarios',       'bi-people',         'Usuarios y roles del sistema'),
 ]
-
 
 @sesion_requerida                                    
 def reportes_view(request):
@@ -74,3 +75,41 @@ def generar_reporte_view(request):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     response['X-Historial'] = historial_data
     return response
+
+
+@sesion_requerida
+@require_POST
+def registrar_exportacion_view(request):
+    modulo = request.POST.get('modulo', '').strip()
+    formato = request.POST.get('formato', '').strip()
+    try:
+        total_registros = int(request.POST.get('total_registros', 0))
+    except ValueError:
+        total_registros = 0
+
+    MODULOS_VALIDOS = ['inventario', 'prestamos', 'devoluciones', 'mantenimiento', 'almacenamiento', 'usuarios']
+    FORMATOS_VALIDOS = ['pdf', 'excel']
+
+    if modulo not in MODULOS_VALIDOS or formato not in FORMATOS_VALIDOS:
+        return JsonResponse({'error': 'Módulo o formato no válido.'}, status=400)
+
+    from datetime import datetime
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    ext = 'xlsx' if formato == 'excel' else 'pdf'
+    filename = f'reporte_{modulo}_{ts}.{ext}'
+    generado_por = request.session.get('usuario_nombre', 'Sistema')
+
+    registro = ReporteHistorial.objects.create(
+        modulo=modulo,
+        formato=formato,
+        nombre_archivo=filename,
+        generado_por=generado_por,
+        total_registros=total_registros,
+    )
+
+    return JsonResponse({
+        'success': True,
+        'id': registro.id,
+        'filename': filename,
+        'fecha': registro.fecha_generado.strftime('%d/%m/%Y %H:%M')
+    })

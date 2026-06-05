@@ -76,7 +76,7 @@
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" style="width:100%; border-collapse:collapse; font-size:.9rem;">
+    <table class="table-app datatable-custom" id="devoluciones-table" style="width:100%; border-collapse:collapse; font-size:.9rem;">
       <thead>
         <tr>
           <th style="width:46px;"></th>
@@ -92,18 +92,17 @@
       <tbody>
         {% for d in devoluciones %}
         <tr style="cursor:pointer;" 
-            onclick="if(!event.target.closest('button') && !event.target.closest('form')) document.querySelector('[data-bs-target=\'#detail-{{ d.pk }}\']').click();"
+            onclick="if(!event.target.closest('button') && !event.target.closest('form')) this.querySelector('.btn-toggle-details').click();"
             onmouseover="this.style.background='rgba(9,77,146,.02)'" 
             onmouseout="this.style.background='transparent'">
           <td style="text-align:center;">
             <button type="button"
+                    class="btn-toggle-details"
                     style="width:24px; height:24px; border-radius:50%;
                            background:rgba(9,77,146,.07); border:1px solid rgba(9,77,146,.14);
                            color:var(--navy); cursor:pointer; display:inline-flex;
                            align-items:center; justify-content:center; padding:0;"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#detail-{{ d.pk }}"
-                    aria-expanded="false">
+                    data-target-detail="detail-{{ d.pk }}">
               <svg class="row-chevron" width="10" height="10" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2.5"
                    style="transition:transform .2s;">
@@ -135,8 +134,10 @@
 
               {# ── Botón ACEPTAR ── #}
               <button type="button"
-                      class="btn-dev-accion btn-dev-aceptar"
-                      onclick="abrirAceptar({{ d.pk }}, '{{ d.prestamo.pk }}', '{{ d.prestamo.usuario|escapejs }}')"
+                      class="btn-dev-accion btn-dev-aceptar btn-aceptar-click"
+                      data-pk="{{ d.pk }}"
+                      data-prestamo-pk="{{ d.prestamo.pk }}"
+                      data-usuario="{{ d.prestamo.usuario }}"
                       title="Aceptar devolución">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2.5">
@@ -144,11 +145,13 @@
                 </svg>
                 Aceptar
               </button>
-{% comment %} 
-              {# ── Botón RECHAZAR ── #} {% endcomment %}
+
+              {# ── Botón RECHAZAR ── #}
               <button type="button"
-                      class="btn-dev-accion btn-dev-rechazar"
-                      onclick="abrirRechazar({{ d.pk }}, '{{ d.prestamo.pk }}', '{{ d.prestamo.usuario|escapejs }}')"
+                      class="btn-dev-accion btn-dev-rechazar btn-rechazar-click"
+                      data-pk="{{ d.pk }}"
+                      data-prestamo-pk="{{ d.prestamo.pk }}"
+                      data-usuario="{{ d.prestamo.usuario }}"
                       title="Rechazar devolución">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2.5">
@@ -163,55 +166,55 @@
         </tr>
 
         <!-- DETALLE DESPLEGABLE -->
-        <tr style="background:rgba(9,77,146,.02);">
+        <tr class="detail-row d-none" id="detail-{{ d.pk }}" style="background:rgba(9,77,146,.02);">
           <td colspan="7" style="padding:0; border:none;">
-            <div class="collapse" id="detail-{{ d.pk }}">
-              <div style="padding:1rem 1.4rem; border-bottom:1px solid var(--border-color);">
-                <p style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em;
-                           text-transform:uppercase; color:var(--text-muted); margin-bottom:.75rem;">
-                  Detalle completo
-                </p>
-                <div class="row g-3" style="font-family:var(--font-ui);">
-                  <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Préstamo</div>
-                    <div style="font-weight:700; color:var(--navy); font-family:var(--font-mono);">#{{ d.prestamo.pk }}</div>
+            <div style="padding:1rem 1.4rem; border-bottom:1px solid var(--border-color);">
+              <p style="font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em;
+                         text-transform:uppercase; color:var(--text-muted); margin-bottom:.75rem;">
+                Detalle completo
+              </p>
+              <div class="row g-3" style="font-family:var(--font-ui);">
+                <div class="col-6 col-md-2">
+                  <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Préstamo</div>
+                  <div style="font-weight:700; color:var(--navy); font-family:var(--font-mono);">#{{ d.prestamo.pk }}</div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Usuario</div>
+                  <div style="font-weight:600; color:var(--text-main); font-size:.85rem;">{{ d.prestamo.usuario }}</div>
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Tipo</div>
+                  {% if d.devolucion_total %}
+                    <div style="font-weight:700; color:#15803d; font-size:.85rem;">Total</div>
+                  {% else %}
+                    <div style="font-weight:700; color:#92400e; font-size:.85rem;">Parcial</div>
+                  {% endif %}
+                </div>
+                <div class="col-6 col-md-2">
+                  <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Fecha Registro</div>
+                  <div style="font-family:var(--font-mono); font-size:.83rem; color:var(--text-main);">{{ d.fecha_creacion|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="col-12">
+                  <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.25rem;">Motivo / Observaciones</div>
+                  <div style="color:var(--text-main); font-size:.88rem;">{{ d.motivo }}</div>
+                </div>
+                <div class="col-12">
+                  <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--navy); font-weight:700; margin-bottom:.6rem; border-bottom:1px solid rgba(9,77,146,.1); padding-bottom:.2rem;">
+                    Detalle de herramientas reintegradas
                   </div>
-                  <div class="col-6 col-md-3">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Usuario</div>
-                    <div style="font-weight:600; color:var(--text-main); font-size:.85rem;">{{ d.prestamo.usuario }}</div>
-                  </div>
-                  <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Tipo</div>
-                    <div style="font-weight:700; color:{% if d.devolucion_total %}#15803d{% else %}#92400e{% endif %}; font-size:.85rem;">
-                      {% if d.devolucion_total %}Total{% else %}Parcial{% endif %}
-                    </div>
-                  </div>
-                  <div class="col-6 col-md-2">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.18rem;">Fecha Registro</div>
-                    <div style="font-family:var(--font-mono); font-size:.83rem; color:var(--text-main);">{{ d.fecha_creacion|date:"d/m/Y H:i" }}</div>
-                  </div>
-                  <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; margin-bottom:.25rem;">Motivo / Observaciones</div>
-                    <div style="color:var(--text-main); font-size:.88rem;">{{ d.motivo }}</div>
-                  </div>
-                  <div class="col-12">
-                    <div style="font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--navy); font-weight:700; margin-bottom:.6rem; border-bottom:1px solid rgba(9,77,146,.1); padding-bottom:.2rem;">
-                      Detalle de herramientas reintegradas
-                    </div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:.6rem;">
-                      {% for item in d.items.all %}
-                        <div style="padding:.65rem .85rem; border-radius:var(--radius-md); background:#fff; border:1px solid rgba(9,77,146,.15); display:flex; align-items:center; gap:.75rem; box-shadow: 0 2px 4px rgba(0,0,0,.02);">
-                          <div style="flex:1;">
-                             <div style="font-weight:600; font-size:.88rem; color:var(--text-main);">{{ item.producto.nombre }}</div>
-                             <div style="font-family:var(--font-mono); font-size:.75rem; color:var(--text-muted); margin-top:.1rem;">
-                               <span style="background:rgba(0,0,0,.05); padding:1px 4px; border-radius:3px;">{{ item.producto.codigo_sku }}</span>
-                               {% if item.serial_entregado %} · <span style="color:var(--navy); opacity:.8;">SN: {{ item.serial_entregado }}</span>{% endif %}
-                             </div>
-                          </div>
-                          <div style="font-family:var(--font-mono); font-weight:700; color:var(--navy);">×{{ item.cantidad }}</div>
+                  <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:.6rem;">
+                    {% for item in d.items.all %}
+                      <div style="padding:.65rem .85rem; border-radius:var(--radius-md); background:#fff; border:1px solid rgba(9,77,146,.15); display:flex; align-items:center; gap:.75rem; box-shadow: 0 2px 4px rgba(0,0,0,.02);">
+                        <div style="flex:1;">
+                           <div style="font-weight:600; font-size:.88rem; color:var(--text-main);">{{ item.producto.nombre }}</div>
+                           <div style="font-family:var(--font-mono); font-size:.75rem; color:var(--text-muted); margin-top:.1rem;">
+                             <span style="background:rgba(0,0,0,.05); padding:1px 4px; border-radius:3px;">{{ item.producto.codigo_sku }}</span>
+                             {% if item.serial_entregado %} · <span style="color:var(--navy); opacity:.8;">SN: {{ item.serial_entregado }}</span>{% endif %}
+                           </div>
                         </div>
-                      {% endfor %}
-                    </div>
+                        <div style="font-family:var(--font-mono); font-weight:700; color:var(--navy);">×{{ item.cantidad }}</div>
+                      </div>
+                    {% endfor %}
                   </div>
                 </div>
               </div>
@@ -499,4 +502,5 @@
 
 {% block js %}
 <script src="{% static 'js/devoluciones.js' %}"></script>
+<script src="{% static 'js/tables/devoluciones_table.js' %}"></script>
 {% endblock js %}

@@ -263,7 +263,7 @@
       <span class="reg-badge">{{ estantes|length }} registro{{ estantes|length|pluralize }}</span>
     </div>
 
-    <table class="reg-table">
+    <table class="reg-table datatable-custom" id="estantes-table">
       <thead>
         <tr>
           <th>ID</th>
@@ -609,4 +609,7 @@
   });
 </script>
 
+{% block js %}
+<script src="{% static 'js/tables/almacenamiento_table.js' %}"></script>
+{% endblock js %}
 {% endblock %}
