@@ -2,7 +2,6 @@
 {% load static %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'css/datatables.min.css' %}">
 {% endblock css %}
 
 {% block content %}
@@ -140,7 +139,7 @@
   </div>
 
   <div class="table-responsive">
-    <table class="table-app" id="inventario-table">
+    <table class="table-app datatable-custom" id="inventario-table">
       <thead>
         <tr>
           <th>SKU</th>
@@ -523,10 +522,6 @@
 {% endblock %}
 
 {% block js %}
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- DataTables JS -->
-<script src="{% static 'js/datatables.min.js' %}"></script>
 <!-- Custom Table JS -->
 <script src="{% static 'js/tables/inventario_table.js' %}"></script>
 {% endblock %}
