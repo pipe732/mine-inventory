@@ -13,6 +13,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/datatables.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 {% block css %}{% endblock css %}
 </head>
@@ -56,6 +57,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{% static 'js/accesibilidad.js' %}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="{% static 'js/datatables.min.js' %}"></script>
+  <script src="{% static 'js/datatables-init.js' %}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var overlay = document.getElementById('page-loading-overlay');
@@ -91,6 +95,12 @@
 
       window.addEventListener('beforeunload', function () {
         showLoading();
+      });
+
+      // Aplicar colores de fondo dinámicos desde atributos de datos (evita problemas de parser CSS)
+      document.querySelectorAll('[data-dynamic-bg]').forEach(function (el) {
+        var color = el.getAttribute('data-dynamic-bg');
+        if (color) el.style.backgroundColor = color;
       });
     });
   </script>

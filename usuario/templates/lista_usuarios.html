@@ -147,7 +147,7 @@
     </div>
 
     <div class="table-responsive">
-      <table class="table-app" style="width:100%;border-collapse:collapse;font-size:.9rem;">
+      <table class="table-app datatable-custom" id="usuarios-table" style="width:100%;border-collapse:collapse;font-size:.9rem;">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -862,4 +862,7 @@ document.getElementById('edit_telefono').addEventListener('input', function() {
 });
 </script>
 
+{% block js %}
+<script src="{% static 'js/tables/usuarios_table.js' %}"></script>
+{% endblock js %}
 {% endblock %}

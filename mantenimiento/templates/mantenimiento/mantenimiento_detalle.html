@@ -81,7 +81,7 @@ Detalle de Mantenimiento
       <div class="card-body" style="padding: 1.25rem">
         {% include "mantenimiento/partials/_section_heading.html" with titulo="Historial de cambios" %}
         <div class="table-responsive">
-          <table class="table-app" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+          <table class="table-app datatable-disabled" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -140,8 +140,8 @@ Detalle de Mantenimiento
             {% if m.tipo_estado %}
             <span
               class="badge-state"
-              style="background:{{ m.tipo_estado.color|default:'#6c757d' }};
-                           color:#fff; border:none;"
+              data-dynamic-bg="{{ m.tipo_estado.color|default:'#6c757d' }}"
+              style="color:#fff; border:none;"
             >
               {{ m.tipo_estado.nombre }}
             </span>
