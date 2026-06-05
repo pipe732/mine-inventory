@@ -111,22 +111,41 @@ def inventario(request):
             return redirect("inventario:inventario")
 
         # ── CATEGORIA: crear rápida ──
+       # ── CATEGORIA: crear rápida ──
         elif accion == "crear_categoria":
             post_cat_nombre = request.POST.get("cat_nombre", "").strip()
             post_cat_descripcion = request.POST.get("cat_descripcion", "").strip()
 
+            # Conservamos los datos del producto por si se estaba llenando el modal de herramientas
+            post_sku = request.POST.get("codigo_sku", "").strip()
+            post_nombre = request.POST.get("nombre", "").strip()
+            post_descripcion = request.POST.get("descripcion", "").strip()
+            post_stock = request.POST.get("stock", "1").strip() or "1"
+
             try:
-                Categoria.objects.create(nombre=post_cat_nombre, descripcion=post_cat_descripcion)
+                nueva_cat = Categoria.objects.create(nombre=post_cat_nombre, descripcion=post_cat_descripcion)
                 messages.success(request, f"Categoría '{post_cat_nombre}' creada correctamente.")
+                
+                # Si el usuario vino desde el modal de producto, guardamos su ID para preseleccionarla
+                post_categoria = str(nueva_cat.pk)
+                
+                # Si venía del modal de producto, forzamos a que el modal se vuelva a abrir automáticamente
+                if post_sku or post_nombre:
+                    request.session['abrir_modal_producto'] = True
+
                 return redirect("inventario:inventario")
+                
             except IntegrityError:
                 error_categoria = "Esta categoría ya existe."
                 modal_categoria_errors = True
-                form_modal_errors = True # Mantiene el flujo para regresar al modal principal
+                form_modal_errors = True  # Mantiene el flujo para regresar al modal principal
 
     # Consultar herramientas y categorías para la vista
     productos = Producto.objects.all()
     categorias = Categoria.objects.all()
+
+    from usuario.models import Usuario
+    usuarios_sistema = Usuario.objects.all().order_by('nombre_completo')
 
     # Manejo de errores de formularios externos (Mantenimiento)
     mant_form_data = request.session.pop('mant_form_data', None)
@@ -141,11 +160,16 @@ def inventario(request):
         mant_form = MantenimientoForm()
         mant_modal_errors = False
 
-    # KPIs adaptados a la lógica unitaria
+  # KPIs adaptados a la lógica unitaria
     total_productos = productos.count()
     total_stock = productos.aggregate(s=Sum("stock"))["s"] or 0
     sin_stock = productos.filter(stock=0).count()
     stock_bajo = productos.filter(stock__lte=5, stock__gt=0).count()
+    
+    # ── CONTROL DE REAPERTURA: Validación de categoría rápida ──
+    # Si la sesión tiene la bandera, forzamos a True para que el script del HTML abra el modal de herramientas
+    if request.session.pop('abrir_modal_producto', False):
+        form_modal_errors = True
 
     context = {
         "productos": productos,
@@ -168,6 +192,7 @@ def inventario(request):
         "mant_producto_id_error": mant_producto_id_error,
         "mant_sku_error": mant_sku_error,
         "mant_nombre_error": mant_nombre_error,
+        "usuarios_sistema": usuarios_sistema,
         "kpi_total_productos": total_productos,
         "kpi_total_stock": total_stock,
         "kpi_sin_stock": sin_stock,

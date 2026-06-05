@@ -9,7 +9,6 @@
 {% if messages %}
 {% for message in messages %}
 <div class="alert alert-dismissible fade show d-flex align-items-center gap-2 alert-custom" role="alert">
-
   {% if message.tags == 'error' %}
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2">
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -22,14 +21,12 @@
     <polyline points="22 4 12 14.01 9 11.01" />
   </svg>
   {% endif %}
-
   <span>{{ message }}</span>
   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endfor %}
 {% endif %}
 
-<!-- ══ SECCIÓN KPIs ══ -->
 <div class="row g-3 mb-4">
   <div class="col-12 col-sm-6 col-lg-3">
     <div class="card p-3 border-0 shadow-sm bg-white h-100">
@@ -88,7 +85,6 @@
   </div>
 </div>
 
-<!-- ══ SECCIÓN DE FILTROS Y BÚSQUEDA ══ -->
 <div class="card p-3 border-0 shadow-sm mb-4 bg-white">
   <div class="row g-2 align-items-center">
     <div class="col-12 col-md-7">
@@ -98,23 +94,26 @@
       </div>
     </div>
     <div class="col-12 col-md-4">
-      <select id="inventario-categoria" class="form-select form-select-sm bg-light">
-        <option value="">-- Todas las Categorías --</option>
-        {% for cat in categorias %}
-        <option value="{{ cat.pk }}" {% if request.GET.categoria == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
-        {% endfor %}
-      </select>
+      <div class="input-group input-group-sm">
+        <select id="inventario-categoria" class="form-select bg-light">
+          <option value="">-- Todas las Categorías --</option>
+          {% for cat in categorias %}
+          <option value="{{ cat.pk }}" {% if request.GET.categoria == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" class="btn btn-success d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalNuevaCategoria" title="Crear nueva categoría">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
     </div>
     <div class="col-12 col-md-1">
-      <button type="button" id="btn-limpiar-filtros" class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center" 
-        data-bs-toggle="tooltip" data-bs-placement="top" title="Limpiar filtros">
+      <button type="button" id="btn-limpiar-filtros" class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpiar filtros">
         <i class="bi bi-brush"></i>
       </button>
     </div>
   </div>
 </div>
 
-<!-- ══ TABLA INVENTARIO ══ -->
 <div class="card table-card p-3">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span class="card-title">
@@ -130,9 +129,7 @@
       <span class="badge-count">
         {{ total }} registro{{ total|pluralize }}
       </span>
-      <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-1 has-tooltip" 
-        data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta" 
-        data-bs-placement="bottom" title="Registrar una nueva herramienta en el inventario">
+      <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-1 has-tooltip" data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta" data-bs-placement="bottom" title="Registrar una nueva herramienta en el inventario">
           <i class="bi bi-plus-lg"></i> 
       </button>
     </div>
@@ -154,14 +151,10 @@
       <tbody>
         {% for producto in productos %}
         <tr>
-          <td>
-            <span class="sku-text">{{ producto.codigo_sku }}</span>
-          </td>
+          <td><span class="sku-text">{{ producto.codigo_sku }}</span></td>
           <td class="fw-semibold">{{ producto.nombre }}</td>
           <td class="description-col">
-            <span class="text-truncate d-block description-text">
-              {{ producto.descripcion|default:"—" }}
-            </span>
+            <span class="text-truncate d-block description-text">{{ producto.descripcion|default:"—" }}</span>
           </td>
           <td class="col-categoria" data-categoria-id="{{ producto.categoria.pk|default:'' }}">
             {% if producto.categoria %}
@@ -172,12 +165,7 @@
           </td>
           <td>
             {% if producto.estante %}
-            <button class="btn btn-outline-secondary btn-sm btn-reg-action btn-ver-ubicacion"
-              data-bs-toggle="tooltip" data-bs-placement="top" title="Ver ubicación física de la herramienta"
-              data-almacen-nombre="{{ producto.estante.almacen.nombre|escapejs }}"
-              data-almacen-pk="{{ producto.estante.almacen.pk }}"
-              data-estante-codigo="{{ producto.estante.codigo|escapejs }}" data-estante-pk="{{ producto.estante.pk }}"
-              data-producto-nombre="{{ producto.nombre|escapejs }}">
+            <button class="btn btn-outline-secondary btn-sm btn-reg-action btn-ver-ubicacion" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver ubicación física de la herramienta" data-almacen-nombre="{{ producto.estante.almacen.nombre|escapejs }}" data-almacen-pk="{{ producto.estante.almacen.pk }}" data-estante-codigo="{{ producto.estante.codigo|escapejs }}" data-estante-pk="{{ producto.estante.pk }}" data-producto-nombre="{{ producto.nombre|escapejs }}">
               <i class="bi bi-geo-alt"></i> Ver
             </button>
             {% else %}
@@ -195,41 +183,21 @@
           </td>
           <td>
             <div class="d-flex gap-1 justify-content-center align-items-center">
-              <!-- CONEXIÓN: SOLICITAR PRESTAMO -->
               {% if producto.stock > 0 %}
-              <button type="button" class="btn btn-sm btn-outline-success px-2 py-1 btn-action-small" 
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Registrar préstamo rápido"
-                onclick="abrirPrestamo('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}')">
+              <button type="button" class="btn btn-sm btn-outline-success px-2 py-1 btn-action-small" data-bs-toggle="tooltip" data-bs-placement="top" title="Registrar préstamo rápido" onclick="abrirPrestamo('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}')">
                 <i class="bi bi-arrow-left-right"></i>
               </button>
               {% else %}
-              <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 btn-action-small" disabled 
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Sin existencias para préstamo"
-                onclick="event.stopPropagation();">
+              <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 btn-action-small" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="Sin existencias para préstamo" onclick="event.stopPropagation();">
                 <i class="bi bi-arrow-left-right"></i>
               </button>
               {% endif %}
 
-              <!-- ACCIÓN: EDITAR -->
-              <button type="button" class="btn btn-sm btn-light border btn-action-small" 
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Modificar información" 
-                onclick="abrirEditar(
-                    '{{ producto.pk }}',
-                    '{{ producto.codigo_sku|escapejs }}',
-                    '{{ producto.nombre|escapejs }}',
-                    '{% if producto.descripcion %}{{ producto.descripcion|escapejs }}{% endif %}',
-                    '{{ producto.stock }}',
-                    '{% if producto.categoria %}{{ producto.categoria.pk }}{% endif %}',
-                    '{% if producto.estante %}{{ producto.estante.almacen.pk }}{% endif %}',
-                    '{% if producto.estante %}{{ producto.estante.pk }}{% endif %}'
-                  )">
+              <button type="button" class="btn btn-sm btn-light border btn-action-small" data-bs-toggle="tooltip" data-bs-placement="top" title="Modificar información" onclick="abrirEditar('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}', '{% if producto.descripcion %}{{ producto.descripcion|escapejs }}{% endif %}', '{{ producto.stock }}', '{% if producto.categoria %}{{ producto.categoria.pk }}{% endif %}')">
                 <i class="bi bi-pencil"></i>
               </button>
               
-              <!-- CONEXIÓN: ENVIAR A MANTENIMIENTO -->
-              <button type="button" class="btn btn-sm btn-light border text-warning btn-action-small" 
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Enviar a mantenimiento" 
-                onclick="abrirMantenimiento('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}')">
+              <button type="button" class="btn btn-sm btn-light border text-warning btn-action-small" data-bs-toggle="tooltip" data-bs-placement="top" title="Enviar a mantenimiento" onclick="abrirMantenimiento('{{ producto.pk }}', '{{ producto.codigo_sku|escapejs }}', '{{ producto.nombre|escapejs }}')">
                 <i class="bi bi-wrench"></i>
               </button>
             </div>
@@ -247,7 +215,6 @@
   </div>
 </div>
 
-<!-- ══ MODAL — Registrar Préstamo Rápido ══ -->
 <div class="modal fade" id="modalPrestamoRapido" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -255,31 +222,40 @@
         <h5 class="modal-title fw-bold"><i class="bi bi-person-plus me-2"></i>Registrar Préstamo de Salida</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <!-- Ajusta la URL de action de acuerdo al nombre de tu app de préstamos -->
-      <!-- Línea 315 corregida -->
-<form method="POST" action="{% url 'usuario_solicitar_prestamo' %}">
+      <form method="POST" action="{% url 'prestamo' %}">
         {% csrf_token %}
-        <input type="hidden" name="producto_id" id="prestamo_producto_id">
+        <input type="hidden" name="producto[]" id="prestamo_producto_id">
         <div class="modal-body p-4">
           <div class="alert alert-success py-2 mb-3 fs-7">
             <strong>Herramienta:</strong> <span id="prestamo_display_herramienta">—</span>
           </div>
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label text-muted fw-bold small uppercase mb-1">Operario / Solicitante *</label>
-              <input type="text" name="operario" class="form-control" placeholder="Nombre completo del operario" required>
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Usuario *</label>
+              <select name="usuario" id="prestamo_usuario" class="form-select" required onchange="actualizarNombreUsuario();">
+                <option value="">— Selecciona usuario —</option>
+                {% for usuario in usuarios_sistema %}
+                <option value="{{ usuario.numero_documento }}" data-nombre="{{ usuario.nombre_completo|escapejs }}">
+                  {{ usuario.nombre_completo }} — {{ usuario.numero_documento }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Nombre Completo</label>
+              <input type="text" name="nombre_usuario" id="prestamo_nombre_usuario" class="form-control" placeholder="Se autocompletará" readonly required>
             </div>
             <div class="col-6">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Cantidad a Prestar *</label>
-              <input type="number" name="cantidad" class="form-control" min="1" value="1" required>
+              <input type="number" name="cantidad[]" class="form-control" min="1" value="1" required>
             </div>
             <div class="col-6">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Fecha de Devolución Estimada</label>
-              <input type="date" name="fecha_devolucion_esperada" class="form-control">
+              <input type="date" name="fecha_vencimiento" class="form-control">
             </div>
             <div class="col-12">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Observación inicial</label>
-              <textarea name="notas" class="form-control" rows="2" placeholder="Frente de trabajo, área de minas, etc..."></textarea>
+              <textarea name="observaciones" class="form-control" rows="2" placeholder="Frente de trabajo, área de minas, etc..."></textarea>
             </div>
           </div>
         </div>
@@ -292,14 +268,11 @@
   </div>
 </div>
 
-<!-- ══ MODAL — Ver Ubicación ══ -->
 <div class="modal fade" id="modalUbicacion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title d-flex align-items-center gap-2">
-          <i class="bi bi-geo-alt"></i> Ubicación de la herramienta
-        </h5>
+        <h5 class="modal-title d-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> Ubicación de la herramienta</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body modal-body-padded">
@@ -327,14 +300,11 @@
   </div>
 </div>
 
-<!-- ══ MODAL — Nueva Herramienta ══ -->
 <div class="modal fade" id="modalNuevaHerramienta" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-success text-white">
-        <h5 class="modal-title fw-bold">
-          <i class="bi bi-plus-circle me-2"></i>Registrar Nueva Herramienta
-        </h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Registrar Nueva Herramienta</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="post" action="{% url 'inventario:inventario' %}" novalidate>
@@ -348,9 +318,7 @@
           </div>
           {% endif %}
 
-          <div class="modal-section-title">
-            Datos de la herramienta
-          </div>
+          <div class="modal-section-title">Datos de la herramienta</div>
           
           <div class="row g-3">
             <div class="col-md-4">
@@ -363,12 +331,17 @@
             </div>
             <div class="col-md-6">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Categoría</label>
-              <select name="categoria" class="form-select">
-                <option value="">-- Sin Categoría --</option>
-                {% for cat in categorias %}
-                <option value="{{ cat.pk }}" {% if post_categoria|slugify == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
-                {% endfor %}
-              </select>
+              <div class="input-group">
+                <select name="categoria" class="form-select">
+                  <option value="">-- Sin Categoría --</option>
+                  {% for cat in categorias %}
+                  <option value="{{ cat.pk }}" {% if post_categoria|slugify == cat.pk|slugify %}selected{% endif %}>{{ cat.nombre }}</option>
+                  {% endfor %}
+                </select>
+                <button type="button" class="btn btn-outline-success" onclick="abrirCategoriaDesdeProducto();" title="Crear categoría instantánea">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
             </div>
             <div class="col-md-6">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Stock / Cantidad INITIAL</label>
@@ -389,7 +362,6 @@
   </div>
 </div>
 
-<!-- ══ MODAL — Editar Herramienta ══ -->
 <div class="modal fade" id="modalEditarHerramienta" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -397,12 +369,10 @@
         <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Modificar Información</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
       <form method="POST">
         {% csrf_token %}
         <input type="hidden" name="accion" value="editar_producto">
         <input type="hidden" name="producto_id" id="edit_producto_id">
-
         <div class="modal-body p-4">
           <div class="row g-3">
             <div class="col-12">
@@ -441,7 +411,6 @@
   </div>
 </div>
 
-<!-- ══ MODAL — Mantenimiento ══ -->
 <div class="modal fade" id="modalMantenimiento" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -449,17 +418,14 @@
         <h5 class="modal-title fw-bold"><i class="bi bi-wrench me-2"></i>Enviar a Mantenimiento</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
       <form id="formMantenimiento" method="POST" action="{% url 'mantenimiento:registrar_desde_inventario' %}">
         {% csrf_token %}
         <input type="hidden" name="producto_id" id="mantProductoId" value="{{ mant_producto_id_error }}">
-
         <div class="modal-body p-4">
           <div class="alert alert-info py-2 mb-3 fs-7">
             <div class="fw-bold">Herramienta seleccionada:</div>
             <span id="mantTextDisplay">[{{ mant_sku_error }}] {{ mant_nombre_error }}</span>
           </div>
-
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label text-muted fw-bold small uppercase mb-1">Tipo de Mantenimiento</label>
@@ -488,14 +454,64 @@
   </div>
 </div>
 
-<!-- ══ SCRIPTS JS DE CONTROL ══ -->
+<div class="modal fade" id="modalNuevaCategoria" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-tag-fill me-2"></i>Crear Nueva Categoría</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{% url 'inventario:inventario' %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="crear_categoria">
+        
+        <input type="hidden" name="codigo_sku" value="{{ post_sku }}">
+        <input type="hidden" name="nombre" value="{{ post_nombre }}">
+        <input type="hidden" name="descripcion" value="{{ post_descripcion }}">
+        <input type="hidden" name="stock" value="{{ post_stock }}">
+
+        <div class="modal-body p-4">
+          {% if error_categoria %}
+          <div class="alert alert-danger py-2 fs-7 mb-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error_categoria }}
+          </div>
+          {% endif %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Nombre de la Categoría *</label>
+              <input type="text" name="cat_nombre" class="form-control" placeholder="Ej: Herramientas Eléctricas" value="{{ post_cat_nombre }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small uppercase mb-1">Descripción corta</label>
+              <textarea name="cat_descripcion" class="form-control" rows="2" placeholder="Opcional...">{{ post_cat_descripcion }}</textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-0 px-4 py-3">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success px-4">Guardar Categoría</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
   // Abrir Préstamo Rápido
   function abrirPrestamo(id, sku, nombre) {
     document.getElementById('prestamo_producto_id').value = id;
     document.getElementById('prestamo_display_herramienta').innerText = '[' + sku + '] ' + nombre;
+    document.getElementById('prestamo_usuario').selectedIndex = 0;
+    document.getElementById('prestamo_nombre_usuario').value = '';
     var modal = new bootstrap.Modal(document.getElementById('modalPrestamoRapido'));
     modal.show();
+  }
+
+  function actualizarNombreUsuario() {
+    var usuarioSelect = document.getElementById('prestamo_usuario');
+    var nombreInput = document.getElementById('prestamo_nombre_usuario');
+    var selectedOption = usuarioSelect.options[usuarioSelect.selectedIndex];
+    nombreInput.value = selectedOption ? selectedOption.dataset.nombre || '' : '';
   }
 
   // Abrir Edición
@@ -517,11 +533,44 @@
     var modal = new bootstrap.Modal(document.getElementById('modalMantenimiento'));
     modal.show();
   }
+
+  // Flujo puente: Abrir categoría desde el modal de producto conservando datos
+  function abrirCategoriaDesdeProducto() {
+    // Cerramos el modal de herramientas temporalmente
+    var modalProdElement = document.getElementById('modalNuevaHerramienta');
+    var modalProd = bootstrap.Modal.getInstance(modalProdElement);
+    if(modalProd) modalProd.hide();
+
+    // Sincronizamos los inputs actuales del producto hacia el formulario del modal de categoría
+    var formCat = document.querySelector('#modalNuevaCategoria form');
+    formCat.querySelector('input[name="codigo_sku"]').value = modalProdElement.querySelector('input[name="codigo_sku"]').value;
+    formCat.querySelector('input[name="nombre"]').value = modalProdElement.querySelector('input[name="nombre"]').value;
+    formCat.querySelector('input[name="descripcion"]').value = modalProdElement.querySelector('textarea[name="descripcion"]').value;
+    formCat.querySelector('input[name="stock"]').value = modalProdElement.querySelector('input[name="stock"]').value;
+
+    // Abrimos el modal de categoría
+    var modalCat = new bootstrap.Modal(document.getElementById('modalNuevaCategoria'));
+    modalCat.show();
+  }
+
+// Control de Reapertura automática mediante banderas del backend
+  document.addEventListener("DOMContentLoaded", function() {
+    {% if form_modal_errors or request.session.abrir_modal_producto %}
+      var modalProd = new bootstrap.Modal(document.getElementById('modalNuevaHerramienta'));
+      modalProd.show();
+    {% elif modal_categoria_errors %}
+      var modalCat = new bootstrap.Modal(document.getElementById('modalNuevaCategoria'));
+      modalCat.show();
+    {% endif %}
+  
+  });
 </script>
 
 {% endblock %}
 
 {% block js %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'js/datatables.min.js' %}"></script>
 <!-- Custom Table JS -->
 <script src="{% static 'js/tables/inventario_table.js' %}"></script>
 {% endblock %}
