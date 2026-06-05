@@ -105,7 +105,7 @@
       </select>
     </div>
     <div class="col-12 col-md-3 d-flex gap-1">
-      <button type="submit" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1">
+      <button type="submit" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-1" style="background-color:var(--rust); border-color:var(--rust); color:#fff;">
         <i class="bi bi-funnel-fill"></i> Filtrar
       </button>
       {% if request.GET.busqueda or request.GET.categoria %}
@@ -136,7 +136,7 @@
                    border:1px solid rgba(152,71,62,0.3);">
         {{ total }} registro{{ total|pluralize }}
       </span>
-      <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta">
+      <button type="button" class="btn btn-sm d-flex align-items-center gap-1" style="background-color:var(--rust); border-color:var(--rust); color:#fff;" data-bs-toggle="modal" data-bs-target="#modalNuevaHerramienta">
           <i class="bi bi-plus-lg"></i> Nueva Herramienta
       </button>
     </div>
@@ -341,7 +341,7 @@
         </div>
         <div class="modal-footer bg-light border-0 px-4 py-3">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success px-4">Confirmar Préstamo</button>
+          <button type="submit" class="btn px-4" style="background-color:var(--rust);border-color:var(--rust);color:#fff;">Confirmar Préstamo</button>
         </div>
       </form>
     </div>
@@ -438,7 +438,7 @@
         </div>
         <div class="modal-footer bg-light border-0 px-4 py-3">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success px-4">Guardar Registro</button>
+          <button type="submit" class="btn px-4" style="background-color:var(--rust);border-color:var(--rust);color:#fff;">Guardar Registro</button>
         </div>
       </form>
     </div>
@@ -490,7 +490,7 @@
         </div>
         <div class="modal-footer bg-light border-0 px-4 py-3">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button type="submit" class="btn btn-primary px-4">Actualizar Datos</button>
+          <button type="submit" class="btn px-4" style="background-color:var(--rust);border-color:var(--rust);color:#fff;">Actualizar Datos</button>
         </div>
       </form>
     </div>
@@ -537,7 +537,7 @@
         </div>
         <div class="modal-footer bg-light border-0 px-4 py-3">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-warning text-dark px-4 fw-bold">Confirmar Envío</button>
+          <button type="submit" class="btn px-4 fw-bold" style="background-color:var(--rust);border-color:var(--rust);color:#fff;">Confirmar Envío</button>
         </div>
       </form>
     </div>
