@@ -1053,18 +1053,53 @@ body.light-mode .modal-header .btn-close {
   background: #f9f7f3;
   border-top: 1px solid var(--border-color);
 }
+#modalMantenimiento .modal-dialog {
+  max-height: 92vh;
+}
 
+#modalMantenimiento .modal-content {
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#modalMantenimiento .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Soporte para formulario largo */
+#modalMantenimiento .modal-body .row.g-3 {
+  margin-bottom: 0;
+}
 #modalMantenimiento .modal-dialog {
   max-width: 900px;
 }
 
 #modalMantenimiento .modal-content {
+  display: flex;
+  flex-direction: column;
   max-height: calc(100vh - 2rem);
 }
 
+#modalMantenimiento form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 #modalMantenimiento .modal-body {
+  flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 220px);
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+#modalMantenimiento .modal-footer {
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
@@ -1074,10 +1109,6 @@ body.light-mode .modal-header .btn-close {
 
   #modalMantenimiento .modal-content {
     max-height: calc(100vh - 1rem);
-  }
-
-  #modalMantenimiento .modal-body {
-    max-height: calc(100vh - 180px);
   }
 }
 

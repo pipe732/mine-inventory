@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Campos obligatorios y sus mensajes ────────────────────────────────────
+    //Campos obligatorios y sus mensajes
     const CAMPOS_OBLIGATORIOS = {
         'id_producto':           'El ítem/herramienta es obligatorio',
         'id_tipo_mantenimiento': 'El tipo de mantenimiento es obligatorio',
